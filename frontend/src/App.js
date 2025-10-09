@@ -70,7 +70,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (filters.order_type) params.append('order_type', filters.order_type);
+      if (filters.order_type && filters.order_type !== 'all') params.append('order_type', filters.order_type);
       if (filters.customer_name) params.append('customer_name', filters.customer_name);
       if (filters.phone) params.append('phone', filters.phone);
       
