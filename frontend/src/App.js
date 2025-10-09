@@ -118,7 +118,7 @@ const Dashboard = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ order_type: '', customer_name: '', phone: '' });
+    setFilters({ order_type: 'all', customer_name: '', phone: '' });
   };
 
   return (
