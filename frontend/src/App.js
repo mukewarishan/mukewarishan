@@ -186,7 +186,7 @@ const Dashboard = () => {
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All types</SelectItem>
+                    <SelectItem value="all">All types</SelectItem>
                     <SelectItem value="cash">Cash</SelectItem>
                     <SelectItem value="company">Company</SelectItem>
                   </SelectContent>
