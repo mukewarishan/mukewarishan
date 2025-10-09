@@ -58,7 +58,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({ total_orders: 0, by_type: [] });
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ order_type: '', customer_name: '', phone: '' });
+  const [filters, setFilters] = useState({ order_type: 'all', customer_name: '', phone: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
