@@ -1147,6 +1147,13 @@ const OrderForm = ({ orderId = null }) => {
   );
 };
 
+// Wrapper components for routing
+const NewOrderPage = () => <OrderForm />;
+const EditOrderPage = () => {
+  const { orderId } = useParams();
+  return <OrderForm orderId={orderId} />;
+};
+
 // Main App Component
 function App() {
   return (
@@ -1155,8 +1162,8 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/new-order" element={<OrderForm />} />
-          <Route path="/edit-order/:orderId" element={<OrderForm />} />
+          <Route path="/new-order" element={<NewOrderPage />} />
+          <Route path="/edit-order/:orderId" element={<EditOrderPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" richColors />
