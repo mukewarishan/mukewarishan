@@ -255,6 +255,12 @@ class CraneOrderUpdate(BaseModel):
     company_diesel_refill_location: Optional[str] = None
     company_driver_name: Optional[str] = None
     company_towing_vehicle: Optional[str] = None
+    
+    # Incentive fields (admin only)
+    incentive_amount: Optional[float] = None
+    incentive_reason: Optional[str] = None
+    incentive_added_by: Optional[str] = None
+    incentive_added_at: Optional[datetime] = None
 
 # Helper functions for MongoDB serialization
 def prepare_for_mongo(data):
