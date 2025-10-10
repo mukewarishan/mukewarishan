@@ -2334,7 +2334,12 @@ class CraneOrderAPITester:
 def main():
     """Main test execution"""
     tester = CraneOrderAPITester()
-    return tester.run_all_tests()
+    
+    # Check if we should run focused dashboard test
+    if len(sys.argv) > 1 and sys.argv[1] == "--dashboard":
+        return 0 if tester.run_focused_dashboard_test() else 1
+    else:
+        return tester.run_all_tests()
 
 if __name__ == "__main__":
     sys.exit(main())
