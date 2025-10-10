@@ -1409,7 +1409,7 @@ const OrderForm = ({ orderId = null }) => {
                         
                         <div>
                           <Label htmlFor="company_name" className="text-sm font-medium text-slate-700">
-                            Company Name (Secondary)
+                            Company Name
                           </Label>
                           <Input
                             id="company_name"
