@@ -911,9 +911,9 @@ const DataImport = () => {
               </div>
             </div>
 
-            <div className=\"bg-blue-50 border border-blue-200 rounded-lg p-4\">
-              <h3 className=\"text-lg font-semibold text-blue-800 mb-2\">📋 Import Process Details</h3>
-              <div className=\"space-y-2 text-blue-700\">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">📋 Import Process Details</h3>
+              <div className="space-y-2 text-blue-700">
                 <p>• All customer names and contact information imported</p>
                 <p>• Order types automatically classified (Cash/Company)</p>
                 <p>• Vehicle details and trip information preserved</p>
@@ -923,9 +923,9 @@ const DataImport = () => {
               </div>
             </div>
 
-            <div className=\"bg-yellow-50 border border-yellow-200 rounded-lg p-4\">
-              <h3 className=\"text-lg font-semibold text-yellow-800 mb-2\">💡 Data Mapping Information</h3>
-              <div className=\"text-yellow-700 text-sm space-y-1\">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-2">💡 Data Mapping Information</h3>
+              <div className="text-yellow-700 text-sm space-y-1">
                 <p><strong>Customer Names:</strong> Extracted from 'Customer Name' column</p>
                 <p><strong>Phone Numbers:</strong> Generated from available data or auto-generated</p>
                 <p><strong>Order Types:</strong> Automatically classified based on available company/cash data</p>
