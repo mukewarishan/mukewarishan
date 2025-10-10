@@ -1272,13 +1272,22 @@ const UserManagement = () => {
                                 Edit
                               </Button>
                               {user.id !== currentUser?.id && (
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => deleteUser(user.id, user.full_name)}
-                                >
-                                  Delete
-                                </Button>
+                                <>
+                                  <Button
+                                    size="sm"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    onClick={() => resetPassword(user)}
+                                  >
+                                    Reset Password
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => deleteUser(user.id, user.full_name)}
+                                  >
+                                    Delete
+                                  </Button>
+                                </>
                               )}
                             </div>
                           </td>
