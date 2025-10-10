@@ -511,6 +511,10 @@ class CraneOrderAPITester:
             self.test_create_company_order,
             self.test_cash_order_with_driver_dropdown,
             self.test_company_order_with_dropdowns,
+            self.test_care_off_fields_cash_order,
+            self.test_care_off_fields_optional,
+            self.test_care_off_fields_company_order,
+            self.test_care_off_amount_validation,
             self.test_all_driver_options,
             self.test_all_firm_options,
             self.test_all_company_options,
@@ -518,6 +522,7 @@ class CraneOrderAPITester:
             self.test_get_orders_with_filters,
             self.test_get_single_order,
             self.test_update_order,
+            self.test_update_order_with_care_off,
             self.test_get_stats_summary,
             self.test_delete_order,
             self.test_invalid_endpoints
