@@ -2765,9 +2765,11 @@ const Reports = () => {
 
             {/* Tabs for Reports */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="expense">Expense by Driver</TabsTrigger>
                 <TabsTrigger value="revenue">Revenue by Vehicle Type</TabsTrigger>
+                <TabsTrigger value="towing">Revenue by Towing Vehicle</TabsTrigger>
+                <TabsTrigger value="custom">Custom Reports</TabsTrigger>
               </TabsList>
 
               {/* Expense Report Tab */}
