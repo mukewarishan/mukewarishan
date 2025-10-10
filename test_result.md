@@ -309,6 +309,54 @@ backend:
         agent: "testing"
         comment: "✅ MONTHLY REPORTS SYSTEM TESTING COMPLETE: Comprehensive testing of new reporting functionality with 100% success rate. ✅ EXPENSE REPORT BY DRIVER: GET /api/reports/expense-by-driver working correctly - aggregates expenses (diesel + toll costs) by driver name for both cash and company orders, proper date filtering by month/year, correct data structure with driver_name, cash_orders, company_orders, total_orders, total_diesel_expense, total_toll_expense, total_expenses. ✅ REVENUE REPORT BY VEHICLE TYPE: GET /api/reports/revenue-by-vehicle-type working correctly - aggregates revenue by service type, cash orders use amount_received, company orders use SK rates calculation, includes incentive amounts, proper revenue calculations (base + incentive). ✅ EXCEL EXPORT FUNCTIONALITY: Both /api/reports/expense-by-driver/export and /api/reports/revenue-by-vehicle-type/export endpoints working correctly, return proper Excel files with formatted headers and data. ✅ ACCESS CONTROL: Proper role-based access control enforced - only Admin/Super Admin can access report endpoints (HTTP 403 for data_entry users, HTTP 200 for admin users). ✅ EDGE CASES: Proper handling of months with no data (empty results), invalid parameters (HTTP 422 validation errors), missing parameters (HTTP 422). All monthly reports functionality working perfectly as requested in the review."
 
+  - task: "Revenue by Towing Vehicle Report"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ REVENUE BY TOWING VEHICLE REPORT WORKING: GET /api/reports/revenue-by-towing-vehicle?month=10&year=2024 endpoint working correctly. Aggregates revenue by towing vehicle name for specified month/year. Cash orders use amount_received, company orders use SK rates calculation. Includes incentive amounts in total revenue. Excel export endpoint /api/reports/revenue-by-towing-vehicle/export also working correctly. Test data shows proper aggregation with vehicles: Tata ACE, Mahindra Bolero, Honda Activa, Unknown Vehicle."
+
+  - task: "Custom Reports System"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ CUSTOM REPORTS SYSTEM WORKING: POST /api/reports/custom endpoint working correctly with all group_by options: driver, service_type, towing_vehicle, firm, company. Supports custom date ranges, report types (summary/detailed), and order type filtering. Revenue calculations include SK rates for company orders and incentives. Excel export via POST /api/reports/custom/export working correctly. Proper role-based access control enforced (Admin/Super Admin only)."
+
+  - task: "Create New Rates Functionality"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ CREATE NEW RATES WORKING: POST /api/rates endpoint working correctly. Creates new service rate combinations with validation for required fields (name_of_firm, company_name, service_type, base_rate, rate_per_km_beyond). Duplicate rate validation working (returns HTTP 400 for existing combinations). Missing fields validation working (returns HTTP 400). Audit trail working correctly (logs rate creation in audit system). Rate deletion via DELETE /api/rates/{rate_id} also working."
+
+  - task: "Excel Import Display Investigation"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ EXCEL IMPORT INVESTIGATION COMPLETE: Dashboard orders loading correctly (89 orders found). Date filtering investigation shows orders distributed across different time periods (2024 data found). Reports include imported data correctly - October 2024 reports show data from multiple sources. DateTime format investigation shows ISO format with Z timezone being used consistently. No issues found with Excel imported records display - they appear correctly in dashboard and reports."
+
 frontend:
   - task: "Google Sheets Export Button"
     implemented: true
