@@ -345,6 +345,7 @@ const Dashboard = () => {
   const [filters, setFilters] = useState({ order_type: 'all', customer_name: '', phone: '' });
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [orderFinancials, setOrderFinancials] = useState({}); // Store calculated financials
   const { hasRole } = useAuth();
   const navigate = useNavigate();
 
