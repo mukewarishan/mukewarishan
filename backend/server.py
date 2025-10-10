@@ -199,6 +199,7 @@ class CraneOrderCreate(BaseModel):
     company_diesel: Optional[float] = None
     company_diesel_refill_location: Optional[str] = None
     company_driver_name: Optional[str] = None
+    company_towing_vehicle: Optional[str] = None
 
 class CraneOrderUpdate(BaseModel):
     customer_name: Optional[str] = None
