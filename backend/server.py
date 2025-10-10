@@ -1233,6 +1233,40 @@ async def export_orders_googlesheets(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error exporting to Google Sheets: {str(e)}")
 
+# Financial calculation endpoint
+@api_router.get("/orders/{order_id}/financials")
+async def get_order_financials(
+    order_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get calculated financial details for an order"""
+    try:
+        # Get the order
+        order = await db.crane_orders.find_one({"id": order_id}, {"_id": 0})
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        # Calculate financials
+        financials = await calculate_order_financials(order)
+        
+        return financials
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating financials: {str(e)}")
+
+@api_router.get("/rates")
+async def get_service_rates(
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get all service rates (Admin and Super Admin only)"""
+    try:
+        rates = await db.service_rates.find({}, {"_id": 0}).to_list(1000)
+        return [parse_from_mongo(rate) for rate in rates]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching service rates: {str(e)}")
+
 # Data import endpoint
 @api_router.post("/import/excel")
 async def import_excel_data(
