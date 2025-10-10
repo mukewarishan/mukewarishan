@@ -137,15 +137,18 @@ backend:
 
   - task: "Backend Mandatory Fields Validation"
     implemented: true
-    working: "NA"
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated CraneOrder model to make company_name, company_service_type, company_driver_details, and company_towing_vehicle mandatory fields for company orders."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE: Mandatory fields validation is NOT working. Backend accepts company orders even when mandatory fields are missing/empty. Tests expected HTTP 422 validation errors but got HTTP 200 success. The Pydantic model defines these fields as strings with default empty values ('') but lacks custom validation logic to enforce non-empty values for company orders. Need to implement validation in create_order endpoint to check: if order_type == 'company', then company_name, company_service_type, company_driver_details, and company_towing_vehicle must be non-empty strings."
 
   - task: "PDF Export"
     implemented: true
