@@ -3381,6 +3381,338 @@ class CraneOrderAPITester:
         
         return False
 
+    def test_super_admin_password_reset_feature(self):
+        """Test Super Admin Password Reset Feature comprehensively"""
+        print("\n🔐 Testing Super Admin Password Reset Feature...")
+        
+        # Step 1: Login as Super Admin
+        success1, login_response = self.run_test(
+            "Super Admin Login for Password Reset",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "admin@kawalecranes.com", "password": "admin123"}
+        )
+        
+        if not success1 or 'access_token' not in login_response:
+            return self.log_test("Super Admin Password Reset Feature", False, "Failed to login as Super Admin")
+        
+        # Store admin token
+        admin_token = self.token
+        super_admin_token = login_response['access_token']
+        self.token = super_admin_token
+        
+        # Step 2: Create a test data_entry user for password reset testing
+        test_user_data = {
+            "email": "test_dataentry@test.com",
+            "full_name": "Test Data Entry User",
+            "password": "test123",
+            "role": "data_entry"
+        }
+        
+        success2, create_response = self.run_test(
+            "Create Test Data Entry User",
+            "POST",
+            "auth/register",
+            200,
+            test_user_data
+        )
+        
+        if not success2 or 'id' not in create_response:
+            self.token = admin_token
+            return self.log_test("Super Admin Password Reset Feature", False, "Failed to create test user")
+        
+        test_user_id = create_response['id']
+        
+        # Step 3: Test password reset with valid password (6+ chars)
+        reset_data_valid = {"new_password": "newpass123"}
+        success3, reset_response = self.run_test(
+            "Password Reset - Valid Password",
+            "PUT",
+            f"users/{test_user_id}/reset-password",
+            200,
+            reset_data_valid
+        )
+        
+        # Step 4: Test password reset with short password (<6 chars)
+        reset_data_short = {"new_password": "123"}
+        success4, _ = self.run_test(
+            "Password Reset - Short Password (Should Fail)",
+            "PUT",
+            f"users/{test_user_id}/reset-password",
+            400,
+            reset_data_short
+        )
+        
+        # Step 5: Test Super Admin trying to reset own password (should fail)
+        super_admin_id = login_response['user']['id']
+        reset_data_self = {"new_password": "newadminpass"}
+        success5, _ = self.run_test(
+            "Password Reset - Self Reset (Should Fail)",
+            "PUT",
+            f"users/{super_admin_id}/reset-password",
+            400,
+            reset_data_self
+        )
+        
+        # Step 6: Verify audit log created for password reset
+        success6, audit_response = self.run_test(
+            "Check Audit Log for Password Reset",
+            "GET",
+            "audit-logs",
+            200,
+            params={"action": "UPDATE", "resource_type": "USER"}
+        )
+        
+        audit_found = False
+        if success6 and audit_response:
+            for log in audit_response:
+                if (log.get('resource_id') == test_user_id and 
+                    log.get('action') == 'UPDATE' and 
+                    log.get('new_data', {}).get('password') == '***'):
+                    audit_found = True
+                    break
+        
+        if audit_found:
+            self.log_test("Password Reset Audit Log", True, "Audit log created for password reset")
+        else:
+            self.log_test("Password Reset Audit Log", False, "No audit log found for password reset")
+        
+        # Step 7: Test that user can login with new password
+        self.token = None  # Remove admin token for login test
+        success7, new_login_response = self.run_test(
+            "Login with New Password",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "test_dataentry@test.com", "password": "newpass123"}
+        )
+        
+        # Step 8: Test that old password no longer works
+        success8, _ = self.run_test(
+            "Login with Old Password (Should Fail)",
+            "POST",
+            "auth/login",
+            401,
+            data={"email": "test_dataentry@test.com", "password": "test123"}
+        )
+        
+        # Cleanup: Delete test user
+        self.token = super_admin_token
+        self.run_test("Cleanup Test User", "DELETE", f"users/{test_user_id}", 200)
+        
+        # Restore original token
+        self.token = admin_token
+        
+        # Overall success check
+        all_tests_passed = all([success1, success2, success3, success4, success5, audit_found, success7, success8])
+        
+        if all_tests_passed:
+            self.log_test("Super Admin Password Reset Feature", True, "All password reset tests passed")
+        else:
+            failed_tests = []
+            if not success1: failed_tests.append("Super Admin Login")
+            if not success2: failed_tests.append("Create Test User")
+            if not success3: failed_tests.append("Valid Password Reset")
+            if not success4: failed_tests.append("Short Password Validation")
+            if not success5: failed_tests.append("Self Reset Prevention")
+            if not audit_found: failed_tests.append("Audit Log Creation")
+            if not success7: failed_tests.append("New Password Login")
+            if not success8: failed_tests.append("Old Password Rejection")
+            
+            self.log_test("Super Admin Password Reset Feature", False, f"Failed tests: {', '.join(failed_tests)}")
+        
+        return all_tests_passed
+
+    def test_data_entry_role_access_restrictions(self):
+        """Test Data Entry Role Access Restrictions comprehensively"""
+        print("\n🛡️ Testing Data Entry Role Access Restrictions...")
+        
+        # Step 1: Login as Super Admin to create data entry user
+        success1, admin_login_response = self.run_test(
+            "Admin Login for Role Testing",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "admin@kawalecranes.com", "password": "admin123"}
+        )
+        
+        if not success1 or 'access_token' not in admin_login_response:
+            return self.log_test("Data Entry Role Access Restrictions", False, "Failed to login as Admin")
+        
+        admin_token = admin_login_response['access_token']
+        self.token = admin_token
+        
+        # Step 2: Create data entry user
+        data_entry_user = {
+            "email": "dataentry_test@kawalecranes.com",
+            "full_name": "Data Entry Test User",
+            "password": "dataentry123",
+            "role": "data_entry"
+        }
+        
+        success2, create_response = self.run_test(
+            "Create Data Entry User",
+            "POST",
+            "auth/register",
+            200,
+            data_entry_user
+        )
+        
+        if not success2 or 'id' not in create_response:
+            return self.log_test("Data Entry Role Access Restrictions", False, "Failed to create data entry user")
+        
+        data_entry_user_id = create_response['id']
+        
+        # Step 3: Login as data entry user
+        success3, de_login_response = self.run_test(
+            "Data Entry User Login",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "dataentry_test@kawalecranes.com", "password": "dataentry123"}
+        )
+        
+        if not success3 or 'access_token' not in de_login_response:
+            self.token = admin_token
+            self.run_test("Cleanup Data Entry User", "DELETE", f"users/{data_entry_user_id}", 200)
+            return self.log_test("Data Entry Role Access Restrictions", False, "Failed to login as data entry user")
+        
+        data_entry_token = de_login_response['access_token']
+        self.token = data_entry_token
+        
+        # Step 4: Test what Data Entry user CAN access
+        print("   Testing Data Entry user ALLOWED access...")
+        
+        # Can view rates
+        success4a, _ = self.run_test("Data Entry - View Rates (Should Work)", "GET", "rates", 200)
+        
+        # Can create orders
+        test_order = {
+            "customer_name": "Data Entry Test Order",
+            "phone": "9876543999",
+            "order_type": "cash",
+            "cash_vehicle_name": "Test Vehicle",
+            "amount_received": 1000.0
+        }
+        success4b, order_response = self.run_test("Data Entry - Create Order (Should Work)", "POST", "orders", 200, test_order)
+        
+        created_order_id = None
+        if success4b and 'id' in order_response:
+            created_order_id = order_response['id']
+        
+        # Can view orders
+        success4c, _ = self.run_test("Data Entry - View Orders (Should Work)", "GET", "orders", 200)
+        
+        # Can edit orders
+        success4d = True
+        if created_order_id:
+            update_data = {"customer_name": "Updated by Data Entry"}
+            success4d, _ = self.run_test("Data Entry - Edit Order (Should Work)", "PUT", f"orders/{created_order_id}", 200, update_data)
+        
+        # Step 5: Test what Data Entry user CANNOT access
+        print("   Testing Data Entry user FORBIDDEN access...")
+        
+        # Cannot access audit logs
+        success5a, _ = self.run_test("Data Entry - Audit Logs (Should Fail)", "GET", "audit-logs", 403)
+        
+        # Cannot access expense reports
+        success5b, _ = self.run_test("Data Entry - Expense Report (Should Fail)", "GET", "reports/expense-by-driver", 403, params={"month": 10, "year": 2024})
+        
+        # Cannot access revenue reports
+        success5c, _ = self.run_test("Data Entry - Revenue Report (Should Fail)", "GET", "reports/revenue-by-vehicle-type", 403, params={"month": 10, "year": 2024})
+        
+        # Cannot access import excel
+        success5d, _ = self.run_test("Data Entry - Import Excel (Should Fail)", "POST", "import/excel", 403)
+        
+        # Cannot edit rates
+        if success4a:  # If we got rates successfully, try to edit one
+            # Get a rate ID first
+            rates_response = self.run_test("Get Rates for Edit Test", "GET", "rates", 200)[1]
+            if rates_response and len(rates_response) > 0:
+                rate_id = rates_response[0]['id']
+                update_rate_data = {"base_rate": 1500}
+                success5e, _ = self.run_test("Data Entry - Edit Rate (Should Fail)", "PUT", f"rates/{rate_id}", 403, update_rate_data)
+            else:
+                success5e = True  # No rates to test with, consider it passed
+        else:
+            success5e = True
+        
+        # Cannot create rates
+        new_rate_data = {
+            "name_of_firm": "Test Firm",
+            "company_name": "Test Company",
+            "service_type": "Test Service",
+            "base_rate": 1000,
+            "rate_per_km_beyond": 10
+        }
+        success5f, _ = self.run_test("Data Entry - Create Rate (Should Fail)", "POST", "rates", 403, new_rate_data)
+        
+        # Cannot delete rates
+        if success4a:  # If we got rates successfully, try to delete one
+            rates_response = self.run_test("Get Rates for Delete Test", "GET", "rates", 200)[1]
+            if rates_response and len(rates_response) > 0:
+                rate_id = rates_response[0]['id']
+                success5g, _ = self.run_test("Data Entry - Delete Rate (Should Fail)", "DELETE", f"rates/{rate_id}", 403)
+            else:
+                success5g = True  # No rates to test with, consider it passed
+        else:
+            success5g = True
+        
+        # Cannot access user management
+        success5h, _ = self.run_test("Data Entry - User Management (Should Fail)", "GET", "users", 403)
+        
+        # Step 6: Test Admin/Super Admin access still works
+        print("   Testing Admin access still works...")
+        self.token = admin_token
+        
+        # Admin can access reports
+        success6a, _ = self.run_test("Admin - Expense Report (Should Work)", "GET", "reports/expense-by-driver", 200, params={"month": 10, "year": 2024})
+        
+        # Admin can edit rates
+        if success4a:
+            rates_response = self.run_test("Get Rates for Admin Edit Test", "GET", "rates", 200)[1]
+            if rates_response and len(rates_response) > 0:
+                rate_id = rates_response[0]['id']
+                update_rate_data = {"base_rate": 1600}
+                success6b, _ = self.run_test("Admin - Edit Rate (Should Work)", "PUT", f"rates/{rate_id}", 200, update_rate_data)
+            else:
+                success6b = True
+        else:
+            success6b = True
+        
+        # Admin can access user management
+        success6c, _ = self.run_test("Admin - User Management (Should Work)", "GET", "users", 200)
+        
+        # Cleanup: Delete test order and user
+        if created_order_id:
+            self.run_test("Cleanup Test Order", "DELETE", f"orders/{created_order_id}", 200)
+        
+        self.run_test("Cleanup Data Entry User", "DELETE", f"users/{data_entry_user_id}", 200)
+        
+        # Overall success check
+        allowed_access_tests = [success4a, success4b, success4c, success4d]
+        forbidden_access_tests = [success5a, success5b, success5c, success5d, success5e, success5f, success5g, success5h]
+        admin_access_tests = [success6a, success6b, success6c]
+        
+        all_allowed_passed = all(allowed_access_tests)
+        all_forbidden_passed = all(forbidden_access_tests)
+        all_admin_passed = all(admin_access_tests)
+        
+        overall_success = all_allowed_passed and all_forbidden_passed and all_admin_passed
+        
+        if overall_success:
+            self.log_test("Data Entry Role Access Restrictions", True, "All role access restriction tests passed")
+        else:
+            failed_categories = []
+            if not all_allowed_passed: failed_categories.append("Data Entry Allowed Access")
+            if not all_forbidden_passed: failed_categories.append("Data Entry Forbidden Access")
+            if not all_admin_passed: failed_categories.append("Admin Access Verification")
+            
+            self.log_test("Data Entry Role Access Restrictions", False, f"Failed categories: {', '.join(failed_categories)}")
+        
+        return overall_success
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
