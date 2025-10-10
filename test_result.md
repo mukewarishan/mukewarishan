@@ -345,9 +345,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "SK Rates Calculation System"
+    - "Backend Mandatory Fields Validation"
   stuck_tasks: 
     - "Google Sheets API Integration"
+    - "Backend Mandatory Fields Validation"
   test_all: false
   test_priority: "high_first"
 
