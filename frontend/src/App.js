@@ -3366,6 +3366,117 @@ const RatesManagement = () => {
             </div>
           </div>
         )}
+
+        {/* Create New Rate Dialog */}
+        {showCreateDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4">Create New Rate</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label>Name of Firm</Label>
+                  <Select value={newRate.name_of_firm} onValueChange={(value) => setNewRate(prev => ({...prev, name_of_firm: value}))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select firm" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Kawale Cranes">Kawale Cranes</SelectItem>
+                      <SelectItem value="Sarang Cranes">Sarang Cranes</SelectItem>
+                      <SelectItem value="Vidharbha Towing">Vidharbha Towing</SelectItem>
+                      <SelectItem value="Vira Towing">Vira Towing</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>Company Name</Label>
+                  <Select value={newRate.company_name} onValueChange={(value) => setNewRate(prev => ({...prev, company_name: value}))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Europ Assistance">Europ Assistance</SelectItem>
+                      <SelectItem value="Mondial">Mondial</SelectItem>
+                      <SelectItem value="TVS">TVS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>Service Type</Label>
+                  <Select value={newRate.service_type} onValueChange={(value) => setNewRate(prev => ({...prev, service_type: value}))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select service type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2 Wheeler Towing">2 Wheeler Towing</SelectItem>
+                      <SelectItem value="Under-lift">Under-lift</SelectItem>
+                      <SelectItem value="FBT">FBT</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>Base Rate (₹)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={newRate.base_rate}
+                    onChange={(e) => setNewRate(prev => ({...prev, base_rate: e.target.value}))}
+                    placeholder="Base rate"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Base Distance (km)</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={newRate.base_distance_km}
+                    onChange={(e) => setNewRate(prev => ({...prev, base_distance_km: e.target.value}))}
+                    placeholder="Base distance in km"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Rate per km Beyond Base (₹)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={newRate.rate_per_km_beyond}
+                    onChange={(e) => setNewRate(prev => ({...prev, rate_per_km_beyond: e.target.value}))}
+                    placeholder="Rate per km beyond base distance"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCreateDialog(false);
+                    setNewRate({
+                      name_of_firm: '',
+                      company_name: '',
+                      service_type: '',
+                      base_rate: '',
+                      base_distance_km: '40',
+                      rate_per_km_beyond: ''
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateRate}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Create Rate
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
