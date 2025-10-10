@@ -259,6 +259,18 @@ frontend:
         agent: "main"
         comment: "Moved Incentive Amount & Reason fields to Costs & Charges tab. Now only visible for Cash orders and Admin/Super Admin users. Fields auto-clear when switching to Company order type."
 
+  - task: "Revenue Calculation System"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added revenue calculation display for company orders. Shows base revenue, incentive amount, and total revenue with calculation details from SK rates."
+
   - task: "PDF Export Button"
     implemented: true
     working: true
