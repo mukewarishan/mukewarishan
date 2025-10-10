@@ -77,6 +77,21 @@ class CraneOrderAPITester:
             details = f"Request failed: {str(e)}"
             return self.log_test(name, False, details), {}
 
+    def test_login(self):
+        """Test admin login and get token"""
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "admin@kawalecranes.com", "password": "admin123"}
+        )
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            self.log_test("Token Obtained", True, f"Token length: {len(self.token)}")
+            return True
+        return False
+
     def test_root_endpoint(self):
         """Test root API endpoint"""
         return self.run_test("Root Endpoint", "GET", "", 200)
