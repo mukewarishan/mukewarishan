@@ -646,6 +646,14 @@ const Dashboard = () => {
                   <div key={order.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-3">
+                        {hasRole(['super_admin', 'admin']) && (
+                          <input
+                            type="checkbox"
+                            checked={selectedOrders.includes(order.id)}
+                            onChange={() => handleSelectOrder(order.id)}
+                            className="rounded border-slate-300"
+                          />
+                        )}
                         <Badge 
                           className={order.order_type === 'cash' 
                             ? 'bg-green-100 text-green-800 hover:bg-green-200' 
