@@ -1393,44 +1393,48 @@ const OrderForm = ({ orderId = null }) => {
                   </div>
                   
                   {formData.order_type === 'company' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <Label htmlFor="name_of_firm" className="text-sm font-medium text-slate-700">
-                          Name of Firm *
-                        </Label>
-                        <Input
-                          id="name_of_firm"
-                          value={formData.name_of_firm}
-                          onChange={(e) => handleInputChange('name_of_firm', e.target.value)}
-                          placeholder="Enter firm name"
-                          className="mt-1"
-                        />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label htmlFor="name_of_firm" className="text-sm font-medium text-slate-700">
+                            Name of Firm *
+                          </Label>
+                          <Input
+                            id="name_of_firm"
+                            value={formData.name_of_firm}
+                            onChange={(e) => handleInputChange('name_of_firm', e.target.value)}
+                            placeholder="Enter firm name"
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="company_name" className="text-sm font-medium text-slate-700">
+                            Company Name (Secondary)
+                          </Label>
+                          <Input
+                            id="company_name"
+                            value={formData.company_name}
+                            onChange={(e) => handleInputChange('company_name', e.target.value)}
+                            placeholder="Additional company information"
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="case_id_file_number" className="text-sm font-medium text-slate-700">
-                          Case ID / File Number
-                        </Label>
-                        <Input
-                          id="case_id_file_number"
-                          value={formData.case_id_file_number}
-                          onChange={(e) => handleInputChange('case_id_file_number', e.target.value)}
-                          placeholder="Enter case ID"
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="company_name" className="text-sm font-medium text-slate-700">
-                          Company Name (Secondary)
-                        </Label>
-                        <Input
-                          id="company_name"
-                          value={formData.company_name}
-                          onChange={(e) => handleInputChange('company_name', e.target.value)}
-                          placeholder="Additional company information"
-                          className="mt-1"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label htmlFor="case_id_file_number" className="text-sm font-medium text-slate-700">
+                            Case ID / File Number
+                          </Label>
+                          <Input
+                            id="case_id_file_number"
+                            value={formData.case_id_file_number}
+                            onChange={(e) => handleInputChange('case_id_file_number', e.target.value)}
+                            placeholder="Enter case ID"
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
