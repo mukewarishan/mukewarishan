@@ -364,6 +364,9 @@ const Dashboard = () => {
       
       const response = await axios.get(`${API}/orders?${params.toString()}`);
       setOrders(response.data);
+      
+      // Fetch financials for company orders
+      await fetchFinancialsForCompanyOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
       if (error.response?.status === 401) {
