@@ -380,6 +380,28 @@ const Dashboard = () => {
     }
   };
 
+  const fetchFinancialsForCompanyOrders = async (ordersList) => {
+    try {
+      const companyOrders = ordersList.filter(order => order.order_type === 'company');
+      const financialsData = {};
+      
+      // Fetch financials for each company order
+      for (const order of companyOrders) {
+        try {
+          const response = await axios.get(`${API}/orders/${order.id}/financials`);
+          financialsData[order.id] = response.data;
+        } catch (error) {
+          console.error(`Error fetching financials for order ${order.id}:`, error);
+          // Continue with other orders even if one fails
+        }
+      }
+      
+      setOrderFinancials(financialsData);
+    } catch (error) {
+      console.error('Error fetching order financials:', error);
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const response = await axios.get(`${API}/orders/stats/summary`);
