@@ -120,6 +120,18 @@ backend:
         agent: "testing"
         comment: "Tested Google Sheets export endpoint. Returns HTTP 500 as expected due to missing environment variables (GOOGLE_SERVICE_ACCOUNT_KEY_PATH and GOOGLE_SHEETS_SPREADSHEET_ID). Implementation is correct but requires configuration to work."
 
+  - task: "SK Rates Calculation System"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented complete rate calculation system based on SK_Rates.xlsx. Added ServiceRate model, calculation functions, financials endpoint, and auto-initialization of rates on startup. Calculates base revenue + per-km charges + incentive amounts."
+
   - task: "PDF Export"
     implemented: true
     working: true
