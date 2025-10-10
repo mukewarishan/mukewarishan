@@ -1168,6 +1168,8 @@ const UserManagement = () => {
 const DataImport = () => {
   const [importing, setImporting] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const handleImport = async () => {
     setImporting(true);
