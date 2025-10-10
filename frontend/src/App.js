@@ -2610,8 +2610,19 @@ const Reports = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [expenseData, setExpenseData] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
+  const [towingVehicleData, setTowingVehicleData] = useState([]);
+  const [customReportData, setCustomReportData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('expense');
+  
+  // Custom report configuration
+  const [customConfig, setCustomConfig] = useState({
+    start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    end_date: new Date().toISOString().split('T')[0],
+    group_by: 'order_type',
+    report_type: 'summary',
+    order_types: ['cash', 'company']
+  });
 
   const months = [
     { value: 1, label: 'January' },
