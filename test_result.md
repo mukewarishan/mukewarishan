@@ -122,15 +122,18 @@ backend:
 
   - task: "SK Rates Calculation System"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented complete rate calculation system based on SK_Rates.xlsx. Added ServiceRate model, calculation functions, financials endpoint, and auto-initialization of rates on startup. Calculates base revenue + per-km charges + incentive amounts."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE SK RATES TESTING COMPLETED: Service rates properly initialized (17 rates found), /api/rates endpoint working ✅, rate structure correct ✅, financial calculations accurate ✅. Base distance (≤40km): ₹1200 ✅, Beyond distance (65km): ₹2125 (1700+25*17) ✅, With incentive: Base+Incentive=Total ✅, No rate found handling ✅, Cash orders return 0 ✅. All rate calculation logic working perfectly for Kawale Cranes, Vidharbha Towing, Sarang Cranes, Vira Towing with Europ Assistance, Mondial, TVS companies."
 
   - task: "PDF Export"
     implemented: true
