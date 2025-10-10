@@ -276,7 +276,7 @@ def parse_from_mongo(item):
     if not item:
         return item
     
-    datetime_fields = ['added_time', 'date_time', 'reach_time', 'drop_time', 'created_at', 'updated_at', 'last_login', 'timestamp']
+    datetime_fields = ['added_time', 'date_time', 'reach_time', 'drop_time', 'created_at', 'updated_at', 'last_login', 'timestamp', 'incentive_added_at']
     for field in datetime_fields:
         if field in item and isinstance(item[field], str):
             try:
