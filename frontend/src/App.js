@@ -1854,6 +1854,19 @@ const OrderForm = ({ orderId = null }) => {
                             className="mt-1"
                           />
                         </div>
+                        
+                        <div>
+                          <Label htmlFor="cash_diesel_refill_location" className="text-sm font-medium text-slate-700">
+                            Diesel Refill Location
+                          </Label>
+                          <Input
+                            id="cash_diesel_refill_location"
+                            value={formData.cash_diesel_refill_location}
+                            onChange={(e) => handleInputChange('cash_diesel_refill_location', e.target.value)}
+                            placeholder="Where diesel was refilled"
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
