@@ -961,6 +961,72 @@ const UserManagement = () => {
                 </form>
               </DialogContent>
             </Dialog>
+
+            {/* Edit User Dialog */}
+            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit User</DialogTitle>
+                </DialogHeader>
+                {editingUser && (
+                  <form onSubmit={updateUser} className="space-y-4">
+                    <div>
+                      <Label>Email Address</Label>
+                      <Input
+                        value={editingUser.email}
+                        disabled
+                        className="bg-slate-50"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="edit_full_name">Full Name *</Label>
+                      <Input
+                        id="edit_full_name"
+                        value={editingUser.full_name}
+                        onChange={(e) => setEditingUser(prev => ({ ...prev, full_name: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="edit_role">Role *</Label>
+                      <Select value={editingUser.role} onValueChange={(value) => setEditingUser(prev => ({ ...prev, role: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="data_entry">Data Entry Operator</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="edit_is_active"
+                        checked={editingUser.is_active}
+                        onChange={(e) => setEditingUser(prev => ({ ...prev, is_active: e.target.checked }))}
+                        className="rounded"
+                      />
+                      <Label htmlFor="edit_is_active">Active User</Label>
+                    </div>
+                    
+                    <div className="flex justify-end space-x-2">
+                      <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={updating}>
+                        {updating ? 'Updating...' : 'Update User'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           
           <CardContent>
