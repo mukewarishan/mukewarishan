@@ -2228,7 +2228,7 @@ const OrderForm = ({ orderId = null }) => {
                         
                         <div>
                           <Label className="text-sm font-medium text-slate-700">
-                            Towing Vehicle
+                            Towing Vehicle <span className="text-red-500">*</span>
                           </Label>
                           <Select 
                             value={formData.company_towing_vehicle} 
