@@ -3,9 +3,10 @@ from pymongo import MongoClient
 
 # MongoDB connection
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'test_database')
 client = MongoClient(MONGO_URL)
-db = client['crane_orders_db']
-orders_collection = db['orders']
+db = client[DB_NAME]
+orders_collection = db['crane_orders']
 
 print("=" * 60)
 print("VERIFICATION OF IMPORTED DATA")
