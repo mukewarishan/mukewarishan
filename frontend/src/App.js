@@ -2374,6 +2374,38 @@ const OrderForm = ({ orderId = null }) => {
                             className="mt-1"
                           />
                         </div>
+                        
+                        {/* Incentive Fields - Admin Only for Cash Orders */}
+                        {hasRole(['super_admin', 'admin']) && (
+                          <>
+                            <div>
+                              <Label htmlFor="incentive_amount" className="text-sm font-medium text-slate-700">
+                                Incentive Amount (₹)
+                              </Label>
+                              <Input
+                                id="incentive_amount"
+                                type="number"
+                                step="0.01"
+                                value={formData.incentive_amount}
+                                onChange={(e) => handleInputChange('incentive_amount', e.target.value)}
+                                placeholder="Enter incentive amount"
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="incentive_reason" className="text-sm font-medium text-slate-700">
+                                Incentive Reason
+                              </Label>
+                              <Input
+                                id="incentive_reason"
+                                value={formData.incentive_reason}
+                                onChange={(e) => handleInputChange('incentive_reason', e.target.value)}
+                                placeholder="Reason for incentive (optional)"
+                                className="mt-1"
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
