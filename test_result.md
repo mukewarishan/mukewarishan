@@ -483,7 +483,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Google Sheets API Integration"
+    - "Super Admin Password Reset Feature"
+    - "Data Entry Role Access Restrictions"
   stuck_tasks: 
     - "Google Sheets API Integration"
   test_all: false
