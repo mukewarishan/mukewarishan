@@ -855,6 +855,25 @@ const Dashboard = () => {
                             Case ID: {order.case_id_file_number}
                           </p>
                         )}
+                        {order.order_type === 'company' && orderFinancials[order.id] && (
+                          <div className="mt-1">
+                            {orderFinancials[order.id].total_revenue > 0 && (
+                              <p className="text-lg font-bold text-blue-600">
+                                ₹{orderFinancials[order.id].total_revenue.toLocaleString('en-IN')}
+                              </p>
+                            )}
+                            {orderFinancials[order.id].base_revenue > 0 && (
+                              <p className="text-xs text-slate-500">
+                                Base: ₹{orderFinancials[order.id].base_revenue.toLocaleString('en-IN')}
+                              </p>
+                            )}
+                            {orderFinancials[order.id].calculation_details && (
+                              <p className="text-xs text-slate-400 truncate" title={orderFinancials[order.id].calculation_details}>
+                                {orderFinancials[order.id].calculation_details}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         {hasRole(['super_admin', 'admin']) && order.incentive_amount && (
                           <div className="mt-2 p-2 bg-orange-100 border border-orange-200 rounded text-xs">
                             <p className="text-orange-800 font-semibold">
