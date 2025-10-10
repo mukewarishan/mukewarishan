@@ -1419,6 +1419,19 @@ const OrderForm = ({ orderId = null }) => {
                           className="mt-1"
                         />
                       </div>
+                      
+                      <div>
+                        <Label htmlFor="company_name" className="text-sm font-medium text-slate-700">
+                          Company Name (Secondary)
+                        </Label>
+                        <Input
+                          id="company_name"
+                          value={formData.company_name}
+                          onChange={(e) => handleInputChange('company_name', e.target.value)}
+                          placeholder="Additional company information"
+                          className="mt-1"
+                        />
+                      </div>
                     </div>
                   )}
                 </TabsContent>
