@@ -932,20 +932,32 @@ class CraneOrderAPITester:
 
     def run_all_tests(self):
         """Run all API tests"""
-        print("🚀 Starting Crane Orders API Tests")
+        print("🚀 Starting Kawale Cranes Backend API Tests")
         print(f"📍 Testing API at: {self.api_url}")
-        print("=" * 60)
+        print("=" * 80)
 
         # First login to get authentication token
         if not self.test_login():
             print("❌ Login failed, stopping tests")
             return 1
 
-        # Test sequence
+        # Test sequence - organized by functionality
         test_methods = [
+            # Core API Tests
             self.test_root_endpoint,
+            
+            # Authentication System Tests
+            self.test_authentication_system,
+            
+            # Order Management CRUD Tests
             self.test_create_cash_order,
             self.test_create_company_order,
+            self.test_get_all_orders,
+            self.test_get_single_order,
+            self.test_update_order,
+            self.test_delete_order,
+            
+            # Advanced Order Features Tests
             self.test_cash_order_with_driver_dropdown,
             self.test_company_order_with_dropdowns,
             self.test_care_off_fields_cash_order,
@@ -958,16 +970,36 @@ class CraneOrderAPITester:
             self.test_all_driver_options,
             self.test_all_firm_options,
             self.test_all_company_options,
-            self.test_get_all_orders,
+            
+            # Filtering and Search Tests
+            self.test_filtering_functionality,
             self.test_get_orders_with_filters,
-            self.test_get_single_order,
-            self.test_update_order,
+            
+            # User Management Tests (Super Admin functionality)
+            self.test_user_management_endpoints,
+            
+            # Role-Based Access Control Tests
+            self.test_role_based_access_control,
+            
+            # Export Endpoints Tests
+            self.test_export_endpoints,
+            
+            # Audit Logging Tests
+            self.test_audit_logging,
+            
+            # MongoDB Connection Tests
+            self.test_mongodb_connections,
+            
+            # Advanced Order Operations
             self.test_update_order_with_care_off,
             self.test_update_order_with_incentive,
             self.test_mixed_order_types_with_features,
             self.test_bulk_delete_multiple_orders,
+            
+            # Statistics and Summary Tests
             self.test_get_stats_summary,
-            self.test_delete_order,
+            
+            # Error Handling Tests
             self.test_invalid_endpoints
         ]
 
@@ -982,22 +1014,40 @@ class CraneOrderAPITester:
         self.cleanup_created_orders()
 
         # Print summary
-        print("=" * 60)
-        print(f"📊 TEST SUMMARY")
+        print("=" * 80)
+        print(f"📊 COMPREHENSIVE TEST SUMMARY")
         print(f"Total Tests: {self.tests_run}")
         print(f"Passed: {self.tests_passed}")
         print(f"Failed: {self.tests_run - self.tests_passed}")
         print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        # Categorize results
+        failed_tests = [result for result in self.test_results if not result['success']]
+        critical_failures = []
+        minor_failures = []
+        
+        for result in failed_tests:
+            if any(keyword in result['test_name'].lower() for keyword in ['login', 'auth', 'create', 'delete', 'export']):
+                critical_failures.append(result)
+            else:
+                minor_failures.append(result)
         
         if self.tests_passed == self.tests_run:
             print("🎉 All tests passed!")
             return 0
         else:
             print("❌ Some tests failed!")
-            print("\nFailed Tests:")
-            for result in self.test_results:
-                if not result['success']:
+            
+            if critical_failures:
+                print(f"\n🚨 CRITICAL FAILURES ({len(critical_failures)}):")
+                for result in critical_failures:
                     print(f"  - {result['test_name']}: {result['details']}")
+            
+            if minor_failures:
+                print(f"\n⚠️ MINOR FAILURES ({len(minor_failures)}):")
+                for result in minor_failures:
+                    print(f"  - {result['test_name']}: {result['details']}")
+            
             return 1
 
 def main():
