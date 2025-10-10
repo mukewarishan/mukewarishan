@@ -2074,6 +2074,133 @@ class CraneOrderAPITester:
         print("=" * 60)
         return all_comprehensive_passed
 
+    def test_dashboard_orders_issue_focused(self):
+        """Focused test for dashboard orders issue - Pydantic validation errors"""
+        print("\n🎯 FOCUSED TEST: Dashboard Orders Issue (Pydantic Validation)")
+        print("=" * 60)
+        
+        # Test 1: GET /api/orders - Check if it returns orders without Pydantic validation errors
+        print("\n1. Testing GET /api/orders endpoint...")
+        success1, response1 = self.run_test("Get All Orders (Dashboard)", "GET", "orders", 200)
+        
+        if success1 and response1:
+            orders = response1 if isinstance(response1, list) else []
+            self.log_test("Orders Retrieved Successfully", True, f"Retrieved {len(orders)} orders")
+            
+            # Check for both cash and company orders
+            cash_orders = [o for o in orders if o.get('order_type') == 'cash']
+            company_orders = [o for o in orders if o.get('order_type') == 'company']
+            
+            self.log_test("Cash Orders Present", len(cash_orders) > 0, f"Found {len(cash_orders)} cash orders")
+            self.log_test("Company Orders Present", len(company_orders) > 0, f"Found {len(company_orders)} company orders")
+            
+            # Check for Pydantic validation issues in company orders
+            pydantic_issues = []
+            for order in company_orders:
+                # Check for None values in company fields that should be strings
+                company_fields = ['company_name', 'company_service_type', 'company_driver_details', 'company_towing_vehicle']
+                for field in company_fields:
+                    if field in order and order[field] is None:
+                        pydantic_issues.append(f"Order {order.get('id', 'unknown')[:8]}: {field} is None")
+            
+            if pydantic_issues:
+                self.log_test("Pydantic Validation Check", False, f"Found issues: {'; '.join(pydantic_issues[:3])}")
+            else:
+                self.log_test("Pydantic Validation Check", True, "No None values found in company string fields")
+        else:
+            self.log_test("Orders Retrieved Successfully", False, "Failed to retrieve orders")
+        
+        # Test 2: GET /api/orders with filters
+        print("\n2. Testing filtered orders endpoints...")
+        success2, _ = self.run_test("Filter by Cash Orders", "GET", "orders", 200, params={"order_type": "cash"})
+        success3, _ = self.run_test("Filter by Company Orders", "GET", "orders", 200, params={"order_type": "company"})
+        
+        # Test 3: GET /api/orders/stats/summary
+        print("\n3. Testing orders stats endpoint...")
+        success4, stats_response = self.run_test("Get Orders Stats Summary", "GET", "orders/stats/summary", 200)
+        
+        if success4 and stats_response:
+            total_orders = stats_response.get('total_orders', 0)
+            by_type = stats_response.get('by_type', [])
+            self.log_test("Stats Summary Working", True, f"Total orders: {total_orders}, Types: {len(by_type)}")
+        else:
+            self.log_test("Stats Summary Working", False, "Stats endpoint failed")
+        
+        # Test 4: Create a company order to test validation
+        print("\n4. Testing company order creation (mandatory fields)...")
+        company_order_test = {
+            "customer_name": "Dashboard Test Company",
+            "phone": "9876543999",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": "Tata ACE",
+            "case_id_file_number": "DASH001"
+        }
+        
+        success5, create_response = self.run_test("Create Company Order (Dashboard Test)", "POST", "orders", 200, company_order_test)
+        if success5 and create_response and 'id' in create_response:
+            self.created_orders.append(create_response['id'])
+            
+            # Verify the created order doesn't have None values
+            company_fields = ['company_name', 'company_service_type', 'company_driver_details', 'company_towing_vehicle']
+            all_fields_valid = True
+            for field in company_fields:
+                if create_response.get(field) is None or create_response.get(field) == '':
+                    all_fields_valid = False
+                    break
+            
+            self.log_test("Created Order Validation", all_fields_valid, "Company order created with valid mandatory fields")
+        
+        # Overall dashboard test result
+        overall_success = success1 and success2 and success3 and success4 and success5
+        
+        if overall_success:
+            self.log_test("🎯 DASHBOARD ORDERS ISSUE TEST", True, "All dashboard orders tests passed - no Pydantic validation errors detected")
+        else:
+            failed_tests = []
+            if not success1: failed_tests.append("Get Orders")
+            if not success2: failed_tests.append("Filter Cash")
+            if not success3: failed_tests.append("Filter Company")
+            if not success4: failed_tests.append("Stats Summary")
+            if not success5: failed_tests.append("Create Company Order")
+            
+            self.log_test("🎯 DASHBOARD ORDERS ISSUE TEST", False, f"Failed tests: {', '.join(failed_tests)}")
+        
+        return overall_success
+
+    def run_focused_dashboard_test(self):
+        """Run focused test for dashboard orders issue"""
+        print("🎯 FOCUSED DASHBOARD ORDERS TEST")
+        print(f"🌐 Testing against: {self.api_url}")
+        print("=" * 60)
+        
+        # Login first
+        if not self.test_login():
+            print("❌ Login failed. Cannot proceed with authenticated tests.")
+            return False
+        
+        # Run focused dashboard test
+        dashboard_success = self.test_dashboard_orders_issue_focused()
+        
+        # Cleanup any created orders
+        self.cleanup_created_orders()
+        
+        # Print focused summary
+        print("\n" + "=" * 60)
+        print(f"🎯 FOCUSED TEST SUMMARY")
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        if self.tests_passed == self.tests_run:
+            print("✅ ALL FOCUSED TESTS PASSED - Dashboard orders issue appears to be resolved!")
+        else:
+            print("❌ Some tests failed - Dashboard orders issue may still exist")
+        
+        return dashboard_success
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
