@@ -609,6 +609,29 @@ async def create_order(
     
     order_obj = CraneOrder(**order_dict)
     
+    # Validate mandatory fields for company orders
+    if order_obj.order_type == "company":
+        missing_fields = []
+        
+        if not order_obj.company_name or order_obj.company_name.strip() == "":
+            missing_fields.append("Company Name")
+        
+        if not order_obj.company_service_type or order_obj.company_service_type.strip() == "":
+            missing_fields.append("Service Type")
+        
+        if not order_obj.company_driver_details or order_obj.company_driver_details.strip() == "":
+            missing_fields.append("Driver")
+        
+        if not order_obj.company_towing_vehicle or order_obj.company_towing_vehicle.strip() == "":
+            missing_fields.append("Towing Vehicle")
+        
+        if missing_fields:
+            field_list = ", ".join(missing_fields)
+            raise HTTPException(
+                status_code=422, 
+                detail=f"The following fields are required for company orders: {field_list}"
+            )
+    
     # Convert to dict and serialize datetime fields for MongoDB
     doc = prepare_for_mongo(order_obj.model_dump())
     
