@@ -459,7 +459,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Excel Data Import - Kawale_Cranes_23092025.xlsx"
+    - "Google Sheets API Integration"
   stuck_tasks: 
     - "Google Sheets API Integration"
   test_all: false
