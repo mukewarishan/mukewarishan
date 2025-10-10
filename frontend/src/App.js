@@ -2505,6 +2505,51 @@ const OrderForm = ({ orderId = null }) => {
                             className="mt-1"
                           />
                         </div>
+                        
+                        <div>
+                          <Label htmlFor="company_diesel_refill_location_costs" className="text-sm font-medium text-slate-700">
+                            Diesel Refill Location
+                          </Label>
+                          <Input
+                            id="company_diesel_refill_location_costs"
+                            value={formData.company_diesel_refill_location}
+                            onChange={(e) => handleInputChange('company_diesel_refill_location', e.target.value)}
+                            placeholder="Where diesel was refilled"
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        {/* Incentive Fields - Admin Only for Company Orders */}
+                        {hasRole(['super_admin', 'admin']) && (
+                          <>
+                            <div>
+                              <Label htmlFor="incentive_amount_company" className="text-sm font-medium text-slate-700">
+                                Incentive Amount (₹)
+                              </Label>
+                              <Input
+                                id="incentive_amount_company"
+                                type="number"
+                                step="0.01"
+                                value={formData.incentive_amount}
+                                onChange={(e) => handleInputChange('incentive_amount', e.target.value)}
+                                placeholder="Enter incentive amount"
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="incentive_reason_company" className="text-sm font-medium text-slate-700">
+                                Incentive Reason
+                              </Label>
+                              <Input
+                                id="incentive_reason_company"
+                                value={formData.incentive_reason}
+                                onChange={(e) => handleInputChange('incentive_reason', e.target.value)}
+                                placeholder="Reason for incentive (optional)"
+                                className="mt-1"
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
