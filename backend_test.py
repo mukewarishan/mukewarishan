@@ -1316,6 +1316,9 @@ class CraneOrderAPITester:
             # Authentication System Tests
             self.test_authentication_system,
             
+            # SK Rates Calculation System Tests (PRIMARY FOCUS)
+            self.test_sk_rates_calculation_system,
+            
             # Order Management CRUD Tests
             self.test_create_cash_order,
             self.test_create_company_order,
