@@ -2792,8 +2792,12 @@ const Reports = () => {
   const handleMonthYearChange = () => {
     if (activeTab === 'expense') {
       fetchExpenseReport();
-    } else {
+    } else if (activeTab === 'revenue') {
       fetchRevenueReport();
+    } else if (activeTab === 'towing') {
+      fetchTowingVehicleReport();
+    } else if (activeTab === 'custom') {
+      fetchCustomReport();
     }
   };
 
