@@ -1734,46 +1734,6 @@ const OrderForm = ({ orderId = null }) => {
                     </div>
                   )}
                 </TabsContent>
-                
-                {/* Additional Info Tab */}
-                <TabsContent value="additional" className="space-y-6">
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">
-                      Additional Information
-                    </h3>
-                    
-                    {formData.order_type === 'cash' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Label htmlFor="care_off" className="text-sm font-medium text-slate-700">
-                            Care Off
-                          </Label>
-                          <Input
-                            id="care_off"
-                            value={formData.care_off}
-                            onChange={(e) => handleInputChange('care_off', e.target.value)}
-                            placeholder="Care off details"
-                            className="mt-1"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="diesel" className="text-sm font-medium text-slate-700">
-                            Diesel Name/Type
-                          </Label>
-                          <Input
-                            id="diesel"
-                            value={formData.diesel}
-                            onChange={(e) => handleInputChange('diesel', e.target.value)}
-                            placeholder="Diesel brand or type"
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                    )}
-                    
-                  </div>
-                </TabsContent>
               </Tabs>
               
               <Separator className="my-8" />
