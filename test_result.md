@@ -318,7 +318,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Google Sheets Export Button"
+    - "SK Rates Calculation System"
   stuck_tasks: 
     - "Google Sheets API Integration"
   test_all: false
