@@ -978,6 +978,9 @@ const UserManagement = () => {
                       <th className="text-left py-3 px-4 font-semibold text-slate-900">Status</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-900">Created</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-900">Last Login</th>
+                      {hasRole(['super_admin']) && (
+                        <th className="text-left py-3 px-4 font-semibold text-slate-900">Actions</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
