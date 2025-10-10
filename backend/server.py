@@ -718,6 +718,36 @@ async def update_order(
         update_dict = update_data.model_dump(exclude_unset=True, exclude_none=True)
         
         if update_dict:
+            # Create a combined dict of existing order + updates for validation
+            combined_data = {**existing_order, **update_dict}
+            
+            # Validate mandatory fields for company orders
+            if combined_data.get("order_type") == "company":
+                missing_fields = []
+                
+                company_name = combined_data.get("company_name", "")
+                if not company_name or (isinstance(company_name, str) and company_name.strip() == ""):
+                    missing_fields.append("Company Name")
+                
+                company_service_type = combined_data.get("company_service_type", "")
+                if not company_service_type or (isinstance(company_service_type, str) and company_service_type.strip() == ""):
+                    missing_fields.append("Service Type")
+                
+                company_driver_details = combined_data.get("company_driver_details", "")
+                if not company_driver_details or (isinstance(company_driver_details, str) and company_driver_details.strip() == ""):
+                    missing_fields.append("Driver")
+                
+                company_towing_vehicle = combined_data.get("company_towing_vehicle", "")
+                if not company_towing_vehicle or (isinstance(company_towing_vehicle, str) and company_towing_vehicle.strip() == ""):
+                    missing_fields.append("Towing Vehicle")
+                
+                if missing_fields:
+                    field_list = ", ".join(missing_fields)
+                    raise HTTPException(
+                        status_code=422, 
+                        detail=f"The following fields are required for company orders: {field_list}"
+                    )
+            
             # Add audit fields
             update_dict['updated_by'] = current_user["id"]
             update_dict['updated_at'] = datetime.now(timezone.utc)
