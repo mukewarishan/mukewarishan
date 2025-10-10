@@ -2060,7 +2060,7 @@ const OrderForm = ({ orderId = null }) => {
                         
                         <div>
                           <Label className="text-sm font-medium text-slate-700">
-                            Service Type
+                            Service Type <span className="text-red-500">*</span>
                           </Label>
                           <Select 
                             value={formData.cash_service_type} 
@@ -2209,7 +2209,7 @@ const OrderForm = ({ orderId = null }) => {
                         
                         <div>
                           <Label className="text-sm font-medium text-slate-700">
-                            Service Type
+                            Service Type <span className="text-red-500">*</span>
                           </Label>
                           <Select 
                             value={formData.company_service_type} 
