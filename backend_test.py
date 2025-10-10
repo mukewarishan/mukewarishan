@@ -479,6 +479,202 @@ class CraneOrderAPITester:
                 self.log_test("Care Off Update Verification", False, f"Care Off: {response.get('care_off')}, Amount: {response.get('care_off_amount')}")
         return False
 
+    def test_incentive_fields_admin_only(self):
+        """Test incentive fields for admin users"""
+        # Test creating order with incentive fields (admin only)
+        order_data = {
+            "customer_name": "Incentive Test User",
+            "phone": "9876543260",
+            "order_type": "cash",
+            "cash_trip_from": "Mumbai",
+            "cash_trip_to": "Pune",
+            "cash_vehicle_name": "Tata ACE",
+            "amount_received": 5000.0,
+            "incentive_amount": 500.0,
+            "incentive_reason": "Excellent service and quick delivery"
+        }
+        
+        success, response = self.run_test("Create Order with Incentive Fields", "POST", "orders", 200, order_data)
+        
+        if success and 'id' in response:
+            self.created_orders.append(response['id'])
+            # Verify incentive fields are stored correctly
+            incentive_amount_correct = response.get('incentive_amount') == 500.0
+            incentive_reason_correct = response.get('incentive_reason') == "Excellent service and quick delivery"
+            
+            if incentive_amount_correct and incentive_reason_correct:
+                self.log_test("Incentive Fields Verification", True, f"Amount: {response['incentive_amount']}, Reason: {response['incentive_reason']}")
+                return True
+            else:
+                self.log_test("Incentive Fields Verification", False, f"Amount: {response.get('incentive_amount')}, Reason: {response.get('incentive_reason')}")
+        return False
+
+    def test_incentive_fields_optional(self):
+        """Test that incentive fields are optional"""
+        order_data = {
+            "customer_name": "No Incentive Test",
+            "phone": "9876543261",
+            "order_type": "company",
+            "name_of_firm": "Kawale Cranes",
+            "company_name": "Mondial",
+            "case_id_file_number": "NOINC001"
+        }
+        
+        success, response = self.run_test("Create Order without Incentive Fields", "POST", "orders", 200, order_data)
+        
+        if success and 'id' in response:
+            self.created_orders.append(response['id'])
+            # Verify incentive fields are null when not provided
+            incentive_amount_null = response.get('incentive_amount') is None
+            incentive_reason_null = response.get('incentive_reason') is None
+            
+            if incentive_amount_null and incentive_reason_null:
+                self.log_test("Incentive Fields Optional Verification", True, "Incentive fields correctly null when not provided")
+                return True
+            else:
+                self.log_test("Incentive Fields Optional Verification", False, f"Amount: {response.get('incentive_amount')}, Reason: {response.get('incentive_reason')}")
+        return False
+
+    def test_reach_drop_time_company_orders(self):
+        """Test reach and drop time fields for company orders"""
+        from datetime import datetime, timezone
+        
+        reach_time = datetime.now(timezone.utc).isoformat()
+        drop_time = datetime.now(timezone.utc).isoformat()
+        
+        order_data = {
+            "customer_name": "Reach Drop Time Test",
+            "phone": "9876543262",
+            "order_type": "company",
+            "name_of_firm": "Kawale Cranes",
+            "company_name": "Mondial",
+            "case_id_file_number": "TIME001",
+            "company_trip_from": "Delhi",
+            "company_trip_to": "Gurgaon",
+            "reach_time": reach_time,
+            "drop_time": drop_time
+        }
+        
+        success, response = self.run_test("Create Company Order with Reach/Drop Time", "POST", "orders", 200, order_data)
+        
+        if success and 'id' in response:
+            self.created_orders.append(response['id'])
+            # Verify reach and drop time fields are stored
+            reach_time_stored = response.get('reach_time') is not None
+            drop_time_stored = response.get('drop_time') is not None
+            
+            if reach_time_stored and drop_time_stored:
+                self.log_test("Reach/Drop Time Fields Verification", True, f"Reach: {response.get('reach_time')}, Drop: {response.get('drop_time')}")
+                return True
+            else:
+                self.log_test("Reach/Drop Time Fields Verification", False, f"Reach: {response.get('reach_time')}, Drop: {response.get('drop_time')}")
+        return False
+
+    def test_bulk_delete_multiple_orders(self):
+        """Test bulk delete functionality by creating and deleting multiple orders"""
+        # Create multiple test orders for bulk delete
+        bulk_order_ids = []
+        
+        for i in range(3):
+            order_data = {
+                "customer_name": f"Bulk Delete Test {i+1}",
+                "phone": f"987654326{i+3}",
+                "order_type": "cash",
+                "cash_vehicle_name": f"Test Vehicle {i+1}",
+                "amount_received": 1000.0 * (i+1)
+            }
+            
+            success, response = self.run_test(f"Create Bulk Delete Test Order {i+1}", "POST", "orders", 200, order_data)
+            
+            if success and 'id' in response:
+                bulk_order_ids.append(response['id'])
+                self.created_orders.append(response['id'])
+        
+        # Now test deleting them one by one (simulating bulk delete)
+        deleted_count = 0
+        for order_id in bulk_order_ids:
+            success, _ = self.run_test(f"Delete Order {order_id[:8]}", "DELETE", f"orders/{order_id}", 200)
+            if success:
+                deleted_count += 1
+                if order_id in self.created_orders:
+                    self.created_orders.remove(order_id)
+        
+        if deleted_count == len(bulk_order_ids):
+            self.log_test("Bulk Delete Simulation", True, f"Successfully deleted {deleted_count} orders")
+            return True
+        else:
+            self.log_test("Bulk Delete Simulation", False, f"Only deleted {deleted_count} out of {len(bulk_order_ids)} orders")
+            return False
+
+    def test_update_order_with_incentive(self):
+        """Test updating an existing order with incentive fields"""
+        if not self.created_orders:
+            return self.log_test("Update Order with Incentive", False, "No orders created to test with")
+        
+        order_id = self.created_orders[0]
+        update_data = {
+            "incentive_amount": 750.0,
+            "incentive_reason": "Updated incentive for exceptional performance"
+        }
+        
+        success, response = self.run_test("Update Order with Incentive Fields", "PUT", f"orders/{order_id}", 200, update_data)
+        
+        if success and response:
+            # Verify the update worked
+            incentive_amount_updated = response.get('incentive_amount') == 750.0
+            incentive_reason_updated = response.get('incentive_reason') == "Updated incentive for exceptional performance"
+            
+            if incentive_amount_updated and incentive_reason_updated:
+                self.log_test("Incentive Update Verification", True, "Incentive fields updated successfully")
+                return True
+            else:
+                self.log_test("Incentive Update Verification", False, f"Amount: {response.get('incentive_amount')}, Reason: {response.get('incentive_reason')}")
+        return False
+
+    def test_mixed_order_types_with_features(self):
+        """Test creating orders with all new features combined"""
+        # Cash order with incentive and care off
+        cash_order = {
+            "customer_name": "Mixed Features Cash",
+            "phone": "9876543270",
+            "order_type": "cash",
+            "cash_trip_from": "Mumbai",
+            "cash_trip_to": "Pune",
+            "cash_vehicle_name": "Tata ACE",
+            "amount_received": 5000.0,
+            "care_off": "Regular customer discount",
+            "care_off_amount": 200.0,
+            "incentive_amount": 300.0,
+            "incentive_reason": "Quick response time"
+        }
+        
+        success1, response1 = self.run_test("Create Cash Order with All Features", "POST", "orders", 200, cash_order)
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+        
+        # Company order with incentive and reach/drop times
+        from datetime import datetime, timezone
+        company_order = {
+            "customer_name": "Mixed Features Company",
+            "phone": "9876543271",
+            "order_type": "company",
+            "name_of_firm": "Kawale Cranes",
+            "company_name": "Mondial",
+            "case_id_file_number": "MIX001",
+            "company_trip_from": "Delhi",
+            "company_trip_to": "Gurgaon",
+            "reach_time": datetime.now(timezone.utc).isoformat(),
+            "drop_time": datetime.now(timezone.utc).isoformat(),
+            "incentive_amount": 400.0,
+            "incentive_reason": "Handled complex case efficiently"
+        }
+        
+        success2, response2 = self.run_test("Create Company Order with All Features", "POST", "orders", 200, company_order)
+        if success2 and 'id' in response2:
+            self.created_orders.append(response2['id'])
+        
+        return success1 and success2
+
     def cleanup_created_orders(self):
         """Clean up any remaining test orders"""
         print("\n🧹 Cleaning up test orders...")
