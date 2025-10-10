@@ -3392,7 +3392,15 @@ class CraneOrderAPITester:
             print("❌ Login failed, stopping tests")
             return 1
 
-        # Run review request priorities first
+        # Run Excel Import Verification first - PRIMARY FOCUS
+        print("\n🎯 EXCEL IMPORT VERIFICATION - PRIMARY FOCUS")
+        print("=" * 80)
+        self.test_excel_import_verification()
+        self.test_reports_with_imported_data()
+        self.test_company_order_financials_imported()
+        self.test_no_pydantic_validation_errors()
+        
+        # Run review request priorities
         print("\n🎯 REVIEW REQUEST TESTING")
         print("=" * 80)
         self.test_review_request_priorities()
