@@ -202,6 +202,12 @@ class CraneOrderCreate(BaseModel):
     company_diesel_refill_location: Optional[str] = None
     company_driver_name: Optional[str] = None
     company_towing_vehicle: Optional[str] = None
+    
+    # Incentive fields (admin only)
+    incentive_amount: Optional[float] = None
+    incentive_reason: Optional[str] = None
+    incentive_added_by: Optional[str] = None
+    incentive_added_at: Optional[datetime] = None
 
 class CraneOrderUpdate(BaseModel):
     customer_name: Optional[str] = None
