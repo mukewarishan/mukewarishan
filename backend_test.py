@@ -2358,6 +2358,11 @@ class CraneOrderAPITester:
             print("❌ Login failed, stopping tests")
             return 1
 
+        # Run review request priorities first
+        print("\n🎯 REVIEW REQUEST TESTING")
+        print("=" * 80)
+        self.test_review_request_priorities()
+
         # Test sequence - organized by functionality
         test_methods = [
             # Core API Tests
