@@ -506,7 +506,7 @@ const OrderForm = ({ orderId = null }) => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-2xl font-bold text-slate-900">
-                  {orderId ? 'Edit Order' : 'New Crane Order'}
+                  {orderId ? 'Edit Order' : 'New Kawale Crane Order'}
                 </CardTitle>
                 <p className="text-slate-600 mt-1">Enter the order details below</p>
               </div>
