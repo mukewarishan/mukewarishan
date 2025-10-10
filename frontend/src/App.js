@@ -3133,6 +3133,7 @@ const Reports = () => {
 
 // Rates Management Component
 const RatesManagement = () => {
+  const { hasRole } = useAuth();
   const [rates, setRates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingRate, setEditingRate] = useState(null);
