@@ -1216,6 +1216,52 @@ const UserManagement = () => {
                 )}
               </DialogContent>
             </Dialog>
+
+            {/* Reset Password Dialog */}
+            <Dialog open={showResetPasswordDialog} onOpenChange={setShowResetPasswordDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Reset Password</DialogTitle>
+                </DialogHeader>
+                {resetPasswordUser && (
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                      <p className="text-sm text-blue-900">
+                        <strong>Resetting password for:</strong> {resetPasswordUser.full_name} ({resetPasswordUser.email})
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="new_password">New Password *</Label>
+                      <Input
+                        id="new_password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password (min 6 characters)"
+                        required
+                        minLength={6}
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Password must be at least 6 characters</p>
+                    </div>
+                    
+                    <div className="flex justify-end space-x-2">
+                      <Button type="button" variant="outline" onClick={() => {
+                        setShowResetPasswordDialog(false);
+                        setResetPasswordUser(null);
+                        setNewPassword('');
+                      }}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={resettingPassword} className="bg-blue-600 hover:bg-blue-700">
+                        {resettingPassword ? 'Resetting...' : 'Reset Password'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </DialogContent>
+            </Dialog>
+
           </CardHeader>
           
           <CardContent>
