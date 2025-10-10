@@ -2860,6 +2860,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                  <Header />
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </BrowserRouter>
         <Toaster position="top-right" richColors />
