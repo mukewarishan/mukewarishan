@@ -3244,6 +3244,17 @@ const RatesManagement = () => {
           </CardHeader>
           
           <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-slate-700">Manage Service Rates</h3>
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <span className="mr-2">➕</span>
+                Create New Rate
+              </Button>
+            </div>
+            
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-slate-300">
                 <thead>
