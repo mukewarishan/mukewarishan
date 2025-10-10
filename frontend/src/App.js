@@ -1852,6 +1852,34 @@ const OrderForm = ({ orderId = null }) => {
                         </div>
                         
                         <div>
+                          <Label htmlFor="care_off" className="text-sm font-medium text-slate-700">
+                            Care Off
+                          </Label>
+                          <Input
+                            id="care_off"
+                            value={formData.care_off}
+                            onChange={(e) => handleInputChange('care_off', e.target.value)}
+                            placeholder="Care off details"
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="care_off_amount" className="text-sm font-medium text-slate-700">
+                            Care Off Amount (₹)
+                          </Label>
+                          <Input
+                            id="care_off_amount"
+                            type="number"
+                            step="0.01"
+                            value={formData.care_off_amount}
+                            onChange={(e) => handleInputChange('care_off_amount', e.target.value)}
+                            placeholder="Care off amount"
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
                           <Label htmlFor="cash_toll" className="text-sm font-medium text-slate-700">
                             Toll Charges (₹)
                           </Label>
