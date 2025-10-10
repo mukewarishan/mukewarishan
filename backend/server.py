@@ -188,7 +188,7 @@ def parse_from_mongo(item):
 # API Endpoints
 @api_router.get("/")
 async def root():
-    return {"message": "Crane Orders Data Entry System"}
+    return {"message": "Kawale Cranes Data Entry System"}
 
 @api_router.post("/orders", response_model=CraneOrder)
 async def create_order(input: CraneOrderCreate):
