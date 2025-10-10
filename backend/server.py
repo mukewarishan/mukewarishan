@@ -1337,6 +1337,145 @@ async def get_service_rates(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching service rates: {str(e)}")
 
+@api_router.put("/rates/{rate_id}")
+async def update_service_rate(
+    rate_id: str,
+    update_data: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Update a service rate (Admin and Super Admin only)"""
+    try:
+        # Validate the update data
+        allowed_fields = ['base_rate', 'base_distance_km', 'rate_per_km_beyond']
+        update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
+        
+        if not update_dict:
+            raise HTTPException(status_code=400, detail="No valid fields to update")
+        
+        # Validate numeric values
+        for field, value in update_dict.items():
+            if not isinstance(value, (int, float)) or value < 0:
+                raise HTTPException(status_code=400, detail=f"{field} must be a non-negative number")
+        
+        # Add audit fields
+        update_dict['updated_at'] = datetime.now(timezone.utc)
+        
+        # Prepare for MongoDB
+        prepared_update = prepare_for_mongo(update_dict)
+        
+        # Update the rate
+        result = await db.service_rates.update_one(
+            {"id": rate_id},
+            {"$set": prepared_update}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Service rate not found")
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="UPDATE",
+            resource_type="SERVICE_RATE",
+            resource_id=rate_id,
+            new_data=update_dict
+        )
+        
+        # Return updated rate
+        updated_rate = await db.service_rates.find_one({"id": rate_id}, {"_id": 0})
+        return parse_from_mongo(updated_rate)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating service rate: {str(e)}")
+
+@api_router.post("/rates")
+async def create_service_rate(
+    rate_data: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Create a new service rate (Admin and Super Admin only)"""
+    try:
+        # Validate required fields
+        required_fields = ['name_of_firm', 'company_name', 'service_type', 'base_rate', 'rate_per_km_beyond']
+        missing_fields = [field for field in required_fields if field not in rate_data or rate_data[field] is None]
+        
+        if missing_fields:
+            field_list = ", ".join(missing_fields)
+            raise HTTPException(status_code=400, detail=f"Missing required fields: {field_list}")
+        
+        # Check if rate combination already exists
+        existing_rate = await db.service_rates.find_one({
+            "name_of_firm": rate_data["name_of_firm"],
+            "company_name": rate_data["company_name"],
+            "service_type": rate_data["service_type"]
+        })
+        
+        if existing_rate:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Rate already exists for {rate_data['name_of_firm']} - {rate_data['company_name']} - {rate_data['service_type']}"
+            )
+        
+        # Create new rate
+        new_rate = ServiceRate(**rate_data)
+        doc = prepare_for_mongo(new_rate.model_dump())
+        
+        result = await db.service_rates.insert_one(doc)
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="CREATE",
+            resource_type="SERVICE_RATE",
+            resource_id=new_rate.id,
+            new_data=rate_data
+        )
+        
+        return new_rate
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating service rate: {str(e)}")
+
+@api_router.delete("/rates/{rate_id}")
+async def delete_service_rate(
+    rate_id: str,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Delete a service rate (Admin and Super Admin only)"""
+    try:
+        # Get rate for audit log
+        existing_rate = await db.service_rates.find_one({"id": rate_id}, {"_id": 0})
+        if not existing_rate:
+            raise HTTPException(status_code=404, detail="Service rate not found")
+        
+        result = await db.service_rates.delete_one({"id": rate_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Service rate not found")
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="DELETE",
+            resource_type="SERVICE_RATE",
+            resource_id=rate_id,
+            old_data=existing_rate
+        )
+        
+        return {"message": "Service rate deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting service rate: {str(e)}")
+
 # Data import endpoint
 @api_router.post("/import/excel")
 async def import_excel_data(
