@@ -1818,21 +1818,7 @@ const OrderForm = ({ orderId = null }) => {
   };
 
   const handleInputChange = (field, value) => {
-    if (field === 'order_type') {
-      // Clear incentive fields when switching to company type (incentives only for cash orders)
-      if (value === 'company') {
-        setFormData(prev => ({ 
-          ...prev, 
-          [field]: value,
-          incentive_amount: '',
-          incentive_reason: ''
-        }));
-      } else {
-        setFormData(prev => ({ ...prev, [field]: value }));
-      }
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   if (loading && orderId) {
