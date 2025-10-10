@@ -347,6 +347,138 @@ class CraneOrderAPITester:
                     
         return success_count == len(company_options)
 
+    def test_care_off_fields_cash_order(self):
+        """Test Care Off fields in cash orders"""
+        # Test with both Care Off fields filled
+        order_data = {
+            "customer_name": "Care Off Test User",
+            "phone": "9876543250",
+            "order_type": "cash",
+            "cash_trip_from": "Mumbai",
+            "cash_trip_to": "Pune",
+            "cash_vehicle_name": "Tata ACE",
+            "cash_service_type": "2-Wheeler Crane",
+            "amount_received": 5000.0,
+            "advance_amount": 1000.0,
+            "care_off": "Special discount for regular customer",
+            "care_off_amount": 500.0
+        }
+        
+        success, response = self.run_test("Create Cash Order with Care Off Fields", "POST", "orders", 201, order_data)
+        
+        if success and 'id' in response:
+            self.created_orders.append(response['id'])
+            # Verify Care Off fields are stored correctly
+            care_off_correct = response.get('care_off') == "Special discount for regular customer"
+            care_off_amount_correct = response.get('care_off_amount') == 500.0
+            
+            if care_off_correct and care_off_amount_correct:
+                self.log_test("Care Off Fields Verification", True, f"Care Off: {response['care_off']}, Amount: {response['care_off_amount']}")
+                return True
+            else:
+                self.log_test("Care Off Fields Verification", False, f"Care Off: {response.get('care_off')}, Amount: {response.get('care_off_amount')}")
+        return False
+
+    def test_care_off_fields_optional(self):
+        """Test that Care Off fields are optional in cash orders"""
+        # Test cash order without Care Off fields
+        order_data = {
+            "customer_name": "No Care Off Test",
+            "phone": "9876543251",
+            "order_type": "cash",
+            "cash_trip_from": "Delhi",
+            "cash_trip_to": "Gurgaon",
+            "cash_vehicle_name": "Mahindra Bolero",
+            "amount_received": 3000.0
+        }
+        
+        success, response = self.run_test("Create Cash Order without Care Off Fields", "POST", "orders", 201, order_data)
+        
+        if success and 'id' in response:
+            self.created_orders.append(response['id'])
+            # Verify Care Off fields are null/empty when not provided
+            care_off_null = response.get('care_off') is None
+            care_off_amount_null = response.get('care_off_amount') is None
+            
+            if care_off_null and care_off_amount_null:
+                self.log_test("Care Off Fields Optional Verification", True, "Care Off fields correctly null when not provided")
+                return True
+            else:
+                self.log_test("Care Off Fields Optional Verification", False, f"Care Off: {response.get('care_off')}, Amount: {response.get('care_off_amount')}")
+        return False
+
+    def test_care_off_fields_company_order(self):
+        """Test that Care Off fields work in company orders (backend should accept them)"""
+        # Test company order with Care Off fields (backend should accept but frontend shouldn't show)
+        order_data = {
+            "customer_name": "Company Care Off Test",
+            "phone": "9876543252",
+            "order_type": "company",
+            "name_of_firm": "Kawale Cranes",
+            "company_name": "Mondial",
+            "case_id_file_number": "CARE001",
+            "company_trip_from": "Mumbai",
+            "company_trip_to": "Pune",
+            "care_off": "Company discount",
+            "care_off_amount": 300.0
+        }
+        
+        success, response = self.run_test("Create Company Order with Care Off Fields", "POST", "orders", 201, order_data)
+        
+        if success and 'id' in response:
+            self.created_orders.append(response['id'])
+            # Backend should accept Care Off fields even for company orders
+            care_off_stored = response.get('care_off') == "Company discount"
+            care_off_amount_stored = response.get('care_off_amount') == 300.0
+            
+            if care_off_stored and care_off_amount_stored:
+                self.log_test("Company Order Care Off Backend Storage", True, "Backend accepts Care Off fields for company orders")
+                return True
+            else:
+                self.log_test("Company Order Care Off Backend Storage", False, f"Care Off: {response.get('care_off')}, Amount: {response.get('care_off_amount')}")
+        return False
+
+    def test_care_off_amount_validation(self):
+        """Test Care Off amount field validation"""
+        # Test with invalid amount (string instead of number)
+        order_data = {
+            "customer_name": "Invalid Care Off Amount",
+            "phone": "9876543253",
+            "order_type": "cash",
+            "cash_vehicle_name": "Test Vehicle",
+            "care_off": "Test discount",
+            "care_off_amount": "invalid_amount"  # Should be a number
+        }
+        
+        # This should fail validation (422 Unprocessable Entity)
+        success, response = self.run_test("Create Order with Invalid Care Off Amount", "POST", "orders", 422, order_data)
+        return success
+
+    def test_update_order_with_care_off(self):
+        """Test updating an existing order with Care Off fields"""
+        if not self.created_orders:
+            return self.log_test("Update Order with Care Off", False, "No orders created to test with")
+        
+        order_id = self.created_orders[0]
+        update_data = {
+            "care_off": "Updated care off reason",
+            "care_off_amount": 750.0
+        }
+        
+        success, response = self.run_test("Update Order with Care Off Fields", "PUT", f"orders/{order_id}", 200, update_data)
+        
+        if success and response:
+            # Verify the update worked
+            care_off_updated = response.get('care_off') == "Updated care off reason"
+            care_off_amount_updated = response.get('care_off_amount') == 750.0
+            
+            if care_off_updated and care_off_amount_updated:
+                self.log_test("Care Off Update Verification", True, "Care Off fields updated successfully")
+                return True
+            else:
+                self.log_test("Care Off Update Verification", False, f"Care Off: {response.get('care_off')}, Amount: {response.get('care_off_amount')}")
+        return False
+
     def cleanup_created_orders(self):
         """Clean up any remaining test orders"""
         print("\n🧹 Cleaning up test orders...")
