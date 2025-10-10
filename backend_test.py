@@ -210,6 +210,247 @@ class CraneOrderAPITester:
         
         return success1 and success2
 
+    def test_user_management_endpoints(self):
+        """Test user management CRUD operations (Super Admin functionality)"""
+        print("\n🔐 Testing User Management Endpoints...")
+        
+        # Test get all users
+        success1, users_response = self.run_test("Get All Users", "GET", "users", 200)
+        
+        # Test create new user
+        new_user_data = {
+            "email": "testuser@kawalecranes.com",
+            "full_name": "Test User",
+            "password": "testpass123",
+            "role": "data_entry"
+        }
+        success2, create_response = self.run_test("Create New User", "POST", "auth/register", 200, new_user_data)
+        
+        created_user_id = None
+        if success2 and create_response:
+            created_user_id = create_response.get('id')
+        
+        # Test update user
+        success3 = True
+        if created_user_id:
+            update_data = {
+                "full_name": "Updated Test User",
+                "role": "admin"
+            }
+            success3, _ = self.run_test("Update User", "PUT", f"users/{created_user_id}", 200, update_data)
+        
+        # Test delete user
+        success4 = True
+        if created_user_id:
+            success4, _ = self.run_test("Delete User", "DELETE", f"users/{created_user_id}", 200)
+        
+        return success1 and success2 and success3 and success4
+
+    def test_authentication_system(self):
+        """Test authentication system comprehensively"""
+        print("\n🔐 Testing Authentication System...")
+        
+        # Test login with admin credentials
+        success1, login_response = self.run_test(
+            "Admin Login Test",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "admin@kawalecranes.com", "password": "admin123"}
+        )
+        
+        # Verify JWT token functionality
+        success2 = False
+        if success1 and 'access_token' in login_response:
+            token = login_response['access_token']
+            # Test using token for authenticated endpoint
+            old_token = self.token
+            self.token = token
+            success2, _ = self.run_test("JWT Token Verification", "GET", "auth/me", 200)
+            self.token = old_token
+        
+        # Test logout
+        success3, _ = self.run_test("User Logout", "POST", "auth/logout", 200)
+        
+        # Test invalid login
+        success4, _ = self.run_test(
+            "Invalid Login Test",
+            "POST", 
+            "auth/login",
+            401,
+            data={"email": "admin@kawalecranes.com", "password": "wrongpassword"}
+        )
+        
+        return success1 and success2 and success3 and success4
+
+    def test_role_based_access_control(self):
+        """Test role-based access control"""
+        print("\n🛡️ Testing Role-Based Access Control...")
+        
+        # Create a data entry user for testing
+        data_entry_user = {
+            "email": "dataentry@kawalecranes.com",
+            "full_name": "Data Entry User",
+            "password": "dataentry123",
+            "role": "data_entry"
+        }
+        
+        success1, create_response = self.run_test("Create Data Entry User", "POST", "auth/register", 200, data_entry_user)
+        
+        # Login as data entry user
+        success2, login_response = self.run_test(
+            "Data Entry Login",
+            "POST",
+            "auth/login", 
+            200,
+            data={"email": "dataentry@kawalecranes.com", "password": "dataentry123"}
+        )
+        
+        # Test data entry user trying to access admin-only endpoints
+        success3 = False
+        if success2 and 'access_token' in login_response:
+            old_token = self.token
+            self.token = login_response['access_token']
+            
+            # Data entry user should NOT be able to delete orders (admin only)
+            if self.created_orders:
+                success3, _ = self.run_test("Data Entry Delete Order (Should Fail)", "DELETE", f"orders/{self.created_orders[0]}", 403)
+            
+            # Data entry user should NOT be able to access user management
+            success4, _ = self.run_test("Data Entry Get Users (Should Fail)", "GET", "users", 403)
+            
+            self.token = old_token
+            success3 = success3 and success4
+        
+        # Cleanup - delete the test user
+        if create_response and 'id' in create_response:
+            self.run_test("Cleanup Data Entry User", "DELETE", f"users/{create_response['id']}", 200)
+        
+        return success1 and success2 and success3
+
+    def test_export_endpoints(self):
+        """Test PDF and Excel export endpoints"""
+        print("\n📄 Testing Export Endpoints...")
+        
+        # Test PDF export
+        success1, pdf_response = self.run_test("PDF Export", "GET", "export/pdf", 200)
+        
+        # Test Excel export  
+        success2, excel_response = self.run_test("Excel Export", "GET", "export/excel", 200)
+        
+        # Test Google Sheets export (should fail without proper config)
+        success3, sheets_response = self.run_test("Google Sheets Export", "GET", "export/googlesheets", 500)
+        
+        # Test export with filters
+        success4, _ = self.run_test("PDF Export with Filters", "GET", "export/pdf", 200, params={"order_type": "cash", "limit": 10})
+        success5, _ = self.run_test("Excel Export with Filters", "GET", "export/excel", 200, params={"order_type": "company", "limit": 10})
+        
+        return success1 and success2 and success3 and success4 and success5
+
+    def test_audit_logging(self):
+        """Test audit logging functionality"""
+        print("\n📋 Testing Audit Logging...")
+        
+        # Test get audit logs
+        success1, audit_response = self.run_test("Get Audit Logs", "GET", "audit-logs", 200)
+        
+        # Test audit logs with filters
+        success2, _ = self.run_test("Filter Audit Logs by Action", "GET", "audit-logs", 200, params={"action": "LOGIN"})
+        success3, _ = self.run_test("Filter Audit Logs by Resource", "GET", "audit-logs", 200, params={"resource_type": "ORDER"})
+        success4, _ = self.run_test("Filter Audit Logs by User", "GET", "audit-logs", 200, params={"user_email": "admin"})
+        
+        # Verify audit logs contain expected entries
+        success5 = False
+        if success1 and audit_response:
+            logs = audit_response if isinstance(audit_response, list) else []
+            # Check if we have some audit logs
+            if len(logs) > 0:
+                success5 = True
+                self.log_test("Audit Logs Content Verification", True, f"Found {len(logs)} audit log entries")
+            else:
+                self.log_test("Audit Logs Content Verification", False, "No audit logs found")
+        
+        return success1 and success2 and success3 and success4 and success5
+
+    def test_mongodb_connections(self):
+        """Test MongoDB connections and data retrieval"""
+        print("\n🗄️ Testing MongoDB Connections...")
+        
+        # Test basic data retrieval (orders)
+        success1, orders_response = self.run_test("MongoDB Orders Retrieval", "GET", "orders", 200)
+        
+        # Test data persistence by creating and retrieving an order
+        test_order = {
+            "customer_name": "MongoDB Test User",
+            "phone": "9876543299",
+            "order_type": "cash",
+            "cash_vehicle_name": "Test Vehicle",
+            "amount_received": 1000.0
+        }
+        
+        success2, create_response = self.run_test("MongoDB Data Persistence Test", "POST", "orders", 200, test_order)
+        
+        success3 = False
+        if success2 and create_response and 'id' in create_response:
+            order_id = create_response['id']
+            self.created_orders.append(order_id)
+            
+            # Retrieve the created order to verify persistence
+            success3, retrieve_response = self.run_test("MongoDB Data Retrieval Test", "GET", f"orders/{order_id}", 200)
+            
+            if success3 and retrieve_response:
+                # Verify data integrity
+                if (retrieve_response.get('customer_name') == test_order['customer_name'] and
+                    retrieve_response.get('phone') == test_order['phone']):
+                    self.log_test("MongoDB Data Integrity", True, "Data stored and retrieved correctly")
+                else:
+                    self.log_test("MongoDB Data Integrity", False, "Data mismatch after storage/retrieval")
+        
+        return success1 and success2 and success3
+
+    def test_filtering_functionality(self):
+        """Test filtering functionality in orders endpoint"""
+        print("\n🔍 Testing Filtering Functionality...")
+        
+        # Create test orders with specific data for filtering
+        cash_order = {
+            "customer_name": "Filter Test Cash User",
+            "phone": "9876543280",
+            "order_type": "cash",
+            "cash_vehicle_name": "Filter Test Vehicle",
+            "amount_received": 2000.0
+        }
+        
+        company_order = {
+            "customer_name": "Filter Test Company User", 
+            "phone": "9876543281",
+            "order_type": "company",
+            "name_of_firm": "Filter Test Firm",
+            "company_name": "Filter Test Company",
+            "case_id_file_number": "FILTER001"
+        }
+        
+        # Create the test orders
+        success1, cash_response = self.run_test("Create Cash Order for Filter Test", "POST", "orders", 200, cash_order)
+        success2, company_response = self.run_test("Create Company Order for Filter Test", "POST", "orders", 200, company_order)
+        
+        if success1 and cash_response and 'id' in cash_response:
+            self.created_orders.append(cash_response['id'])
+        if success2 and company_response and 'id' in company_response:
+            self.created_orders.append(company_response['id'])
+        
+        # Test various filters
+        success3, _ = self.run_test("Filter by Order Type (Cash)", "GET", "orders", 200, params={"order_type": "cash"})
+        success4, _ = self.run_test("Filter by Order Type (Company)", "GET", "orders", 200, params={"order_type": "company"})
+        success5, _ = self.run_test("Filter by Customer Name", "GET", "orders", 200, params={"customer_name": "Filter Test"})
+        success6, _ = self.run_test("Filter by Phone Number", "GET", "orders", 200, params={"phone": "9876543280"})
+        
+        # Test pagination
+        success7, _ = self.run_test("Pagination Test (Limit)", "GET", "orders", 200, params={"limit": 5})
+        success8, _ = self.run_test("Pagination Test (Skip)", "GET", "orders", 200, params={"skip": 2, "limit": 3})
+        
+        return success1 and success2 and success3 and success4 and success5 and success6 and success7 and success8
+
     def test_cash_order_with_driver_dropdown(self):
         """Test creating cash order with driver dropdown field"""
         order_data = {
