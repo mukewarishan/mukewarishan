@@ -106,7 +106,7 @@ user_problem_statement: "Add the feature to export all records to PDF or Microso
 
 backend:
   - task: "Google Sheets API Integration"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "server.py"
     stuck_count: 0
@@ -115,7 +115,7 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Need to implement Google Sheets export endpoint with gspread integration"
+        comment: "Implemented Google Sheets export endpoint /api/export/googlesheets with gspread integration. Requires environment variables setup."
 
   - task: "PDF Export"
     implemented: true
