@@ -2811,6 +2811,371 @@ class CraneOrderAPITester:
         
         return False
 
+    def test_new_reporting_features(self):
+        """Test new reporting features as requested in review"""
+        print("\n📊 Testing New Reporting Features...")
+        
+        # Create test data for October 2024
+        test_orders = []
+        
+        # Create orders with different towing vehicles for revenue by towing vehicle report
+        towing_vehicles_data = [
+            {
+                "customer_name": "Revenue Test User 1",
+                "phone": "9876540001",
+                "order_type": "cash",
+                "date_time": "2024-10-15T10:00:00Z",
+                "cash_towing_vehicle": "Tata ACE",
+                "cash_driver_name": "Rahul",
+                "cash_service_type": "2-Wheeler Crane",
+                "amount_received": 3000.0,
+                "incentive_amount": 200.0,
+                "incentive_reason": "Quick service"
+            },
+            {
+                "customer_name": "Revenue Test User 2", 
+                "phone": "9876540002",
+                "order_type": "company",
+                "date_time": "2024-10-20T14:30:00Z",
+                "company_towing_vehicle": "Mahindra Bolero",
+                "company_driver_name": "Subhash",
+                "name_of_firm": "Kawale Cranes",
+                "company_name": "Europ Assistance",
+                "company_service_type": "2 Wheeler Towing",
+                "company_kms_travelled": 35.0,
+                "case_id_file_number": "REV001"
+            },
+            {
+                "customer_name": "Revenue Test User 3",
+                "phone": "9876540003", 
+                "order_type": "cash",
+                "date_time": "2024-10-25T16:45:00Z",
+                "cash_towing_vehicle": "Tata ACE",
+                "cash_driver_name": "Dubey",
+                "cash_service_type": "4-Wheeler Crane",
+                "amount_received": 5000.0
+            }
+        ]
+        
+        # Create the test orders
+        created_order_ids = []
+        for i, order_data in enumerate(towing_vehicles_data):
+            success, response = self.run_test(f"Create Test Order {i+1} for Reports", "POST", "orders", 200, order_data)
+            if success and response and 'id' in response:
+                created_order_ids.append(response['id'])
+                self.created_orders.append(response['id'])
+        
+        # Test 1: Revenue by Towing Vehicle Report
+        success1, response1 = self.run_test(
+            "Revenue by Towing Vehicle Report (Oct 2024)",
+            "GET", 
+            "reports/revenue-by-towing-vehicle",
+            200,
+            params={"month": 10, "year": 2024}
+        )
+        
+        if success1 and response1:
+            data = response1.get("data", [])
+            if len(data) > 0:
+                # Check if we have Tata ACE and Mahindra Bolero in results
+                towing_vehicles = [item.get("towing_vehicle") for item in data]
+                if "Tata ACE" in towing_vehicles and "Mahindra Bolero" in towing_vehicles:
+                    self.log_test("Revenue by Towing Vehicle Data", True, f"Found vehicles: {towing_vehicles}")
+                else:
+                    self.log_test("Revenue by Towing Vehicle Data", False, f"Expected Tata ACE and Mahindra Bolero, got: {towing_vehicles}")
+            else:
+                self.log_test("Revenue by Towing Vehicle Data", False, "No data returned")
+        
+        # Test 2: Revenue by Towing Vehicle Excel Export
+        success2, response2 = self.run_test(
+            "Revenue by Towing Vehicle Excel Export",
+            "GET",
+            "reports/revenue-by-towing-vehicle/export", 
+            200,
+            params={"month": 10, "year": 2024}
+        )
+        
+        # Test 3: Custom Reports with different group_by options
+        custom_report_configs = [
+            {
+                "start_date": "2024-10-01T00:00:00Z",
+                "end_date": "2024-10-31T23:59:59Z", 
+                "group_by": "driver",
+                "report_type": "summary"
+            },
+            {
+                "start_date": "2024-10-01T00:00:00Z",
+                "end_date": "2024-10-31T23:59:59Z",
+                "group_by": "service_type", 
+                "report_type": "summary"
+            },
+            {
+                "start_date": "2024-10-01T00:00:00Z",
+                "end_date": "2024-10-31T23:59:59Z",
+                "group_by": "towing_vehicle",
+                "report_type": "detailed"
+            },
+            {
+                "start_date": "2024-10-01T00:00:00Z", 
+                "end_date": "2024-10-31T23:59:59Z",
+                "group_by": "firm",
+                "report_type": "summary"
+            },
+            {
+                "start_date": "2024-10-01T00:00:00Z",
+                "end_date": "2024-10-31T23:59:59Z",
+                "group_by": "company",
+                "report_type": "summary"
+            }
+        ]
+        
+        custom_report_results = []
+        for i, config in enumerate(custom_report_configs):
+            success, response = self.run_test(
+                f"Custom Report - Group by {config['group_by']}",
+                "POST",
+                "reports/custom",
+                200,
+                data=config
+            )
+            custom_report_results.append(success)
+            
+            if success and response:
+                group_by = response.get("group_by")
+                data = response.get("data", [])
+                summary = response.get("summary", {})
+                self.log_test(f"Custom Report {group_by} Data", True, f"Groups: {len(data)}, Total Orders: {summary.get('total_orders', 0)}")
+        
+        # Test 4: Custom Report Excel Export
+        success4, response4 = self.run_test(
+            "Custom Report Excel Export",
+            "POST",
+            "reports/custom/export",
+            200,
+            data=custom_report_configs[0]  # Use driver grouping
+        )
+        
+        return success1 and success2 and all(custom_report_results) and success4
+
+    def test_create_new_rates(self):
+        """Test creating new service rates"""
+        print("\n💰 Testing Create New Rates...")
+        
+        # Test 1: Create a new valid rate
+        new_rate_data = {
+            "name_of_firm": "Test Firm",
+            "company_name": "Test Company", 
+            "service_type": "Test Service",
+            "base_rate": 1500.0,
+            "base_distance_km": 45.0,
+            "rate_per_km_beyond": 20.0
+        }
+        
+        success1, response1 = self.run_test(
+            "Create New Service Rate",
+            "POST",
+            "rates",
+            200,
+            data=new_rate_data
+        )
+        
+        created_rate_id = None
+        if success1 and response1:
+            created_rate_id = response1.get('id')
+            # Verify the created rate has correct values
+            if (response1.get('base_rate') == 1500.0 and 
+                response1.get('base_distance_km') == 45.0 and
+                response1.get('rate_per_km_beyond') == 20.0):
+                self.log_test("New Rate Values Verification", True, f"Rate created with correct values")
+            else:
+                self.log_test("New Rate Values Verification", False, f"Rate values mismatch")
+        
+        # Test 2: Try to create duplicate rate (should fail)
+        success2, response2 = self.run_test(
+            "Create Duplicate Rate (Should Fail)",
+            "POST", 
+            "rates",
+            400,
+            data=new_rate_data
+        )
+        
+        if success2 and response2:
+            detail = response2.get('detail', '')
+            if 'already exists' in detail:
+                self.log_test("Duplicate Rate Validation", True, f"Correctly rejected duplicate: {detail}")
+            else:
+                self.log_test("Duplicate Rate Validation", False, f"Unexpected error: {detail}")
+        
+        # Test 3: Create rate with missing required fields (should fail)
+        invalid_rate_data = {
+            "name_of_firm": "Invalid Firm",
+            "company_name": "Invalid Company"
+            # Missing service_type, base_rate, rate_per_km_beyond
+        }
+        
+        success3, response3 = self.run_test(
+            "Create Rate Missing Fields (Should Fail)",
+            "POST",
+            "rates", 
+            400,
+            data=invalid_rate_data
+        )
+        
+        # Test 4: Verify audit trail for rate creation
+        if created_rate_id:
+            success4, response4 = self.run_test(
+                "Check Audit Trail for Rate Creation",
+                "GET",
+                "audit-logs",
+                200,
+                params={"resource_type": "SERVICE_RATE", "action": "CREATE"}
+            )
+            
+            if success4 and response4:
+                logs = response4 if isinstance(response4, list) else []
+                rate_creation_logs = [log for log in logs if log.get('resource_id') == created_rate_id]
+                if rate_creation_logs:
+                    self.log_test("Rate Creation Audit Trail", True, f"Found {len(rate_creation_logs)} audit log(s)")
+                else:
+                    self.log_test("Rate Creation Audit Trail", False, "No audit logs found for rate creation")
+        
+        # Cleanup: Delete the created rate
+        if created_rate_id:
+            self.run_test("Cleanup Created Rate", "DELETE", f"rates/{created_rate_id}", 200)
+        
+        return success1 and success2 and success3
+
+    def test_excel_import_investigation(self):
+        """Test dashboard display and investigate Excel import issues"""
+        print("\n🔍 Testing Excel Import Investigation...")
+        
+        # Test 1: Get orders with various date filters
+        date_filters = [
+            {"start_date": "2024-01-01", "end_date": "2024-12-31"},  # Full year 2024
+            {"start_date": "2023-01-01", "end_date": "2023-12-31"},  # Full year 2023
+            {"start_date": "2024-10-01", "end_date": "2024-10-31"},  # October 2024
+            {"start_date": "2024-11-01", "end_date": "2024-11-30"},  # November 2024
+        ]
+        
+        orders_by_period = {}
+        for i, date_filter in enumerate(date_filters):
+            # Note: The orders endpoint doesn't have date filtering, so we'll get all orders
+            # and check if there are orders from different time periods
+            success, response = self.run_test(
+                f"Get Orders for Period {i+1}",
+                "GET",
+                "orders",
+                200,
+                params={"limit": 1000}
+            )
+            
+            if success and response:
+                orders = response if isinstance(response, list) else []
+                
+                # Filter orders by date manually to check date distribution
+                period_orders = []
+                for order in orders:
+                    order_date = order.get('date_time')
+                    if order_date:
+                        # Check if order falls within the period
+                        if isinstance(order_date, str):
+                            try:
+                                order_datetime = datetime.fromisoformat(order_date.replace('Z', '+00:00'))
+                                start_datetime = datetime.fromisoformat(date_filter['start_date'] + 'T00:00:00+00:00')
+                                end_datetime = datetime.fromisoformat(date_filter['end_date'] + 'T23:59:59+00:00')
+                                
+                                if start_datetime <= order_datetime <= end_datetime:
+                                    period_orders.append(order)
+                            except:
+                                continue
+                
+                orders_by_period[f"period_{i+1}"] = len(period_orders)
+                self.log_test(f"Orders in Period {i+1}", True, f"Found {len(period_orders)} orders in {date_filter['start_date']} to {date_filter['end_date']}")
+        
+        # Test 2: Check if orders appear in different months/years
+        total_orders_found = sum(orders_by_period.values())
+        if total_orders_found > 0:
+            self.log_test("Orders Date Distribution", True, f"Total orders across periods: {total_orders_found}")
+            
+            # Check for orders in different periods
+            periods_with_orders = sum(1 for count in orders_by_period.values() if count > 0)
+            if periods_with_orders > 1:
+                self.log_test("Multi-Period Orders", True, f"Orders found in {periods_with_orders} different periods")
+            else:
+                self.log_test("Multi-Period Orders", False, f"Orders only found in {periods_with_orders} period(s)")
+        else:
+            self.log_test("Orders Date Distribution", False, "No orders found in any period")
+        
+        # Test 3: Check reports for different months/years to find imported data
+        report_periods = [
+            {"month": 10, "year": 2024},
+            {"month": 11, "year": 2024}, 
+            {"month": 9, "year": 2024},
+            {"month": 12, "year": 2023}
+        ]
+        
+        reports_with_data = 0
+        for period in report_periods:
+            # Test expense report
+            success1, response1 = self.run_test(
+                f"Expense Report {period['month']}/{period['year']}",
+                "GET",
+                "reports/expense-by-driver",
+                200,
+                params=period
+            )
+            
+            if success1 and response1:
+                data = response1.get("data", [])
+                if len(data) > 0:
+                    reports_with_data += 1
+                    self.log_test(f"Report Data {period['month']}/{period['year']}", True, f"Found {len(data)} driver records")
+                else:
+                    self.log_test(f"Report Data {period['month']}/{period['year']}", False, "No data in report")
+            
+            # Test revenue report
+            success2, response2 = self.run_test(
+                f"Revenue Report {period['month']}/{period['year']}",
+                "GET", 
+                "reports/revenue-by-towing-vehicle",
+                200,
+                params=period
+            )
+            
+            if success2 and response2:
+                data = response2.get("data", [])
+                if len(data) > 0:
+                    self.log_test(f"Revenue Report Data {period['month']}/{period['year']}", True, f"Found {len(data)} vehicle records")
+        
+        # Test 4: Investigate datetime parsing and storage format
+        success4, response4 = self.run_test(
+            "Sample Orders for DateTime Investigation",
+            "GET",
+            "orders",
+            200,
+            params={"limit": 10}
+        )
+        
+        datetime_formats_found = set()
+        if success4 and response4:
+            orders = response4 if isinstance(response4, list) else []
+            for order in orders[:5]:  # Check first 5 orders
+                date_time = order.get('date_time')
+                if date_time:
+                    datetime_formats_found.add(type(date_time).__name__)
+                    if isinstance(date_time, str):
+                        # Check format patterns
+                        if 'T' in date_time and 'Z' in date_time:
+                            datetime_formats_found.add("ISO_with_Z")
+                        elif 'T' in date_time and '+' in date_time:
+                            datetime_formats_found.add("ISO_with_timezone")
+                        else:
+                            datetime_formats_found.add("other_string_format")
+            
+            self.log_test("DateTime Format Investigation", True, f"Found formats: {list(datetime_formats_found)}")
+        
+        return total_orders_found > 0 and reports_with_data > 0
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
