@@ -1375,6 +1375,23 @@ const OrderForm = ({ orderId = null }) => {
         submitData.drop_time = new Date(submitData.drop_time).toISOString();
       }
       
+      // Handle incentive fields (admin only)
+      if (hasRole(['super_admin', 'admin'])) {
+        if (submitData.incentive_amount && parseFloat(submitData.incentive_amount) > 0) {
+          submitData.incentive_amount = parseFloat(submitData.incentive_amount);
+          submitData.incentive_added_by = user?.id;
+          submitData.incentive_added_at = new Date().toISOString();
+        } else {
+          // Remove incentive fields if amount is empty or zero
+          delete submitData.incentive_amount;
+          delete submitData.incentive_reason;
+        }
+      } else {
+        // Remove incentive fields for non-admin users
+        delete submitData.incentive_amount;
+        delete submitData.incentive_reason;
+      }
+      
       if (orderId) {
         await axios.put(`${API}/orders/${orderId}`, submitData);
         toast.success('Order updated successfully!');
