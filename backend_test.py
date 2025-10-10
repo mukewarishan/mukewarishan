@@ -3248,6 +3248,11 @@ class CraneOrderAPITester:
             # Monthly Reports System Tests
             self.test_monthly_reports_system,
             
+            # NEW REPORTING & RATES FEATURES (Review Request Priority)
+            self.test_new_reporting_features,
+            self.test_create_new_rates,
+            self.test_excel_import_investigation,
+            
             # Audit Logging Tests
             self.test_audit_logging,
             
