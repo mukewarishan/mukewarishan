@@ -378,6 +378,30 @@ backend:
         agent: "testing"
         comment: "✅ EXCEL IMPORT VERIFICATION COMPLETE - ALL SUCCESS CRITERIA MET: Comprehensive testing confirms the Excel import is working perfectly. ✅ DASHBOARD ORDERS COUNT: Total 348 orders (215 cash, 133 company) - matches expected import results ✅ ORDER STATS VERIFICATION: GET /api/orders/stats/summary correctly shows 348 total orders ✅ SAMPLE RECORD VERIFICATION: Found Kartik cash order (phone: 7350009241, driver: Meshram, service: FBT, amount: ₹2000) and Sachi company order (phone: 9545617572, company: Europ Assistance, service: 2 Wheeler Towing) ✅ SEPTEMBER 2025 DATA: Reports include imported data - expense report shows drivers Meshram, Akshay, Vikas; revenue report shows service types FBT, Under-lift, 2 Wheeler Towing; towing vehicle report shows imported vehicles ✅ COMPANY ORDER FINANCIALS: SK rates calculation working correctly for imported company orders (Base: ₹1500.0, Total: ₹2250.0 with incentive) ✅ FILTERING & SORTING: Cash orders filter returns 215 orders, company orders filter returns 133 orders ✅ DATE RANGE COVERAGE: 134 orders found in September 2025 date range (2025-09-21 to 2025-10-07) ✅ NO PYDANTIC VALIDATION ERRORS: All 348 orders retrieved successfully without validation errors. The Excel import fix and re-execution was successful - all imported data is now properly integrated into the system."
 
+  - task: "Super Admin Password Reset Feature"
+    implemented: true
+    working: "NA"
+    file: "server.py, App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added password reset functionality for Super Admin. Backend: Created PUT /api/users/{user_id}/reset-password endpoint (Super Admin only) that accepts new_password, validates minimum 6 characters, prevents self-password reset through this endpoint, hashes password with bcrypt, updates user password, logs audit trail. Frontend: Added state management for reset password dialog, created resetPassword function to open dialog with user info, implemented handleResetPassword to call API, added Reset Password button in Users Management table (visible only for Super Admin, not shown for current user's own row), created Reset Password dialog with password input and validation. Need testing to verify: 1) Super Admin can reset any user's password, 2) Password validation works (min 6 chars), 3) Cannot reset own password through this endpoint, 4) Audit log created for password reset, 5) Dialog shows correct user info, 6) Password actually changes and user can login with new password."
+
+  - task: "Data Entry Role Access Restrictions"
+    implemented: true
+    working: "NA"
+    file: "server.py, App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated role-based access control for Data Entry users. Backend: Changed GET /api/rates endpoint from require_role([SUPER_ADMIN, ADMIN]) to get_current_user (all authenticated users can view rates), kept PUT/POST/DELETE /api/rates restricted to Admin/Super Admin only, audit logs remain restricted to Admin/Super Admin, reports remain restricted to Admin/Super Admin, import data remains restricted to Admin/Super Admin. Frontend: Moved Rates link outside of hasRole check (visible to all authenticated users including Data Entry), kept Users, Audit Logs, Import Data, Reports links restricted to Admin/Super Admin only, updated RatesManagement component to use hasRole hook, changed page title from 'Manage Service Rates' to 'View Service Rates' for Data Entry users, hid Create New Rate button for Data Entry users, hid Actions column header and Edit buttons for Data Entry users. Need testing to verify: 1) Data Entry user can access /rates and view rates list, 2) Data Entry user cannot see Create/Edit buttons in rates page, 3) Data Entry user cannot access audit logs, reports, import data pages, 4) Data Entry user can create and edit orders, 5) API properly rejects Data Entry requests to edit/create/delete rates."
+
 frontend:
   - task: "Google Sheets Export Button"
     implemented: true
