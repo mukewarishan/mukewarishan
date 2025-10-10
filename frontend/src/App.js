@@ -1168,6 +1168,7 @@ const OrderForm = ({ orderId = null }) => {
     diesel: '',
     cash_diesel: '',
     cash_diesel_refill_location: '',
+    cash_driver_name: '',
     
     // Company fields
     name_of_firm: '',
