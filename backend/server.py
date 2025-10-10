@@ -612,6 +612,59 @@ async def delete_user(
             raise e
         raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
 
+
+@api_router.put("/users/{user_id}/reset-password")
+async def reset_user_password(
+    user_id: str,
+    password_data: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN]))
+):
+    """Reset user password (Super Admin only)"""
+    try:
+        # Validate password data
+        new_password = password_data.get("new_password")
+        if not new_password or len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+        
+        # Prevent resetting own password through this endpoint
+        if user_id == current_user["id"]:
+            raise HTTPException(status_code=400, detail="Use change password endpoint for your own password")
+        
+        # Check if user exists
+        existing_user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not existing_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Hash new password
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Update password
+        result = await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"hashed_password": hashed_password}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Log audit (without storing the actual password)
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="UPDATE",
+            resource_type="USER",
+            resource_id=user_id,
+            old_data={"password": "***"},
+            new_data={"password": "***", "reset_by": current_user["email"]}
+        )
+        
+        return {"message": f"Password reset successfully for user {existing_user.get('email')}"}
+    
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error resetting password: {str(e)}")
+
 # Order endpoints (with authentication and audit)
 @api_router.post("/orders", response_model=CraneOrder)
 async def create_order(
