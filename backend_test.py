@@ -916,6 +916,373 @@ class CraneOrderAPITester:
         
         return success1 and success2
 
+    def test_service_rates_initialization(self):
+        """Test if service rates were properly initialized in the database"""
+        print("\n💰 Testing Service Rates Initialization...")
+        
+        success, response = self.run_test("Get Service Rates", "GET", "rates", 200)
+        
+        if success and response:
+            rates = response if isinstance(response, list) else []
+            
+            # Check if we have the expected number of rates (18 based on SK_Rates data)
+            expected_count = 18
+            if len(rates) >= expected_count:
+                self.log_test("Service Rates Count", True, f"Found {len(rates)} service rates (expected >= {expected_count})")
+                
+                # Check for specific rate combinations
+                expected_combinations = [
+                    ("Kawale Cranes", "Europ Assistance", "2 Wheeler Towing"),
+                    ("Kawale Cranes", "Europ Assistance", "Under-lift"),
+                    ("Kawale Cranes", "Europ Assistance", "FBT"),
+                    ("Vidharbha Towing", "TVS", "Under-lift"),
+                    ("Kawale Cranes", "Mondial", "2 Wheeler Towing")
+                ]
+                
+                found_combinations = 0
+                for rate in rates:
+                    for firm, company, service in expected_combinations:
+                        if (rate.get('name_of_firm') == firm and 
+                            rate.get('company_name') == company and 
+                            rate.get('service_type') == service):
+                            found_combinations += 1
+                            break
+                
+                if found_combinations >= 3:
+                    self.log_test("Service Rates Content", True, f"Found {found_combinations} expected rate combinations")
+                    return True
+                else:
+                    self.log_test("Service Rates Content", False, f"Only found {found_combinations} expected combinations")
+            else:
+                self.log_test("Service Rates Count", False, f"Found {len(rates)} rates, expected >= {expected_count}")
+        
+        return False
+
+    def test_get_service_rates_endpoint(self):
+        """Test /api/rates endpoint (Admin/Super Admin only)"""
+        print("\n📊 Testing Service Rates Endpoint...")
+        
+        # Test with admin token
+        success1, response1 = self.run_test("Get Service Rates (Admin)", "GET", "rates", 200)
+        
+        if success1 and response1:
+            rates = response1 if isinstance(response1, list) else []
+            
+            # Verify rate structure
+            if rates and len(rates) > 0:
+                sample_rate = rates[0]
+                required_fields = ['name_of_firm', 'company_name', 'service_type', 'base_rate', 'rate_per_km_beyond']
+                
+                has_all_fields = all(field in sample_rate for field in required_fields)
+                if has_all_fields:
+                    self.log_test("Service Rate Structure", True, f"Rate has all required fields: {required_fields}")
+                    
+                    # Check specific rate values
+                    kawale_europ_2wheeler = next((r for r in rates if 
+                                                r.get('name_of_firm') == 'Kawale Cranes' and 
+                                                r.get('company_name') == 'Europ Assistance' and 
+                                                r.get('service_type') == '2 Wheeler Towing'), None)
+                    
+                    if kawale_europ_2wheeler:
+                        expected_base_rate = 1200
+                        expected_per_km = 12
+                        actual_base = kawale_europ_2wheeler.get('base_rate')
+                        actual_per_km = kawale_europ_2wheeler.get('rate_per_km_beyond')
+                        
+                        if actual_base == expected_base_rate and actual_per_km == expected_per_km:
+                            self.log_test("Specific Rate Values", True, f"Kawale-Europ-2Wheeler: Base={actual_base}, PerKm={actual_per_km}")
+                            return True
+                        else:
+                            self.log_test("Specific Rate Values", False, f"Expected Base={expected_base_rate}, PerKm={expected_per_km}, Got Base={actual_base}, PerKm={actual_per_km}")
+                    else:
+                        self.log_test("Specific Rate Values", False, "Could not find Kawale Cranes - Europ Assistance - 2 Wheeler Towing rate")
+                else:
+                    self.log_test("Service Rate Structure", False, f"Missing fields in rate: {sample_rate}")
+            else:
+                self.log_test("Service Rate Structure", False, "No rates returned")
+        
+        return False
+
+    def test_create_company_orders_for_financials(self):
+        """Create company orders with different scenarios for financial testing"""
+        print("\n🏢 Creating Company Orders for Financial Testing...")
+        
+        # Test order 1: Base distance (≤40km) - Kawale Cranes, Europ Assistance, 2 Wheeler Towing
+        order1_data = {
+            "customer_name": "Financial Test Base Distance",
+            "phone": "9876543280",
+            "order_type": "company",
+            "name_of_firm": "Kawale Cranes",
+            "company_name": "Europ Assistance", 
+            "company_service_type": "2 Wheeler Towing",
+            "case_id_file_number": "FIN001",
+            "company_trip_from": "Mumbai Central",
+            "company_trip_to": "Bandra",
+            "company_kms_travelled": 25.0,  # Within base distance
+            "company_vehicle_name": "Honda Activa",
+            "company_vehicle_number": "MH01AB1234"
+        }
+        
+        success1, response1 = self.run_test("Create Company Order (Base Distance)", "POST", "orders", 200, order1_data)
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+            self.base_distance_order_id = response1['id']
+        
+        # Test order 2: Beyond base distance (>40km) - Vidharbha Towing, TVS, Under-lift
+        order2_data = {
+            "customer_name": "Financial Test Beyond Distance",
+            "phone": "9876543281",
+            "order_type": "company",
+            "name_of_firm": "Vidharbha Towing",
+            "company_name": "TVS",
+            "company_service_type": "Under-lift",
+            "case_id_file_number": "FIN002",
+            "company_trip_from": "Nagpur",
+            "company_trip_to": "Wardha",
+            "company_kms_travelled": 65.0,  # Beyond base distance (40km)
+            "company_vehicle_name": "TVS Apache",
+            "company_vehicle_number": "MH31CD5678"
+        }
+        
+        success2, response2 = self.run_test("Create Company Order (Beyond Distance)", "POST", "orders", 200, order2_data)
+        if success2 and 'id' in response2:
+            self.created_orders.append(response2['id'])
+            self.beyond_distance_order_id = response2['id']
+        
+        # Test order 3: With incentive - Kawale Cranes, Mondial, Under-lift
+        order3_data = {
+            "customer_name": "Financial Test With Incentive",
+            "phone": "9876543282",
+            "order_type": "company",
+            "name_of_firm": "Kawale Cranes",
+            "company_name": "Mondial",
+            "company_service_type": "Under-lift",
+            "case_id_file_number": "FIN003",
+            "company_trip_from": "Pune",
+            "company_trip_to": "Nashik",
+            "company_kms_travelled": 55.0,  # Beyond base distance
+            "company_vehicle_name": "Maruti Swift",
+            "company_vehicle_number": "MH12EF9012",
+            "incentive_amount": 500.0,
+            "incentive_reason": "Excellent service and quick response"
+        }
+        
+        success3, response3 = self.run_test("Create Company Order (With Incentive)", "POST", "orders", 200, order3_data)
+        if success3 and 'id' in response3:
+            self.created_orders.append(response3['id'])
+            self.incentive_order_id = response3['id']
+        
+        return success1 and success2 and success3
+
+    def test_financial_calculations_base_distance(self):
+        """Test financial calculations for base distance (≤40km)"""
+        print("\n💰 Testing Financial Calculations - Base Distance...")
+        
+        if not hasattr(self, 'base_distance_order_id'):
+            return self.log_test("Financial Calc Base Distance", False, "No base distance order created")
+        
+        success, response = self.run_test("Get Financials (Base Distance)", "GET", f"orders/{self.base_distance_order_id}/financials", 200)
+        
+        if success and response:
+            base_revenue = response.get('base_revenue', 0)
+            incentive_amount = response.get('incentive_amount', 0)
+            total_revenue = response.get('total_revenue', 0)
+            calculation_details = response.get('calculation_details', '')
+            
+            # Expected: Kawale Cranes - Europ Assistance - 2 Wheeler Towing = Base rate 1200 for ≤40km
+            expected_base_revenue = 1200.0
+            expected_total = expected_base_revenue + incentive_amount
+            
+            if base_revenue == expected_base_revenue and total_revenue == expected_total:
+                self.log_test("Base Distance Calculation", True, f"Base: ₹{base_revenue}, Total: ₹{total_revenue}, Details: {calculation_details}")
+                return True
+            else:
+                self.log_test("Base Distance Calculation", False, f"Expected Base: ₹{expected_base_revenue}, Got: ₹{base_revenue}, Total: ₹{total_revenue}")
+        
+        return False
+
+    def test_financial_calculations_beyond_distance(self):
+        """Test financial calculations for beyond base distance (>40km)"""
+        print("\n💰 Testing Financial Calculations - Beyond Distance...")
+        
+        if not hasattr(self, 'beyond_distance_order_id'):
+            return self.log_test("Financial Calc Beyond Distance", False, "No beyond distance order created")
+        
+        success, response = self.run_test("Get Financials (Beyond Distance)", "GET", f"orders/{self.beyond_distance_order_id}/financials", 200)
+        
+        if success and response:
+            base_revenue = response.get('base_revenue', 0)
+            incentive_amount = response.get('incentive_amount', 0)
+            total_revenue = response.get('total_revenue', 0)
+            calculation_details = response.get('calculation_details', '')
+            
+            # Expected: Vidharbha Towing - TVS - Under-lift = Base 1700 + (65-40) * 17 = 1700 + 425 = 2125
+            expected_base_rate = 1700.0
+            expected_per_km = 17.0
+            kms_travelled = 65.0
+            excess_km = kms_travelled - 40.0  # 25km excess
+            expected_base_revenue = expected_base_rate + (excess_km * expected_per_km)  # 1700 + (25 * 17) = 2125
+            expected_total = expected_base_revenue + incentive_amount
+            
+            if base_revenue == expected_base_revenue and total_revenue == expected_total:
+                self.log_test("Beyond Distance Calculation", True, f"Base: ₹{base_revenue}, Total: ₹{total_revenue}, Details: {calculation_details}")
+                return True
+            else:
+                self.log_test("Beyond Distance Calculation", False, f"Expected Base: ₹{expected_base_revenue}, Got: ₹{base_revenue}, Total: ₹{total_revenue}")
+        
+        return False
+
+    def test_financial_calculations_with_incentive(self):
+        """Test financial calculations including incentive amount"""
+        print("\n💰 Testing Financial Calculations - With Incentive...")
+        
+        if not hasattr(self, 'incentive_order_id'):
+            return self.log_test("Financial Calc With Incentive", False, "No incentive order created")
+        
+        success, response = self.run_test("Get Financials (With Incentive)", "GET", f"orders/{self.incentive_order_id}/financials", 200)
+        
+        if success and response:
+            base_revenue = response.get('base_revenue', 0)
+            incentive_amount = response.get('incentive_amount', 0)
+            total_revenue = response.get('total_revenue', 0)
+            calculation_details = response.get('calculation_details', '')
+            
+            # Expected: Kawale Cranes - Mondial - Under-lift = Base 1400 + (55-40) * 15 = 1400 + 225 = 1625
+            # Plus incentive: 1625 + 500 = 2125
+            expected_base_rate = 1400.0
+            expected_per_km = 15.0
+            kms_travelled = 55.0
+            excess_km = kms_travelled - 40.0  # 15km excess
+            expected_base_revenue = expected_base_rate + (excess_km * expected_per_km)  # 1400 + (15 * 15) = 1625
+            expected_incentive = 500.0
+            expected_total = expected_base_revenue + expected_incentive  # 1625 + 500 = 2125
+            
+            if (base_revenue == expected_base_revenue and 
+                incentive_amount == expected_incentive and 
+                total_revenue == expected_total):
+                self.log_test("Incentive Calculation", True, f"Base: ₹{base_revenue}, Incentive: ₹{incentive_amount}, Total: ₹{total_revenue}")
+                return True
+            else:
+                self.log_test("Incentive Calculation", False, f"Expected Base: ₹{expected_base_revenue}, Incentive: ₹{expected_incentive}, Total: ₹{expected_total}, Got Base: ₹{base_revenue}, Incentive: ₹{incentive_amount}, Total: ₹{total_revenue}")
+        
+        return False
+
+    def test_financial_calculations_no_rate_found(self):
+        """Test financial calculations when no rate is found"""
+        print("\n💰 Testing Financial Calculations - No Rate Found...")
+        
+        # Create order with combination that doesn't exist in rates
+        order_data = {
+            "customer_name": "No Rate Test",
+            "phone": "9876543283",
+            "order_type": "company",
+            "name_of_firm": "Unknown Firm",
+            "company_name": "Unknown Company",
+            "company_service_type": "Unknown Service",
+            "case_id_file_number": "NORATE001",
+            "company_trip_from": "Test From",
+            "company_trip_to": "Test To",
+            "company_kms_travelled": 30.0
+        }
+        
+        success1, response1 = self.run_test("Create Order (No Rate)", "POST", "orders", 200, order_data)
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+            order_id = response1['id']
+            
+            # Test financial calculation
+            success2, response2 = self.run_test("Get Financials (No Rate)", "GET", f"orders/{order_id}/financials", 200)
+            
+            if success2 and response2:
+                base_revenue = response2.get('base_revenue', 0)
+                total_revenue = response2.get('total_revenue', 0)
+                calculation_details = response2.get('calculation_details', '')
+                
+                # Should return 0 base revenue with appropriate message
+                if base_revenue == 0 and "No rate found" in calculation_details:
+                    self.log_test("No Rate Found Handling", True, f"Correctly handled no rate: {calculation_details}")
+                    return True
+                else:
+                    self.log_test("No Rate Found Handling", False, f"Base: ₹{base_revenue}, Details: {calculation_details}")
+        
+        return False
+
+    def test_financial_calculations_cash_order(self):
+        """Test that financial calculations return empty for cash orders"""
+        print("\n💰 Testing Financial Calculations - Cash Order...")
+        
+        # Create a cash order
+        cash_order_data = {
+            "customer_name": "Cash Order Financial Test",
+            "phone": "9876543284",
+            "order_type": "cash",
+            "cash_trip_from": "Mumbai",
+            "cash_trip_to": "Pune",
+            "cash_vehicle_name": "Tata ACE",
+            "amount_received": 5000.0
+        }
+        
+        success1, response1 = self.run_test("Create Cash Order for Financial Test", "POST", "orders", 200, cash_order_data)
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+            order_id = response1['id']
+            
+            # Test financial calculation on cash order
+            success2, response2 = self.run_test("Get Financials (Cash Order)", "GET", f"orders/{order_id}/financials", 200)
+            
+            if success2 and response2:
+                base_revenue = response2.get('base_revenue', 0)
+                total_revenue = response2.get('total_revenue', 0)
+                
+                # Should return 0 for cash orders
+                if base_revenue == 0 and total_revenue == 0:
+                    self.log_test("Cash Order Financial Calc", True, "Correctly returns 0 for cash orders")
+                    return True
+                else:
+                    self.log_test("Cash Order Financial Calc", False, f"Expected 0, got Base: ₹{base_revenue}, Total: ₹{total_revenue}")
+        
+        return False
+
+    def test_sk_rates_calculation_system(self):
+        """Comprehensive test of SK Rates calculation system"""
+        print("\n🧮 Testing SK Rates Calculation System...")
+        
+        # Test service rates initialization
+        rates_init = self.test_service_rates_initialization()
+        
+        # Test get service rates endpoint
+        rates_endpoint = self.test_get_service_rates_endpoint()
+        
+        # Create test orders for financial calculations
+        orders_created = self.test_create_company_orders_for_financials()
+        
+        # Test financial calculations
+        base_calc = self.test_financial_calculations_base_distance()
+        beyond_calc = self.test_financial_calculations_beyond_distance()
+        incentive_calc = self.test_financial_calculations_with_incentive()
+        no_rate_calc = self.test_financial_calculations_no_rate_found()
+        cash_calc = self.test_financial_calculations_cash_order()
+        
+        # Overall success
+        all_passed = all([rates_init, rates_endpoint, orders_created, base_calc, beyond_calc, incentive_calc, no_rate_calc, cash_calc])
+        
+        if all_passed:
+            self.log_test("SK Rates System Overall", True, "All SK Rates calculation tests passed")
+        else:
+            failed_tests = []
+            if not rates_init: failed_tests.append("Rates Initialization")
+            if not rates_endpoint: failed_tests.append("Rates Endpoint")
+            if not orders_created: failed_tests.append("Test Orders Creation")
+            if not base_calc: failed_tests.append("Base Distance Calc")
+            if not beyond_calc: failed_tests.append("Beyond Distance Calc")
+            if not incentive_calc: failed_tests.append("Incentive Calc")
+            if not no_rate_calc: failed_tests.append("No Rate Handling")
+            if not cash_calc: failed_tests.append("Cash Order Calc")
+            
+            self.log_test("SK Rates System Overall", False, f"Failed tests: {', '.join(failed_tests)}")
+        
+        return all_passed
+
     def cleanup_created_orders(self):
         """Clean up any remaining test orders"""
         print("\n🧹 Cleaning up test orders...")
