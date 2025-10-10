@@ -297,6 +297,18 @@ backend:
         agent: "testing"
         comment: "Tested all filtering options: Filter by order_type (cash/company) ✅, Filter by customer_name ✅, Filter by phone ✅, Pagination (limit/skip) ✅. All search and filter functionality working correctly."
 
+  - task: "Monthly Reports System"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ MONTHLY REPORTS SYSTEM TESTING COMPLETE: Comprehensive testing of new reporting functionality with 100% success rate. ✅ EXPENSE REPORT BY DRIVER: GET /api/reports/expense-by-driver working correctly - aggregates expenses (diesel + toll costs) by driver name for both cash and company orders, proper date filtering by month/year, correct data structure with driver_name, cash_orders, company_orders, total_orders, total_diesel_expense, total_toll_expense, total_expenses. ✅ REVENUE REPORT BY VEHICLE TYPE: GET /api/reports/revenue-by-vehicle-type working correctly - aggregates revenue by service type, cash orders use amount_received, company orders use SK rates calculation, includes incentive amounts, proper revenue calculations (base + incentive). ✅ EXCEL EXPORT FUNCTIONALITY: Both /api/reports/expense-by-driver/export and /api/reports/revenue-by-vehicle-type/export endpoints working correctly, return proper Excel files with formatted headers and data. ✅ ACCESS CONTROL: Proper role-based access control enforced - only Admin/Super Admin can access report endpoints (HTTP 403 for data_entry users, HTTP 200 for admin users). ✅ EDGE CASES: Proper handling of months with no data (empty results), invalid parameters (HTTP 422 validation errors), missing parameters (HTTP 422). All monthly reports functionality working perfectly as requested in the review."
+
 frontend:
   - task: "Google Sheets Export Button"
     implemented: true
