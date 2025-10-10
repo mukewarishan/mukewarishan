@@ -109,6 +109,12 @@ class CraneOrder(BaseModel):
     updated_by: Optional[str] = None
     updated_at: Optional[datetime] = None
     
+    # Incentive fields (admin only)
+    incentive_amount: Optional[float] = None
+    incentive_reason: Optional[str] = None
+    incentive_added_by: Optional[str] = None
+    incentive_added_at: Optional[datetime] = None
+    
     # Cash order fields
     cash_trip_from: Optional[str] = None
     cash_trip_to: Optional[str] = None
