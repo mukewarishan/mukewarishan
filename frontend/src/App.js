@@ -813,6 +813,58 @@ const UserManagement = () => {
     }
   };
 
+  const editUser = (user) => {
+    setEditingUser({
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role,
+      is_active: user.is_active
+    });
+    setShowEditDialog(true);
+  };
+
+  const updateUser = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      await axios.put(`${API}/users/${editingUser.id}`, {
+        full_name: editingUser.full_name,
+        role: editingUser.role,
+        is_active: editingUser.is_active
+      });
+      toast.success('User updated successfully!');
+      setShowEditDialog(false);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update user');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const deleteUser = async (userId, userName) => {
+    if (userId === currentUser?.id) {
+      toast.error('You cannot delete your own account');
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API}/users/${userId}`);
+      toast.success('User deleted successfully');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete user');
+    }
+  };
+
   const getRoleBadge = (role) => {
     const roleConfig = {
       super_admin: { color: 'bg-red-100 text-red-800', label: 'Super Admin' },
