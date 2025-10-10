@@ -3195,6 +3195,35 @@ const RatesManagement = () => {
     }
   };
 
+  const handleCreateRate = async () => {
+    try {
+      const createData = {
+        name_of_firm: newRate.name_of_firm,
+        company_name: newRate.company_name,
+        service_type: newRate.service_type,
+        base_rate: parseFloat(newRate.base_rate),
+        base_distance_km: parseFloat(newRate.base_distance_km) || 40,
+        rate_per_km_beyond: parseFloat(newRate.rate_per_km_beyond)
+      };
+
+      await axios.post(`${API}/rates`, createData);
+      toast.success('Rate created successfully');
+      setShowCreateDialog(false);
+      setNewRate({
+        name_of_firm: '',
+        company_name: '',
+        service_type: '',
+        base_rate: '',
+        base_distance_km: '40',
+        rate_per_km_beyond: ''
+      });
+      fetchRates(); // Refresh the list
+    } catch (error) {
+      console.error('Error creating rate:', error);
+      toast.error(error.response?.data?.detail || 'Failed to create rate');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
