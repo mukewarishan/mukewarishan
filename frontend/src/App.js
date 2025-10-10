@@ -1291,7 +1291,11 @@ const OrderForm = ({ orderId = null }) => {
     company_diesel: '',
     company_diesel_refill_location: '',
     company_driver_name: '',
-    company_towing_vehicle: ''
+    company_towing_vehicle: '',
+    
+    // Incentive fields (admin only)
+    incentive_amount: '',
+    incentive_reason: ''
   });
   
   const [loading, setLoading] = useState(false);
