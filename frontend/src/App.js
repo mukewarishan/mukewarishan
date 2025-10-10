@@ -1516,16 +1516,22 @@ const OrderForm = ({ orderId = null }) => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="cash_service_type" className="text-sm font-medium text-slate-700">
+                          <Label className="text-sm font-medium text-slate-700">
                             Service Type
                           </Label>
-                          <Input
-                            id="cash_service_type"
-                            value={formData.cash_service_type}
-                            onChange={(e) => handleInputChange('cash_service_type', e.target.value)}
-                            placeholder="e.g., 2-Wheeler Crane, 4-Wheeler Crane"
-                            className="mt-1"
-                          />
+                          <Select 
+                            value={formData.cash_service_type} 
+                            onValueChange={(value) => handleInputChange('cash_service_type', value)}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select service type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="2 Wheeler Towing">2 Wheeler Towing</SelectItem>
+                              <SelectItem value="Under-lift">Under-lift</SelectItem>
+                              <SelectItem value="FBT">FBT</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         
                         <div>
