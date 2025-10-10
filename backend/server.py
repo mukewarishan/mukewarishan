@@ -1385,9 +1385,9 @@ async def get_order_financials(
 
 @api_router.get("/rates")
 async def get_service_rates(
-    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+    current_user: dict = Depends(get_current_user)
 ):
-    """Get all service rates (Admin and Super Admin only)"""
+    """Get all service rates (All authenticated users can view)"""
     try:
         rates = await db.service_rates.find({}, {"_id": 0}).to_list(1000)
         return [parse_from_mongo(rate) for rate in rates]
