@@ -154,6 +154,18 @@ frontend:
         agent: "main"
         comment: "Added Google Sheets export button and updated exportData function to handle Google Sheets response format (JSON instead of blob)"
 
+  - task: "Incentive Fields Conditional Visibility"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Moved Incentive Amount & Reason fields to Costs & Charges tab. Now only visible for Cash orders and Admin/Super Admin users. Fields auto-clear when switching to Company order type."
+
   - task: "PDF Export Button"
     implemented: true
     working: true
