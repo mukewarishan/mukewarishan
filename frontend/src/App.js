@@ -3136,6 +3136,15 @@ const RatesManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editingRate, setEditingRate] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newRate, setNewRate] = useState({
+    name_of_firm: '',
+    company_name: '',
+    service_type: '',
+    base_rate: '',
+    base_distance_km: '40',
+    rate_per_km_beyond: ''
+  });
 
   const fetchRates = async () => {
     try {
