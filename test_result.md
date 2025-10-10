@@ -380,27 +380,33 @@ backend:
 
   - task: "Super Admin Password Reset Feature"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py, App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added password reset functionality for Super Admin. Backend: Created PUT /api/users/{user_id}/reset-password endpoint (Super Admin only) that accepts new_password, validates minimum 6 characters, prevents self-password reset through this endpoint, hashes password with bcrypt, updates user password, logs audit trail. Frontend: Added state management for reset password dialog, created resetPassword function to open dialog with user info, implemented handleResetPassword to call API, added Reset Password button in Users Management table (visible only for Super Admin, not shown for current user's own row), created Reset Password dialog with password input and validation. Need testing to verify: 1) Super Admin can reset any user's password, 2) Password validation works (min 6 chars), 3) Cannot reset own password through this endpoint, 4) Audit log created for password reset, 5) Dialog shows correct user info, 6) Password actually changes and user can login with new password."
+      - working: true
+        agent: "testing"
+        comment: "✅ SUPER ADMIN PASSWORD RESET FEATURE COMPREHENSIVE TESTING COMPLETE: All 8 test scenarios passed with 100% success rate. ✅ SUPER ADMIN LOGIN: Successfully authenticated with admin@kawalecranes.com/admin123 ✅ TEST USER CREATION: Created test data_entry user (test_dataentry@test.com) successfully ✅ VALID PASSWORD RESET: PUT /api/users/{user_id}/reset-password with 6+ character password returns HTTP 200 with success message ✅ SHORT PASSWORD VALIDATION: Password <6 characters properly rejected with HTTP 400 error ✅ SELF-RESET PREVENTION: Super Admin cannot reset own password through this endpoint (HTTP 400) ✅ AUDIT LOG CREATION: Password reset action properly logged in audit system with masked password (***) ✅ NEW PASSWORD LOGIN: User can successfully login with new password after reset ✅ OLD PASSWORD REJECTION: Old password properly rejected with HTTP 401 after reset. The password reset functionality is working perfectly as specified in the review request - Super Admin can reset any user's password with proper validation, audit logging, and security controls."
 
   - task: "Data Entry Role Access Restrictions"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py, App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated role-based access control for Data Entry users. Backend: Changed GET /api/rates endpoint from require_role([SUPER_ADMIN, ADMIN]) to get_current_user (all authenticated users can view rates), kept PUT/POST/DELETE /api/rates restricted to Admin/Super Admin only, audit logs remain restricted to Admin/Super Admin, reports remain restricted to Admin/Super Admin, import data remains restricted to Admin/Super Admin. Frontend: Moved Rates link outside of hasRole check (visible to all authenticated users including Data Entry), kept Users, Audit Logs, Import Data, Reports links restricted to Admin/Super Admin only, updated RatesManagement component to use hasRole hook, changed page title from 'Manage Service Rates' to 'View Service Rates' for Data Entry users, hid Create New Rate button for Data Entry users, hid Actions column header and Edit buttons for Data Entry users. Need testing to verify: 1) Data Entry user can access /rates and view rates list, 2) Data Entry user cannot see Create/Edit buttons in rates page, 3) Data Entry user cannot access audit logs, reports, import data pages, 4) Data Entry user can create and edit orders, 5) API properly rejects Data Entry requests to edit/create/delete rates."
+      - working: true
+        agent: "testing"
+        comment: "✅ DATA ENTRY ROLE ACCESS RESTRICTIONS COMPREHENSIVE TESTING COMPLETE: All access control scenarios tested with 100% success rate. ✅ DATA ENTRY USER ALLOWED ACCESS: Can view rates (GET /api/rates → HTTP 200) ✅, can create orders (POST /api/orders → HTTP 200) ✅, can view orders (GET /api/orders → HTTP 200) ✅, can edit orders (PUT /api/orders/{id} → HTTP 200) ✅. ✅ DATA ENTRY USER FORBIDDEN ACCESS: Cannot access audit logs (GET /api/audit-logs → HTTP 403) ✅, cannot access expense reports (GET /api/reports/expense-by-driver → HTTP 403) ✅, cannot access revenue reports (GET /api/reports/revenue-by-vehicle-type → HTTP 403) ✅, cannot access import excel (POST /api/import/excel → HTTP 403) ✅, cannot edit rates (PUT /api/rates/{id} → HTTP 403) ✅, cannot create rates (POST /api/rates → HTTP 403) ✅, cannot delete rates (DELETE /api/rates/{id} → HTTP 403) ✅, cannot access user management (GET /api/users → HTTP 403) ✅. ✅ ADMIN ACCESS VERIFICATION: Admin users can still access all restricted endpoints (reports, rate management, user management) with HTTP 200 responses. The role-based access control is working perfectly as specified - Data Entry users can view rates and manage orders but are properly restricted from admin-only operations."
 
 frontend:
   - task: "Google Sheets Export Button"
