@@ -343,6 +343,8 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ total_orders: 0, by_type: [] });
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ order_type: 'all', customer_name: '', phone: '' });
+  const [selectedOrders, setSelectedOrders] = useState([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const { hasRole } = useAuth();
   const navigate = useNavigate();
 
