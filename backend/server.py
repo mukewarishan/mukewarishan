@@ -304,10 +304,11 @@ def prepare_for_mongo(data):
     return doc
 
 def parse_from_mongo(item):
-    """Convert ISO strings back to datetime objects from MongoDB"""
+    """Convert ISO strings back to datetime objects from MongoDB and handle None values"""
     if not item:
         return item
     
+    # Convert datetime fields
     datetime_fields = ['added_time', 'date_time', 'reach_time', 'drop_time', 'created_at', 'updated_at', 'last_login', 'timestamp', 'incentive_added_at']
     for field in datetime_fields:
         if field in item and isinstance(item[field], str):
@@ -315,6 +316,22 @@ def parse_from_mongo(item):
                 item[field] = datetime.fromisoformat(item[field])
             except ValueError:
                 continue
+    
+    # Handle None values in string fields that should be Optional[str] but not None for Pydantic validation
+    # Convert None to empty string for optional string fields to avoid Pydantic validation errors
+    optional_string_fields = [
+        'cash_trip_from', 'cash_trip_to', 'care_off', 'cash_vehicle_details', 'cash_driver_details',
+        'cash_vehicle_name', 'cash_vehicle_number', 'cash_service_type', 'diesel', 'cash_diesel_refill_location',
+        'cash_driver_name', 'cash_towing_vehicle', 'name_of_firm', 'company_name', 'case_id_file_number',
+        'company_vehicle_name', 'company_vehicle_number', 'company_service_type', 'company_vehicle_details',
+        'company_driver_details', 'company_trip_from', 'company_trip_to', 'diesel_name',
+        'company_diesel_refill_location', 'company_driver_name', 'company_towing_vehicle', 'incentive_reason'
+    ]
+    
+    for field in optional_string_fields:
+        if field in item and item[field] is None:
+            item[field] = ""  # Convert None to empty string
+    
     return item
 
 # Authentication utility functions
