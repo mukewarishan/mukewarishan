@@ -1820,6 +1820,89 @@ async def export_expense_report_by_driver(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error exporting expense report: {str(e)}")
 
+@api_router.get("/reports/revenue-by-towing-vehicle/export")
+async def export_revenue_report_by_towing_vehicle(
+    month: int = Query(..., ge=1, le=12),
+    year: int = Query(..., ge=2020, le=2030),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Export revenue report by towing vehicle as Excel file"""
+    try:
+        # Get the report data
+        report_response = await get_revenue_report_by_towing_vehicle(month, year, current_user)
+        report_data = report_response["data"]
+        
+        # Create Excel workbook
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = f"Towing Vehicle Revenue {year}-{month:02d}"
+        
+        # Headers
+        headers = [
+            "Towing Vehicle", "Cash Orders", "Company Orders", "Total Orders",
+            "Base Revenue (₹)", "Incentive Amount (₹)", "Total Revenue (₹)"
+        ]
+        
+        for col, header in enumerate(headers, 1):
+            cell = worksheet.cell(row=1, column=col, value=header)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+        
+        # Data rows
+        for row_idx, vehicle_data in enumerate(report_data, 2):
+            worksheet.cell(row=row_idx, column=1, value=vehicle_data["towing_vehicle"])
+            worksheet.cell(row=row_idx, column=2, value=vehicle_data["cash_orders"])
+            worksheet.cell(row=row_idx, column=3, value=vehicle_data["company_orders"])
+            worksheet.cell(row=row_idx, column=4, value=vehicle_data["total_orders"])
+            worksheet.cell(row=row_idx, column=5, value=vehicle_data["total_base_revenue"])
+            worksheet.cell(row=row_idx, column=6, value=vehicle_data["total_incentive_amount"])
+            worksheet.cell(row=row_idx, column=7, value=vehicle_data["total_revenue"])
+        
+        # Summary row
+        summary_row = len(report_data) + 3
+        worksheet.cell(row=summary_row, column=1, value="TOTAL")
+        worksheet.cell(row=summary_row, column=2, value=sum(d["cash_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=3, value=sum(d["company_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=4, value=sum(d["total_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=5, value=sum(d["total_base_revenue"] for d in report_data))
+        worksheet.cell(row=summary_row, column=6, value=sum(d["total_incentive_amount"] for d in report_data))
+        worksheet.cell(row=summary_row, column=7, value=sum(d["total_revenue"] for d in report_data))
+        
+        # Format summary row
+        for col in range(1, 8):
+            cell = worksheet.cell(row=summary_row, column=col)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
+        
+        # Auto-adjust column widths
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 30)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to bytes
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        filename = f"kawale_revenue_by_towing_vehicle_{year}_{month:02d}.xlsx"
+        
+        return Response(
+            content=excel_buffer.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting towing vehicle revenue report: {str(e)}")
+
 @api_router.get("/reports/revenue-by-vehicle-type/export")
 async def export_revenue_report_by_vehicle_type(
     month: int = Query(..., ge=1, le=12),
