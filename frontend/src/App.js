@@ -592,7 +592,32 @@ const Dashboard = () => {
         {/* Orders List */}
         <Card className="bg-white shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl font-bold text-slate-900">Recent Orders</CardTitle>
+            <div className="flex items-center space-x-4">
+              <CardTitle className="text-xl font-bold text-slate-900">Recent Orders</CardTitle>
+              {hasRole(['super_admin', 'admin']) && orders.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedOrders.length === orders.length && orders.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-slate-300"
+                  />
+                  <span className="text-sm text-slate-600">
+                    Select All ({selectedOrders.length} selected)
+                  </span>
+                  {selectedOrders.length > 0 && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={bulkDeleteOrders}
+                      disabled={bulkDeleting}
+                    >
+                      {bulkDeleting ? 'Deleting...' : `Delete ${selectedOrders.length} Selected`}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
             <Button 
               onClick={() => navigate('/new-order')}
               className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
