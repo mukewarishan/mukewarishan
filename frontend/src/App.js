@@ -2665,6 +2665,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/rates"
+              element={
+                <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                  <Header />
+                  <RatesManagement />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </BrowserRouter>
         <Toaster position="top-right" richColors />
