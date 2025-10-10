@@ -1395,16 +1395,23 @@ const OrderForm = ({ orderId = null }) => {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <Label htmlFor="name_of_firm" className="text-sm font-medium text-slate-700">
+                          <Label className="text-sm font-medium text-slate-700">
                             Name of Firm *
                           </Label>
-                          <Input
-                            id="name_of_firm"
-                            value={formData.name_of_firm}
-                            onChange={(e) => handleInputChange('name_of_firm', e.target.value)}
-                            placeholder="Enter firm name"
-                            className="mt-1"
-                          />
+                          <Select 
+                            value={formData.name_of_firm} 
+                            onValueChange={(value) => handleInputChange('name_of_firm', value)}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select firm name" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Kawale Cranes">Kawale Cranes</SelectItem>
+                              <SelectItem value="Vira Towing">Vira Towing</SelectItem>
+                              <SelectItem value="Sarang Cranes">Sarang Cranes</SelectItem>
+                              <SelectItem value="Vidharbha Towing">Vidharbha Towing</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         
                         <div>
