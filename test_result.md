@@ -357,6 +357,18 @@ backend:
         agent: "testing"
         comment: "✅ EXCEL IMPORT INVESTIGATION COMPLETE: Dashboard orders loading correctly (89 orders found). Date filtering investigation shows orders distributed across different time periods (2024 data found). Reports include imported data correctly - October 2024 reports show data from multiple sources. DateTime format investigation shows ISO format with Z timezone being used consistently. No issues found with Excel imported records display - they appear correctly in dashboard and reports."
 
+  - task: "Excel Data Import - Kawale_Cranes_23092025.xlsx"
+    implemented: true
+    working: "NA"
+    file: "import_excel_data.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Imported 205 records from Kawale_Cranes_23092025.xlsx file (157 cash orders, 48 company orders). Created comprehensive import script that maps Excel columns to CraneOrder model fields, cleans monetary values (removes ₹ and INR symbols), handles datetime conversions, generates UUIDs for all records, and properly separates cash vs company order fields. All records successfully inserted into MongoDB with proper data types and structure. Verification shows correct data mapping with sample cash order (customer: Kartik, phone: 7350009241, driver: Meshram, service: FBT, amount: ₹2000) and company order (customer: Sachi, phone: 9545617572, company: Europ Assistance, service: 2 Wheeler Towing, reach time & drop time properly set). Need to test: 1) Dashboard displays all 205 imported records, 2) Reports include imported data with proper filtering by month/year, 3) Company order financials calculated correctly using SK rates, 4) Sorting and filtering works with new data."
+
 frontend:
   - task: "Google Sheets Export Button"
     implemented: true
