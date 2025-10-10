@@ -1692,16 +1692,49 @@ const OrderForm = ({ orderId = null }) => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="company_service_type" className="text-sm font-medium text-slate-700">
+                          <Label className="text-sm font-medium text-slate-700">
                             Service Type
                           </Label>
-                          <Input
-                            id="company_service_type"
-                            value={formData.company_service_type}
-                            onChange={(e) => handleInputChange('company_service_type', e.target.value)}
-                            placeholder="e.g., 2-Wheeler Crane, 4-Wheeler Crane"
-                            className="mt-1"
-                          />
+                          <Select 
+                            value={formData.company_service_type} 
+                            onValueChange={(value) => handleInputChange('company_service_type', value)}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select service type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="2 Wheeler Towing">2 Wheeler Towing</SelectItem>
+                              <SelectItem value="Under-lift">Under-lift</SelectItem>
+                              <SelectItem value="FBT">FBT</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium text-slate-700">
+                            Towing Vehicle
+                          </Label>
+                          <Select 
+                            value={formData.company_towing_vehicle} 
+                            onValueChange={(value) => handleInputChange('company_towing_vehicle', value)}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select towing vehicle" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Ace 1">Ace 1</SelectItem>
+                              <SelectItem value="Ace 2">Ace 2</SelectItem>
+                              <SelectItem value="Ace 3">Ace 3</SelectItem>
+                              <SelectItem value="Xenon 1">Xenon 1</SelectItem>
+                              <SelectItem value="Xenon 2">Xenon 2</SelectItem>
+                              <SelectItem value="Xenon 3">Xenon 3</SelectItem>
+                              <SelectItem value="H407">H407</SelectItem>
+                              <SelectItem value="2901">2901</SelectItem>
+                              <SelectItem value="7868">7868</SelectItem>
+                              <SelectItem value="700">700</SelectItem>
+                              <SelectItem value="4282">4282</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         
                         <div>
