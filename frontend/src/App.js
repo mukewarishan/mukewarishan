@@ -881,12 +881,12 @@ const DataImport = () => {
   };
 
   return (
-    <div className=\"min-h-screen bg-gradient-to-br from-slate-50 to-slate-100\">
-      <div className=\"max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8\">
-        <Card className=\"bg-white shadow-lg\">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="bg-white shadow-lg">
           <CardHeader>
-            <CardTitle className=\"text-2xl font-bold text-slate-900\">Data Import</CardTitle>
-            <p className=\"text-slate-600 mt-1\">Import crane orders data from Excel files</p>
+            <CardTitle className="text-2xl font-bold text-slate-900">Data Import</CardTitle>
+            <p className="text-slate-600 mt-1">Import crane orders data from Excel files</p>
           </CardHeader>
           
           <CardContent className=\"space-y-6\">
