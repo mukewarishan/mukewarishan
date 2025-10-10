@@ -2610,6 +2610,198 @@ const EditOrderPage = () => {
   return <OrderForm orderId={orderId} />;
 };
 
+// Rates Management Component
+const RatesManagement = () => {
+  const [rates, setRates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingRate, setEditingRate] = useState(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  const fetchRates = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/rates`);
+      setRates(response.data);
+    } catch (error) {
+      console.error('Error fetching rates:', error);
+      toast.error('Failed to fetch rates');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRates();
+  }, []);
+
+  const handleEditRate = (rate) => {
+    setEditingRate({
+      id: rate.id,
+      name_of_firm: rate.name_of_firm,
+      company_name: rate.company_name,
+      service_type: rate.service_type,
+      base_rate: rate.base_rate,
+      base_distance_km: rate.base_distance_km || 40,
+      rate_per_km_beyond: rate.rate_per_km_beyond
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateRate = async () => {
+    try {
+      const updateData = {
+        base_rate: parseFloat(editingRate.base_rate),
+        base_distance_km: parseFloat(editingRate.base_distance_km),
+        rate_per_km_beyond: parseFloat(editingRate.rate_per_km_beyond)
+      };
+
+      await axios.put(`${API}/rates/${editingRate.id}`, updateData);
+      toast.success('Rate updated successfully');
+      setShowEditDialog(false);
+      setEditingRate(null);
+      fetchRates(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating rate:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update rate');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Card className="bg-white shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-t-lg">
+            <CardTitle className="text-2xl font-bold flex items-center">
+              <span className="mr-3">💰</span>
+              Service Rates Management
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-slate-300">
+                <thead>
+                  <tr className="bg-slate-100">
+                    <th className="border border-slate-300 px-4 py-2 text-left">Firm</th>
+                    <th className="border border-slate-300 px-4 py-2 text-left">Company</th>
+                    <th className="border border-slate-300 px-4 py-2 text-left">Service Type</th>
+                    <th className="border border-slate-300 px-4 py-2 text-right">Base Rate (₹)</th>
+                    <th className="border border-slate-300 px-4 py-2 text-right">Base Distance (km)</th>
+                    <th className="border border-slate-300 px-4 py-2 text-right">Rate/km Beyond (₹)</th>
+                    <th className="border border-slate-300 px-4 py-2 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rates.map((rate) => (
+                    <tr key={rate.id} className="hover:bg-slate-50">
+                      <td className="border border-slate-300 px-4 py-2">{rate.name_of_firm}</td>
+                      <td className="border border-slate-300 px-4 py-2">{rate.company_name}</td>
+                      <td className="border border-slate-300 px-4 py-2">{rate.service_type}</td>
+                      <td className="border border-slate-300 px-4 py-2 text-right">₹{rate.base_rate?.toLocaleString('en-IN')}</td>
+                      <td className="border border-slate-300 px-4 py-2 text-right">{rate.base_distance_km || 40} km</td>
+                      <td className="border border-slate-300 px-4 py-2 text-right">₹{rate.rate_per_km_beyond}</td>
+                      <td className="border border-slate-300 px-4 py-2 text-center">
+                        <Button
+                          size="sm"
+                          onClick={() => handleEditRate(rate)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                        >
+                          Edit
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {rates.length === 0 && (
+              <div className="text-center py-8 text-slate-500">
+                No rates found. Rates will be automatically initialized when orders are created.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Edit Rate Dialog */}
+        {showEditDialog && editingRate && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4">Edit Rate</h3>
+              <div className="space-y-4">
+                <div className="text-sm text-slate-600 mb-4">
+                  <p><strong>Firm:</strong> {editingRate.name_of_firm}</p>
+                  <p><strong>Company:</strong> {editingRate.company_name}</p>
+                  <p><strong>Service:</strong> {editingRate.service_type}</p>
+                </div>
+                
+                <div>
+                  <Label>Base Rate (₹)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editingRate.base_rate}
+                    onChange={(e) => setEditingRate(prev => ({...prev, base_rate: e.target.value}))}
+                    placeholder="Base rate"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Base Distance (km)</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={editingRate.base_distance_km}
+                    onChange={(e) => setEditingRate(prev => ({...prev, base_distance_km: e.target.value}))}
+                    placeholder="Base distance in km"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Rate per km Beyond Base (₹)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editingRate.rate_per_km_beyond}
+                    onChange={(e) => setEditingRate(prev => ({...prev, rate_per_km_beyond: e.target.value}))}
+                    placeholder="Rate per km beyond base distance"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditingRate(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpdateRate}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  Update Rate
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 function App() {
   return (
