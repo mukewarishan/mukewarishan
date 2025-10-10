@@ -1418,13 +1418,19 @@ const OrderForm = ({ orderId = null }) => {
                           <Label htmlFor="company_name" className="text-sm font-medium text-slate-700">
                             Company Name
                           </Label>
-                          <Input
-                            id="company_name"
-                            value={formData.company_name}
-                            onChange={(e) => handleInputChange('company_name', e.target.value)}
-                            placeholder="Additional company information"
-                            className="mt-1"
-                          />
+                          <Select 
+                            value={formData.company_name} 
+                            onValueChange={(value) => handleInputChange('company_name', value)}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select company name" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Mondial">Mondial</SelectItem>
+                              <SelectItem value="TVS">TVS</SelectItem>
+                              <SelectItem value="Europ Assistance">Europ Assistance</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                       
