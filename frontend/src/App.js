@@ -672,6 +672,14 @@ const Dashboard = () => {
                     <span>📄</span>
                     <span>Export PDF</span>
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => exportData('googlesheets')}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>📊</span>
+                    <span>Export Google Sheets</span>
+                  </Button>
                 </>
               )}
               <Button 
