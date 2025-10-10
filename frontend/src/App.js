@@ -735,6 +735,16 @@ const Dashboard = () => {
                             Case ID: {order.case_id_file_number}
                           </p>
                         )}
+                        {hasRole(['super_admin', 'admin']) && order.incentive_amount && (
+                          <div className="mt-2 p-2 bg-orange-100 border border-orange-200 rounded text-xs">
+                            <p className="text-orange-800 font-semibold">
+                              💰 Incentive: ₹{order.incentive_amount.toLocaleString('en-IN')}
+                            </p>
+                            {order.incentive_reason && (
+                              <p className="text-orange-600">{order.incentive_reason}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
