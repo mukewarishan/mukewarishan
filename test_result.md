@@ -131,6 +131,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Confirmed working from iteration_7.json test report"
+      - working: true
+        agent: "testing"
+        comment: "Re-tested PDF export endpoint /api/export/pdf. Working correctly with proper file download response. Tested with filters (order_type, limit) - all functioning properly."
 
   - task: "Excel Export"
     implemented: true
