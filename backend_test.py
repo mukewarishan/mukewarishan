@@ -2201,6 +2201,152 @@ class CraneOrderAPITester:
         
         return dashboard_success
 
+    def test_dashboard_orders_loading(self):
+        """Test dashboard orders loading without Pydantic validation errors - Priority 1"""
+        print("\n🎯 Testing Dashboard Orders Loading (Priority 1)...")
+        
+        # Test 1: GET /api/orders - Verify orders load without Pydantic validation errors
+        success1, response1 = self.run_test("Dashboard Orders Loading", "GET", "orders", 200)
+        
+        orders_count = 0
+        if success1 and response1:
+            orders = response1 if isinstance(response1, list) else []
+            orders_count = len(orders)
+            self.log_test("Orders Count Check", True, f"Retrieved {orders_count} orders successfully")
+        
+        # Test 2: Test filtered orders - cash orders
+        success2, response2 = self.run_test("Dashboard Filter Cash Orders", "GET", "orders", 200, params={"order_type": "cash"})
+        
+        cash_count = 0
+        if success2 and response2:
+            cash_orders = response2 if isinstance(response2, list) else []
+            cash_count = len(cash_orders)
+            self.log_test("Cash Orders Filter", True, f"Retrieved {cash_count} cash orders")
+        
+        # Test 3: Test filtered orders - company orders
+        success3, response3 = self.run_test("Dashboard Filter Company Orders", "GET", "orders", 200, params={"order_type": "company"})
+        
+        company_count = 0
+        if success3 and response3:
+            company_orders = response3 if isinstance(response3, list) else []
+            company_count = len(company_orders)
+            self.log_test("Company Orders Filter", True, f"Retrieved {company_count} company orders")
+        
+        # Test 4: Test stats endpoint
+        success4, response4 = self.run_test("Dashboard Stats Summary", "GET", "orders/stats/summary", 200)
+        
+        if success4 and response4:
+            total_orders = response4.get('total_orders', 0)
+            by_type = response4.get('by_type', [])
+            self.log_test("Stats Endpoint Verification", True, f"Total orders: {total_orders}, By type: {len(by_type)} categories")
+        
+        return success1 and success2 and success3 and success4
+
+    def test_rates_management_endpoints(self):
+        """Test rates management endpoints - Priority 2"""
+        print("\n🎯 Testing Rates Management Endpoints (Priority 2)...")
+        
+        # Test 1: GET /api/rates - Test retrieving all service rates (Admin only)
+        success1, response1 = self.run_test("Get All Service Rates", "GET", "rates", 200)
+        
+        rates_list = []
+        rate_id_for_update = None
+        if success1 and response1:
+            rates_list = response1 if isinstance(response1, list) else []
+            if rates_list:
+                rate_id_for_update = rates_list[0].get('id')
+                self.log_test("Rates Retrieval", True, f"Retrieved {len(rates_list)} service rates")
+            else:
+                self.log_test("Rates Retrieval", False, "No service rates found")
+        
+        if not rate_id_for_update:
+            self.log_test("Rates Management Tests", False, "No rate ID available for update tests")
+            return False
+        
+        # Test 2: PUT /api/rates/{rate_id} - Test updating rate fields
+        update_data = {
+            "base_rate": 1500.0,
+            "base_distance_km": 45.0,
+            "rate_per_km_beyond": 18.0
+        }
+        
+        success2, response2 = self.run_test("Update Service Rate", "PUT", f"rates/{rate_id_for_update}", 200, update_data)
+        
+        if success2 and response2:
+            updated_base_rate = response2.get('base_rate')
+            updated_base_distance = response2.get('base_distance_km')
+            updated_per_km = response2.get('rate_per_km_beyond')
+            
+            if (updated_base_rate == 1500.0 and 
+                updated_base_distance == 45.0 and 
+                updated_per_km == 18.0):
+                self.log_test("Rate Update Verification", True, f"Base: ₹{updated_base_rate}, Distance: {updated_base_distance}km, Per km: ₹{updated_per_km}")
+            else:
+                self.log_test("Rate Update Verification", False, f"Update failed - Base: {updated_base_rate}, Distance: {updated_base_distance}, Per km: {updated_per_km}")
+        
+        # Test 3: Rate validation - Test invalid rate updates (negative values)
+        invalid_update_data = {
+            "base_rate": -100.0,  # Negative value should fail
+            "rate_per_km_beyond": -5.0
+        }
+        
+        success3, response3 = self.run_test("Invalid Rate Update (Negative Values)", "PUT", f"rates/{rate_id_for_update}", 400, invalid_update_data)
+        
+        # Test 4: Rate validation - Test missing fields
+        incomplete_update_data = {
+            "invalid_field": 123  # Invalid field should be ignored
+        }
+        
+        success4, response4 = self.run_test("Invalid Rate Update (Invalid Fields)", "PUT", f"rates/{rate_id_for_update}", 400, incomplete_update_data)
+        
+        # Test 5: Audit trail verification - Check if rate updates are logged
+        success5, response5 = self.run_test("Audit Trail for Rate Updates", "GET", "audit-logs", 200, params={"resource_type": "SERVICE_RATE", "action": "UPDATE"})
+        
+        audit_found = False
+        if success5 and response5:
+            audit_logs = response5 if isinstance(response5, list) else []
+            # Look for recent rate update audit logs
+            for log in audit_logs:
+                if (log.get('resource_type') == 'SERVICE_RATE' and 
+                    log.get('action') == 'UPDATE' and 
+                    log.get('resource_id') == rate_id_for_update):
+                    audit_found = True
+                    break
+            
+            if audit_found:
+                self.log_test("Rate Update Audit Trail", True, f"Found audit log for rate update")
+            else:
+                self.log_test("Rate Update Audit Trail", False, f"No audit log found for rate update")
+        
+        return success1 and success2 and success3 and success4 and (success5 and audit_found)
+
+    def test_review_request_priorities(self):
+        """Test the specific review request priorities"""
+        print("\n🎯 TESTING REVIEW REQUEST PRIORITIES")
+        print("=" * 60)
+        
+        # Priority 1: Dashboard Orders Loading
+        priority1_success = self.test_dashboard_orders_loading()
+        
+        # Priority 2: Rates Management Endpoints  
+        priority2_success = self.test_rates_management_endpoints()
+        
+        # Overall review request success
+        overall_success = priority1_success and priority2_success
+        
+        if overall_success:
+            self.log_test("Review Request Overall", True, "Both Priority 1 (Dashboard Orders) and Priority 2 (Rates Management) tests passed")
+        else:
+            failed_priorities = []
+            if not priority1_success:
+                failed_priorities.append("Priority 1 (Dashboard Orders)")
+            if not priority2_success:
+                failed_priorities.append("Priority 2 (Rates Management)")
+            
+            self.log_test("Review Request Overall", False, f"Failed priorities: {', '.join(failed_priorities)}")
+        
+        return overall_success
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
