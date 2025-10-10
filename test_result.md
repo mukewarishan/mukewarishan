@@ -348,10 +348,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Backend Mandatory Fields Validation"
+    - "Google Sheets API Integration"
   stuck_tasks: 
     - "Google Sheets API Integration"
-    - "Backend Mandatory Fields Validation"
   test_all: false
   test_priority: "high_first"
 
