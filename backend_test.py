@@ -367,11 +367,21 @@ class CraneOrderAPITester:
         print(f"📍 Testing API at: {self.api_url}")
         print("=" * 60)
 
+        # First login to get authentication token
+        if not self.test_login():
+            print("❌ Login failed, stopping tests")
+            return 1
+
         # Test sequence
         test_methods = [
             self.test_root_endpoint,
             self.test_create_cash_order,
             self.test_create_company_order,
+            self.test_cash_order_with_driver_dropdown,
+            self.test_company_order_with_dropdowns,
+            self.test_all_driver_options,
+            self.test_all_firm_options,
+            self.test_all_company_options,
             self.test_get_all_orders,
             self.test_get_orders_with_filters,
             self.test_get_single_order,
