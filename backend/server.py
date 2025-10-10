@@ -1986,6 +1986,210 @@ async def export_revenue_report_by_vehicle_type(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error exporting revenue report: {str(e)}")
 
+@api_router.post("/reports/custom")
+async def generate_custom_report(
+    report_config: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Generate custom report based on user configuration"""
+    try:
+        # Extract configuration
+        start_date_str = report_config.get("start_date")
+        end_date_str = report_config.get("end_date")
+        group_by = report_config.get("group_by", "order_type")  # order_type, driver, service_type, towing_vehicle, firm, company
+        report_type = report_config.get("report_type", "summary")  # summary, detailed
+        order_types = report_config.get("order_types", ["cash", "company"])  # filter by order types
+        
+        # Parse dates
+        start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00')) if start_date_str else datetime(2020, 1, 1, tzinfo=timezone.utc)
+        end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00')) if end_date_str else datetime.now(timezone.utc)
+        
+        # Query orders for the date range
+        query = {
+            "date_time": {
+                "$gte": start_date.isoformat(),
+                "$lte": end_date.isoformat()
+            }
+        }
+        
+        if order_types and len(order_types) < 2:
+            query["order_type"] = {"$in": order_types}
+        
+        orders = await db.crane_orders.find(query, {"_id": 0}).to_list(10000)
+        parsed_orders = [parse_from_mongo(order) for order in orders]
+        
+        # Group data based on configuration
+        grouped_data = {}
+        
+        for order in parsed_orders:
+            # Determine grouping key
+            if group_by == "driver":
+                key = order.get("cash_driver_name" if order.get("order_type") == "cash" else "company_driver_name") or "Unknown Driver"
+            elif group_by == "service_type":
+                key = order.get("cash_service_type" if order.get("order_type") == "cash" else "company_service_type") or "Unknown Service"
+            elif group_by == "towing_vehicle":
+                key = order.get("cash_towing_vehicle" if order.get("order_type") == "cash" else "company_towing_vehicle") or "Unknown Vehicle"
+            elif group_by == "firm":
+                key = order.get("name_of_firm") or "Unknown Firm"
+            elif group_by == "company":
+                key = order.get("company_name") or "Unknown Company"
+            else:  # order_type
+                key = order.get("order_type", "unknown").title()
+            
+            if key not in grouped_data:
+                grouped_data[key] = {
+                    "group_key": key,
+                    "cash_orders": 0,
+                    "company_orders": 0,
+                    "total_orders": 0,
+                    "total_revenue": 0,
+                    "total_expenses": 0,
+                    "total_incentives": 0,
+                    "orders": [] if report_type == "detailed" else None
+                }
+            
+            # Calculate revenue and expenses
+            if order.get("order_type") == "cash":
+                revenue = order.get("amount_received", 0) or 0
+                expenses = (order.get("cash_diesel", 0) or 0) + (order.get("cash_toll", 0) or 0)
+                grouped_data[key]["cash_orders"] += 1
+            else:  # company order
+                financials = await calculate_order_financials(order)
+                revenue = financials.base_revenue
+                expenses = (order.get("company_diesel", 0) or 0) + (order.get("company_toll", 0) or 0)
+                grouped_data[key]["company_orders"] += 1
+            
+            incentive = order.get("incentive_amount", 0) or 0
+            
+            # Update aggregates
+            grouped_data[key]["total_orders"] += 1
+            grouped_data[key]["total_revenue"] += revenue + incentive
+            grouped_data[key]["total_expenses"] += expenses
+            grouped_data[key]["total_incentives"] += incentive
+            
+            # Add to detailed orders if needed
+            if report_type == "detailed":
+                grouped_data[key]["orders"].append({
+                    "id": order.get("id"),
+                    "customer_name": order.get("customer_name"),
+                    "phone": order.get("phone"),
+                    "order_type": order.get("order_type"),
+                    "date_time": order.get("date_time").isoformat() if order.get("date_time") else None,
+                    "revenue": revenue + incentive,
+                    "expenses": expenses
+                })
+        
+        # Convert to list and sort by total revenue
+        report_data = list(grouped_data.values())
+        report_data.sort(key=lambda x: x["total_revenue"], reverse=True)
+        
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "group_by": group_by,
+            "report_type": report_type,
+            "order_types": order_types,
+            "data": report_data,
+            "summary": {
+                "total_groups": len(report_data),
+                "total_orders": sum(d["total_orders"] for d in report_data),
+                "total_revenue": sum(d["total_revenue"] for d in report_data),
+                "total_expenses": sum(d["total_expenses"] for d in report_data)
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating custom report: {str(e)}")
+
+@api_router.post("/reports/custom/export")
+async def export_custom_report(
+    report_config: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Export custom report as Excel file"""
+    try:
+        # Get the report data
+        report_response = await generate_custom_report(report_config, current_user)
+        report_data = report_response["data"]
+        group_by = report_response["group_by"]
+        
+        # Create Excel workbook
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = f"Custom Report by {group_by.replace('_', ' ').title()}"
+        
+        # Headers
+        headers = [
+            group_by.replace('_', ' ').title(),
+            "Cash Orders", "Company Orders", "Total Orders",
+            "Total Revenue (₹)", "Total Expenses (₹)", "Total Incentives (₹)", "Net Profit (₹)"
+        ]
+        
+        for col, header in enumerate(headers, 1):
+            cell = worksheet.cell(row=1, column=col, value=header)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+        
+        # Data rows
+        for row_idx, group_data in enumerate(report_data, 2):
+            net_profit = group_data["total_revenue"] - group_data["total_expenses"]
+            worksheet.cell(row=row_idx, column=1, value=group_data["group_key"])
+            worksheet.cell(row=row_idx, column=2, value=group_data["cash_orders"])
+            worksheet.cell(row=row_idx, column=3, value=group_data["company_orders"])
+            worksheet.cell(row=row_idx, column=4, value=group_data["total_orders"])
+            worksheet.cell(row=row_idx, column=5, value=group_data["total_revenue"])
+            worksheet.cell(row=row_idx, column=6, value=group_data["total_expenses"])
+            worksheet.cell(row=row_idx, column=7, value=group_data["total_incentives"])
+            worksheet.cell(row=row_idx, column=8, value=net_profit)
+        
+        # Summary row
+        summary_row = len(report_data) + 3
+        total_revenue = sum(d["total_revenue"] for d in report_data)
+        total_expenses = sum(d["total_expenses"] for d in report_data)
+        worksheet.cell(row=summary_row, column=1, value="TOTAL")
+        worksheet.cell(row=summary_row, column=2, value=sum(d["cash_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=3, value=sum(d["company_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=4, value=sum(d["total_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=5, value=total_revenue)
+        worksheet.cell(row=summary_row, column=6, value=total_expenses)
+        worksheet.cell(row=summary_row, column=7, value=sum(d["total_incentives"] for d in report_data))
+        worksheet.cell(row=summary_row, column=8, value=total_revenue - total_expenses)
+        
+        # Format summary row
+        for col in range(1, 9):
+            cell = worksheet.cell(row=summary_row, column=col)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
+        
+        # Auto-adjust column widths
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 30)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to bytes
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        filename = f"kawale_custom_report_{group_by}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        
+        return Response(
+            content=excel_buffer.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting custom report: {str(e)}")
+
 # Data import endpoint
 @api_router.post("/import/excel")
 async def import_excel_data(
