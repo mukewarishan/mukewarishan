@@ -1565,6 +1565,92 @@ async def get_expense_report_by_driver(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating expense report: {str(e)}")
 
+@api_router.get("/reports/revenue-by-towing-vehicle")
+async def get_revenue_report_by_towing_vehicle(
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    year: int = Query(..., ge=2020, le=2030, description="Year (2020-2030)"),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get revenue report by towing vehicle for a specific month (Admin and Super Admin only)"""
+    try:
+        # Create date range for the month
+        start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+        
+        # Query orders for the specified month
+        query = {
+            "date_time": {
+                "$gte": start_date.isoformat(),
+                "$lt": end_date.isoformat()
+            }
+        }
+        
+        orders = await db.crane_orders.find(query, {"_id": 0}).to_list(10000)
+        parsed_orders = [parse_from_mongo(order) for order in orders]
+        
+        # Aggregate revenue by towing vehicle
+        vehicle_revenue = {}
+        
+        for order in parsed_orders:
+            # Determine towing vehicle based on order type
+            if order.get("order_type") == "cash":
+                towing_vehicle = order.get("cash_towing_vehicle") or "Unknown Vehicle"
+                # For cash orders, revenue is amount_received
+                base_revenue = order.get("amount_received", 0) or 0
+            else:  # company order
+                towing_vehicle = order.get("company_towing_vehicle") or "Unknown Vehicle"
+                # For company orders, calculate revenue using rates
+                financials = await calculate_order_financials(order)
+                base_revenue = financials.base_revenue
+            
+            # Add incentive to revenue
+            incentive_amount = order.get("incentive_amount", 0) or 0
+            total_revenue = base_revenue + incentive_amount
+            
+            if towing_vehicle not in vehicle_revenue:
+                vehicle_revenue[towing_vehicle] = {
+                    "towing_vehicle": towing_vehicle,
+                    "cash_orders": 0,
+                    "company_orders": 0,
+                    "total_orders": 0,
+                    "total_base_revenue": 0,
+                    "total_incentive_amount": 0,
+                    "total_revenue": 0
+                }
+            
+            # Update counts and revenue
+            if order.get("order_type") == "cash":
+                vehicle_revenue[towing_vehicle]["cash_orders"] += 1
+            else:
+                vehicle_revenue[towing_vehicle]["company_orders"] += 1
+            
+            vehicle_revenue[towing_vehicle]["total_orders"] += 1
+            vehicle_revenue[towing_vehicle]["total_base_revenue"] += base_revenue
+            vehicle_revenue[towing_vehicle]["total_incentive_amount"] += incentive_amount
+            vehicle_revenue[towing_vehicle]["total_revenue"] += total_revenue
+        
+        # Convert to list and sort by total revenue
+        report_data = list(vehicle_revenue.values())
+        report_data.sort(key=lambda x: x["total_revenue"], reverse=True)
+        
+        return {
+            "month": month,
+            "year": year,
+            "report_type": "revenue_by_towing_vehicle",
+            "data": report_data,
+            "summary": {
+                "total_vehicles": len(report_data),
+                "total_orders": sum(d["total_orders"] for d in report_data),
+                "total_revenue": sum(d["total_revenue"] for d in report_data)
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating towing vehicle revenue report: {str(e)}")
+
 @api_router.get("/reports/revenue-by-vehicle-type")
 async def get_revenue_report_by_vehicle_type(
     month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
