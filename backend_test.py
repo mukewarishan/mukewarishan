@@ -2880,6 +2880,9 @@ class CraneOrderAPITester:
             # Export Endpoints Tests
             self.test_export_endpoints,
             
+            # Monthly Reports System Tests
+            self.test_monthly_reports_system,
+            
             # Audit Logging Tests
             self.test_audit_logging,
             
