@@ -3736,6 +3736,12 @@ class CraneOrderAPITester:
         print("\n🎯 REVIEW REQUEST TESTING")
         print("=" * 80)
         self.test_review_request_priorities()
+        
+        # NEW FEATURES TESTING - PRIMARY FOCUS
+        print("\n🎯 NEW FEATURES TESTING - PRIMARY FOCUS")
+        print("=" * 80)
+        self.test_super_admin_password_reset_feature()
+        self.test_data_entry_role_access_restrictions()
 
         # Test sequence - organized by functionality
         test_methods = [
