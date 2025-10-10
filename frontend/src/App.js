@@ -1171,8 +1171,6 @@ const OrderForm = ({ orderId = null }) => {
     cash_diesel_refill_location: '',
     cash_driver_name: '',
     cash_towing_vehicle: '',
-    cash_reach_time: '',
-    cash_drop_time: '',
     
     // Company fields
     name_of_firm: '',
