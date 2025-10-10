@@ -7,9 +7,10 @@ import re
 
 # MongoDB connection
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'test_database')
 client = MongoClient(MONGO_URL)
-db = client['crane_orders_db']
-orders_collection = db['orders']
+db = client[DB_NAME]
+orders_collection = db['crane_orders']
 
 def clean_monetary_value(value):
     """Clean monetary values like '₹ 2000.00', '500.00 INR', etc."""
