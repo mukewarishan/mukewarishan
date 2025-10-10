@@ -1743,9 +1743,30 @@ const OrderForm = ({ orderId = null }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Basic validation
     if (!formData.customer_name || !formData.phone || !formData.order_type) {
       toast.error('Please fill in all required fields');
       return;
+    }
+    
+    // Order type specific validation
+    if (formData.order_type === 'company') {
+      if (!formData.company_name) {
+        toast.error('Company Name is required for company orders');
+        return;
+      }
+      if (!formData.company_service_type) {
+        toast.error('Service Type is required for company orders');
+        return;
+      }
+      if (!formData.company_driver_name) {
+        toast.error('Driver is required for company orders');
+        return;
+      }
+      if (!formData.company_towing_vehicle) {
+        toast.error('Towing Vehicle is required for company orders');
+        return;
+      }
     }
     
     try {
