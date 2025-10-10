@@ -2972,6 +2972,156 @@ const Reports = () => {
                   )}
                 </div>
               </TabsContent>
+
+              {/* Towing Vehicle Revenue Report Tab */}
+              <TabsContent value="towing">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">
+                      Revenue Report by Towing Vehicle - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                    </h3>
+                    <Button onClick={exportTowingVehicleReport} className="bg-green-600 hover:bg-green-700 text-white">
+                      <span className="mr-2">📥</span>
+                      Export Excel
+                    </Button>
+                  </div>
+
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-slate-300">
+                        <thead>
+                          <tr className="bg-slate-100">
+                            <th className="border border-slate-300 px-4 py-2 text-left">Towing Vehicle</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Base Revenue (₹)</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Incentive (₹)</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Total Revenue (₹)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {towingVehicleData.map((vehicle, index) => (
+                            <tr key={index} className="hover:bg-slate-50">
+                              <td className="border border-slate-300 px-4 py-2 font-medium">{vehicle.towing_vehicle}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.cash_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.company_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.total_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_base_revenue?.toLocaleString('en-IN')}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_incentive_amount?.toLocaleString('en-IN')}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{vehicle.total_revenue?.toLocaleString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {towingVehicleData.length === 0 && !loading && (
+                    <div className="text-center py-8 text-slate-500">
+                      No towing vehicle data found for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Custom Reports Tab */}
+              <TabsContent value="custom">
+                <div className="space-y-6">
+                  <div className="bg-slate-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Custom Report Configuration</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label>Start Date</Label>
+                        <Input
+                          type="date"
+                          value={customConfig.start_date}
+                          onChange={(e) => setCustomConfig(prev => ({...prev, start_date: e.target.value}))}
+                        />
+                      </div>
+                      <div>
+                        <Label>End Date</Label>
+                        <Input
+                          type="date"
+                          value={customConfig.end_date}
+                          onChange={(e) => setCustomConfig(prev => ({...prev, end_date: e.target.value}))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Group By</Label>
+                        <Select value={customConfig.group_by} onValueChange={(value) => setCustomConfig(prev => ({...prev, group_by: value}))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="order_type">Order Type</SelectItem>
+                            <SelectItem value="driver">Driver</SelectItem>
+                            <SelectItem value="service_type">Service Type</SelectItem>
+                            <SelectItem value="towing_vehicle">Towing Vehicle</SelectItem>
+                            <SelectItem value="firm">Firm</SelectItem>
+                            <SelectItem value="company">Company</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-4 mt-4">
+                      <Button onClick={fetchCustomReport} className="bg-blue-600 hover:bg-blue-700 text-white">
+                        Generate Report
+                      </Button>
+                      <Button onClick={exportCustomReport} className="bg-green-600 hover:bg-green-700 text-white">
+                        <span className="mr-2">📥</span>
+                        Export Excel
+                      </Button>
+                    </div>
+                  </div>
+
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    </div>
+                  ) : customReportData.length > 0 && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-slate-300">
+                        <thead>
+                          <tr className="bg-slate-100">
+                            <th className="border border-slate-300 px-4 py-2 text-left">{customConfig.group_by.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Total Revenue (₹)</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Total Expenses (₹)</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Net Profit (₹)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {customReportData.map((item, index) => (
+                            <tr key={index} className="hover:bg-slate-50">
+                              <td className="border border-slate-300 px-4 py-2 font-medium">{item.group_key}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{item.cash_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{item.company_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{item.total_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right">₹{item.total_revenue?.toLocaleString('en-IN')}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right">₹{item.total_expenses?.toLocaleString('en-IN')}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{(item.total_revenue - item.total_expenses)?.toLocaleString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {customReportData.length === 0 && !loading && (
+                    <div className="text-center py-8 text-slate-500">
+                      Configure and generate your custom report above
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
