@@ -1322,11 +1322,10 @@ const OrderForm = ({ orderId = null }) => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
                   <TabsTrigger value="vehicle">Vehicle & Trip</TabsTrigger>
                   <TabsTrigger value="costs">Costs & Charges</TabsTrigger>
-                  <TabsTrigger value="additional">Additional Info</TabsTrigger>
                 </TabsList>
                 
                 {/* Basic Info Tab */}
