@@ -149,13 +149,13 @@ class CraneOrder(BaseModel):
     
     # Company order fields
     name_of_firm: Optional[str] = None
-    company_name: str = ""  # Made mandatory
+    company_name: Optional[str] = None  # Mandatory via endpoint validation
     case_id_file_number: Optional[str] = None
     company_vehicle_name: Optional[str] = None
     company_vehicle_number: Optional[str] = None
-    company_service_type: str = ""  # Made mandatory
+    company_service_type: Optional[str] = None  # Mandatory via endpoint validation
     company_vehicle_details: Optional[str] = None
-    company_driver_details: str = ""  # Made mandatory (Driver)
+    company_driver_details: Optional[str] = None  # Mandatory via endpoint validation (Driver)
     company_trip_from: Optional[str] = None
     company_trip_to: Optional[str] = None
     reach_time: Optional[datetime] = None
@@ -196,13 +196,13 @@ class CraneOrderCreate(BaseModel):
     
     # Company order fields
     name_of_firm: Optional[str] = None
-    company_name: str = ""  # Made mandatory
+    company_name: Optional[str] = None  # Mandatory via endpoint validation
     case_id_file_number: Optional[str] = None
     company_vehicle_name: Optional[str] = None
     company_vehicle_number: Optional[str] = None
-    company_service_type: str = ""  # Made mandatory
+    company_service_type: Optional[str] = None  # Mandatory via endpoint validation
     company_vehicle_details: Optional[str] = None
-    company_driver_details: str = ""  # Made mandatory (Driver)
+    company_driver_details: Optional[str] = None  # Mandatory via endpoint validation (Driver)
     company_trip_from: Optional[str] = None
     company_trip_to: Optional[str] = None
     reach_time: Optional[datetime] = None
