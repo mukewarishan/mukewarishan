@@ -927,6 +927,10 @@ const UserManagement = () => {
   });
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resettingPassword, setResettingPassword] = useState(false);
   const { user: currentUser, hasRole } = useAuth();
 
   useEffect(() => {
