@@ -1006,6 +1006,28 @@ const UserManagement = () => {
                         <td className="py-3 px-4 text-sm text-slate-600">
                           {user.last_login ? new Date(user.last_login).toLocaleDateString('en-IN') : 'Never'}
                         </td>
+                        {hasRole(['super_admin']) && (
+                          <td className="py-3 px-4">
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => editUser(user)}
+                              >
+                                Edit
+                              </Button>
+                              {user.id !== currentUser?.id && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => deleteUser(user.id, user.full_name)}
+                                >
+                                  Delete
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
