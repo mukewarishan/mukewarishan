@@ -763,6 +763,8 @@ const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [newUser, setNewUser] = useState({
     email: '',
     full_name: '',
@@ -770,6 +772,8 @@ const UserManagement = () => {
     role: 'data_entry'
   });
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const { user: currentUser, hasRole } = useAuth();
 
   useEffect(() => {
     fetchUsers();
