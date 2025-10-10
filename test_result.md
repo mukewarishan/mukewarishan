@@ -107,15 +107,18 @@ user_problem_statement: "Add the feature to export all records to PDF or Microso
 backend:
   - task: "Google Sheets API Integration"
     implemented: true
-    working: "NA"
+    working: false
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented Google Sheets export endpoint /api/export/googlesheets with gspread integration. Requires environment variables setup."
+      - working: false
+        agent: "testing"
+        comment: "Tested Google Sheets export endpoint. Returns HTTP 500 as expected due to missing environment variables (GOOGLE_SERVICE_ACCOUNT_KEY_PATH and GOOGLE_SHEETS_SPREADSHEET_ID). Implementation is correct but requires configuration to work."
 
   - task: "PDF Export"
     implemented: true
