@@ -1645,7 +1645,10 @@ class CraneOrderAPITester:
             # Authentication System Tests
             self.test_authentication_system,
             
-            # SK Rates Calculation System Tests (PRIMARY FOCUS)
+            # PRIMARY FOCUS: Mandatory Fields & Incentives Testing
+            self.test_mandatory_fields_and_incentives_comprehensive,
+            
+            # SK Rates Calculation System Tests
             self.test_sk_rates_calculation_system,
             
             # Order Management CRUD Tests
