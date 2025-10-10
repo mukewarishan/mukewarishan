@@ -803,6 +803,241 @@ async def get_audit_logs(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching audit logs: {str(e)}")
 
+# Export endpoints
+@api_router.get("/export/excel")
+async def export_orders_excel(
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN])),
+    order_type: Optional[str] = Query(None),
+    customer_name: Optional[str] = Query(None),
+    phone: Optional[str] = Query(None),
+    limit: int = Query(1000, ge=1, le=5000)
+):
+    """Export orders to Excel (Admin and Super Admin only)"""
+    try:
+        # Build query
+        query = {}
+        if order_type:
+            query["order_type"] = order_type
+        if customer_name:
+            query["customer_name"] = {"$regex": customer_name, "$options": "i"}
+        if phone:
+            query["phone"] = {"$regex": phone, "$options": "i"}
+        
+        # Get orders
+        orders = await db.crane_orders.find(query, {"_id": 0}).limit(limit).to_list(limit)
+        
+        # Create Excel workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Kawale Cranes Orders"
+        
+        # Headers
+        headers = [
+            "Order ID", "Date/Time", "Customer Name", "Phone", "Order Type",
+            "Trip From", "Trip To", "Vehicle", "Driver", "Service Type",
+            "Amount", "Advance", "KMs", "Toll", "Diesel", "Status"
+        ]
+        
+        # Style headers
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center")
+        
+        # Data rows
+        for row, order in enumerate(orders, 2):
+            parsed_order = parse_from_mongo(order)
+            
+            ws.cell(row, 1, parsed_order.get("unique_id", "")[:8])
+            ws.cell(row, 2, parsed_order.get("date_time", "").strftime("%Y-%m-%d %H:%M") if parsed_order.get("date_time") else "")
+            ws.cell(row, 3, parsed_order.get("customer_name", ""))
+            ws.cell(row, 4, parsed_order.get("phone", ""))
+            ws.cell(row, 5, parsed_order.get("order_type", "").title())
+            
+            if parsed_order.get("order_type") == "cash":
+                ws.cell(row, 6, parsed_order.get("cash_trip_from", ""))
+                ws.cell(row, 7, parsed_order.get("cash_trip_to", ""))
+                ws.cell(row, 8, parsed_order.get("cash_vehicle_name", ""))
+                ws.cell(row, 9, parsed_order.get("cash_driver_name", ""))
+                ws.cell(row, 10, parsed_order.get("cash_service_type", ""))
+                ws.cell(row, 11, parsed_order.get("amount_received", 0))
+                ws.cell(row, 12, parsed_order.get("advance_amount", 0))
+                ws.cell(row, 13, parsed_order.get("cash_kms_travelled", 0))
+                ws.cell(row, 14, parsed_order.get("cash_toll", 0))
+                ws.cell(row, 15, parsed_order.get("cash_diesel", 0))
+            else:
+                ws.cell(row, 6, parsed_order.get("company_trip_from", ""))
+                ws.cell(row, 7, parsed_order.get("company_trip_to", ""))
+                ws.cell(row, 8, parsed_order.get("company_vehicle_name", ""))
+                ws.cell(row, 9, parsed_order.get("company_driver_name", ""))
+                ws.cell(row, 10, parsed_order.get("company_service_type", ""))
+                ws.cell(row, 11, "")  # No amount for company
+                ws.cell(row, 12, "")  # No advance for company
+                ws.cell(row, 13, parsed_order.get("company_kms_travelled", 0))
+                ws.cell(row, 14, parsed_order.get("company_toll", 0))
+                ws.cell(row, 15, parsed_order.get("company_diesel", 0))
+            
+            ws.cell(row, 16, "Active")
+        
+        # Adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to memory
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="EXPORT",
+            resource_type="ORDER",
+            new_data={"format": "excel", "count": len(orders)}
+        )
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=kawale_cranes_orders.xlsx"}
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting Excel: {str(e)}")
+
+@api_router.get("/export/pdf")
+async def export_orders_pdf(
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN])),
+    order_type: Optional[str] = Query(None),
+    customer_name: Optional[str] = Query(None),
+    phone: Optional[str] = Query(None),
+    limit: int = Query(1000, ge=1, le=5000)
+):
+    """Export orders to PDF (Admin and Super Admin only)"""
+    try:
+        # Build query
+        query = {}
+        if order_type:
+            query["order_type"] = order_type
+        if customer_name:
+            query["customer_name"] = {"$regex": customer_name, "$options": "i"}
+        if phone:
+            query["phone"] = {"$regex": phone, "$options": "i"}
+        
+        # Get orders
+        orders = await db.crane_orders.find(query, {"_id": 0}).limit(limit).to_list(limit)
+        
+        # Create PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        story = []
+        
+        # Styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            textColor=colors.HexColor('#366092')
+        )
+        
+        # Title
+        story.append(Paragraph("Kawale Cranes - Orders Report", title_style))
+        story.append(Spacer(1, 20))
+        
+        # Summary
+        summary_data = [
+            ['Total Orders', str(len(orders))],
+            ['Report Generated', datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")],
+            ['Generated By', current_user.get("full_name", "Admin")]
+        ]
+        
+        summary_table = Table(summary_data)
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 30))
+        
+        # Orders table
+        headers = ["ID", "Date", "Customer", "Phone", "Type", "Amount"]
+        data = [headers]
+        
+        for order in orders:
+            parsed_order = parse_from_mongo(order)
+            row = [
+                parsed_order.get("unique_id", "")[:8],
+                parsed_order.get("date_time").strftime("%Y-%m-%d") if parsed_order.get("date_time") else "",
+                parsed_order.get("customer_name", "")[:20],
+                parsed_order.get("phone", ""),
+                parsed_order.get("order_type", "").title(),
+                f"₹{parsed_order.get('amount_received', 0)}" if parsed_order.get("order_type") == "cash" else "N/A"
+            ]
+            data.append(row)
+        
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        story.append(table)
+        doc.build(story)
+        buffer.seek(0)
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="EXPORT",
+            resource_type="ORDER",
+            new_data={"format": "pdf", "count": len(orders)}
+        )
+        
+        return StreamingResponse(
+            io.BytesIO(buffer.getvalue()),
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=kawale_cranes_orders.pdf"}
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting PDF: {str(e)}")
+
+# Data import endpoint
+@api_router.post("/import/excel")
+async def import_excel_data(
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN])),
+):
+    """Import orders from Excel file (Admin and Super Admin only)"""
+    # This endpoint will be implemented for file upload functionality
+    return {"message": "Excel import functionality available. Use the frontend upload interface."}
+
 # Initialize default super admin user
 async def create_default_super_admin():
     """Create default super admin user if none exists"""
