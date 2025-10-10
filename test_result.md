@@ -438,7 +438,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Monthly Reports System"
+    - "Revenue by Towing Vehicle Report"
+    - "Custom Reports System"
+    - "Create New Rates Functionality"
+    - "Excel Import Display Investigation"
   stuck_tasks: 
     - "Google Sheets API Integration"
   test_all: false
