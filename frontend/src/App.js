@@ -1245,8 +1245,75 @@ const DataImport = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {/* File Upload Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4">📁 Upload Excel File</h3>
+              
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  dragActive 
+                    ? 'border-blue-500 bg-blue-100' 
+                    : 'border-slate-300 hover:border-blue-400'
+                }`}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+              >
+                <div className="space-y-4">
+                  <div className="text-4xl">📊</div>
+                  <div>
+                    <p className="text-lg font-medium text-slate-700">
+                      Drop your Excel file here or click to browse
+                    </p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Supports .xlsx and .xls files
+                    </p>
+                  </div>
+                  
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="excel-upload"
+                  />
+                  <label htmlFor="excel-upload">
+                    <Button variant="outline" className="cursor-pointer" asChild>
+                      <span>Choose File</span>
+                    </Button>
+                  </label>
+                  
+                  {selectedFile && (
+                    <div className="mt-4 p-3 bg-white rounded border">
+                      <p className="text-sm font-medium text-slate-700">
+                        Selected: {selectedFile.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  )}
+                  
+                  <Button 
+                    onClick={handleImport}
+                    disabled={!selectedFile || importing}
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                  >
+                    {importing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      'Import Excel Data'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-green-800 mb-2">✅ Import Completed Successfully</h3>
+              <h3 className="text-lg font-semibold text-green-800 mb-2">✅ Previous Import Status</h3>
               <p className="text-green-700">
                 The Excel data has been successfully imported into the system.
               </p>
