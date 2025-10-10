@@ -618,12 +618,34 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            <Button 
-              onClick={() => navigate('/new-order')}
-              className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
-            >
-              + Add New Order
-            </Button>
+            <div className="flex space-x-2">
+              {hasRole(['super_admin', 'admin']) && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => exportData('excel')}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>📊</span>
+                    <span>Export Excel</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => exportData('pdf')}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>📄</span>
+                    <span>Export PDF</span>
+                  </Button>
+                </>
+              )}
+              <Button 
+                onClick={() => navigate('/new-order')}
+                className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
+              >
+                + Add New Order
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
