@@ -255,6 +255,21 @@ backend:
         agent: "testing"
         comment: "Tested MongoDB connections and data operations: Data persistence ✅, Data retrieval ✅, Data integrity verification ✅. Database operations working correctly with proper serialization/deserialization."
 
+  - task: "Dashboard Orders Pydantic Validation Fix"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL ISSUE IDENTIFIED: Dashboard orders endpoint returning HTTP 500 errors due to Pydantic validation failures. Backend logs show 'Input should be a valid string' errors for company order fields (company_name, company_service_type, company_driver_details, company_towing_vehicle) that contain None values from existing database records."
+      - working: true
+        agent: "testing"
+        comment: "✅ DASHBOARD ORDERS ISSUE RESOLVED: Fixed Pydantic validation errors by modifying parse_from_mongo() function to convert None values to empty strings for optional string fields. This prevents FastAPI response model validation from failing when serializing orders with None values. Comprehensive testing shows: GET /api/orders ✅ (100 orders retrieved), filtered orders ✅, stats endpoint ✅, company order creation ✅, authentication ✅. Backend logs confirm no more Pydantic validation errors. Dashboard orders now load successfully without HTTP 500 errors."
+
   - task: "Filtering and Search Functionality"
     implemented: true
     working: true
