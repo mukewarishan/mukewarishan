@@ -210,6 +210,143 @@ class CraneOrderAPITester:
         
         return success1 and success2
 
+    def test_cash_order_with_driver_dropdown(self):
+        """Test creating cash order with driver dropdown field"""
+        order_data = {
+            "customer_name": "Test Driver Cash",
+            "phone": "9876543220",
+            "order_type": "cash",
+            "cash_trip_from": "Mumbai",
+            "cash_trip_to": "Pune",
+            "cash_vehicle_name": "Tata ACE",
+            "cash_service_type": "2-Wheeler Crane",
+            "amount_received": 5000.0,
+            "cash_driver_name": "Rahul"  # Testing driver dropdown
+        }
+        
+        success, response = self.run_test("Create Cash Order with Driver", "POST", "orders", 201, order_data)
+        
+        if success and 'id' in response:
+            self.created_orders.append(response['id'])
+            # Verify driver name is stored correctly
+            if response.get('cash_driver_name') == 'Rahul':
+                self.log_test("Cash Driver Field Verification", True, f"Driver stored: {response['cash_driver_name']}")
+                return True
+            else:
+                self.log_test("Cash Driver Field Verification", False, f"Expected: Rahul, Got: {response.get('cash_driver_name')}")
+        return False
+
+    def test_company_order_with_dropdowns(self):
+        """Test creating company order with all new dropdown fields"""
+        order_data = {
+            "customer_name": "Test Company Dropdowns",
+            "phone": "9876543221",
+            "order_type": "company",
+            "name_of_firm": "Kawale Cranes",  # Testing firm dropdown
+            "company_name": "Mondial",  # Testing company dropdown
+            "case_id_file_number": "CASE123",
+            "company_trip_from": "Delhi",
+            "company_trip_to": "Gurgaon",
+            "company_vehicle_name": "Mahindra Bolero",
+            "company_service_type": "4-Wheeler Crane",
+            "company_driver_name": "Subhash"  # Testing driver dropdown
+        }
+        
+        success, response = self.run_test("Create Company Order with Dropdowns", "POST", "orders", 201, order_data)
+        
+        if success and 'id' in response:
+            self.created_orders.append(response['id'])
+            # Verify all dropdown values are stored correctly
+            checks = [
+                ('name_of_firm', 'Kawale Cranes'),
+                ('company_name', 'Mondial'),
+                ('company_driver_name', 'Subhash')
+            ]
+            
+            all_correct = True
+            for field, expected in checks:
+                actual = response.get(field)
+                if actual == expected:
+                    self.log_test(f"Company {field} Verification", True, f"{field}: {actual}")
+                else:
+                    self.log_test(f"Company {field} Verification", False, f"Expected: {expected}, Got: {actual}")
+                    all_correct = False
+            
+            return all_correct
+        return False
+
+    def test_all_driver_options(self):
+        """Test creating orders with different driver options"""
+        driver_options = ["Rahul", "Subhash", "Dubey", "Sudhir", "Vikas"]
+        
+        success_count = 0
+        for i, driver in enumerate(driver_options):
+            order_data = {
+                "customer_name": f"Driver Test {driver}",
+                "phone": f"987654322{i}",
+                "order_type": "cash",
+                "cash_driver_name": driver,
+                "cash_vehicle_name": "Test Vehicle",
+                "amount_received": 1000.0
+            }
+            
+            success, response = self.run_test(f"Create Order with Driver {driver}", "POST", "orders", 201, order_data)
+            
+            if success and 'id' in response:
+                self.created_orders.append(response['id'])
+                if response.get('cash_driver_name') == driver:
+                    success_count += 1
+                    
+        return success_count == len(driver_options)
+
+    def test_all_firm_options(self):
+        """Test creating orders with different firm options"""
+        firm_options = ["Kawale Cranes", "Vira Towing", "Sarang Cranes", "Vidharbha Towing"]
+        
+        success_count = 0
+        for i, firm in enumerate(firm_options):
+            order_data = {
+                "customer_name": f"Firm Test {firm}",
+                "phone": f"987654323{i}",
+                "order_type": "company",
+                "name_of_firm": firm,
+                "company_name": "Mondial",
+                "case_id_file_number": f"FIRM{i}"
+            }
+            
+            success, response = self.run_test(f"Create Order with Firm {firm}", "POST", "orders", 201, order_data)
+            
+            if success and 'id' in response:
+                self.created_orders.append(response['id'])
+                if response.get('name_of_firm') == firm:
+                    success_count += 1
+                    
+        return success_count == len(firm_options)
+
+    def test_all_company_options(self):
+        """Test creating orders with different company options"""
+        company_options = ["Mondial", "TVS", "Europ Assistance"]
+        
+        success_count = 0
+        for i, company in enumerate(company_options):
+            order_data = {
+                "customer_name": f"Company Test {company}",
+                "phone": f"987654324{i}",
+                "order_type": "company",
+                "name_of_firm": "Kawale Cranes",
+                "company_name": company,
+                "case_id_file_number": f"COMP{i}"
+            }
+            
+            success, response = self.run_test(f"Create Order with Company {company}", "POST", "orders", 201, order_data)
+            
+            if success and 'id' in response:
+                self.created_orders.append(response['id'])
+                if response.get('company_name') == company:
+                    success_count += 1
+                    
+        return success_count == len(company_options)
+
     def cleanup_created_orders(self):
         """Clean up any remaining test orders"""
         print("\n🧹 Cleaning up test orders...")
