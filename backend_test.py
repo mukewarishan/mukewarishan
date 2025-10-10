@@ -3176,6 +3176,211 @@ class CraneOrderAPITester:
         
         return total_orders_found > 0 and reports_with_data > 0
 
+    def test_excel_import_verification(self):
+        """Test Excel import verification - PRIMARY FOCUS"""
+        print("\n📥 Testing Excel Import Verification - PRIMARY FOCUS...")
+        
+        # Test 1: Dashboard Orders Loading - should return all imported records (205+ orders)
+        success1, orders_response = self.run_test("Dashboard Orders Loading", "GET", "orders", 200, params={"limit": 1000})
+        
+        total_orders = 0
+        if success1 and orders_response:
+            total_orders = len(orders_response)
+            if total_orders >= 205:
+                self.log_test("Excel Import Count Verification", True, f"Found {total_orders} orders (expected >= 205)")
+            else:
+                self.log_test("Excel Import Count Verification", False, f"Found {total_orders} orders, expected >= 205")
+        
+        # Test 2: Order Count Verification via stats
+        success2, stats_response = self.run_test("Order Count Stats", "GET", "orders/stats/summary", 200)
+        
+        cash_count = 0
+        company_count = 0
+        if success2 and stats_response:
+            total_from_stats = stats_response.get('total_orders', 0)
+            by_type = stats_response.get('by_type', [])
+            
+            for type_stat in by_type:
+                if type_stat.get('_id') == 'cash':
+                    cash_count = type_stat.get('count', 0)
+                elif type_stat.get('_id') == 'company':
+                    company_count = type_stat.get('count', 0)
+            
+            if cash_count >= 157 and company_count >= 48:
+                self.log_test("Excel Import Stats Verification", True, f"Cash: {cash_count} (expected >= 157), Company: {company_count} (expected >= 48)")
+            else:
+                self.log_test("Excel Import Stats Verification", False, f"Cash: {cash_count}, Company: {company_count} - expected >= 157 cash, >= 48 company")
+        
+        # Test 3: Sample Record Verification - Cash order with Kartik
+        success3, cash_orders = self.run_test("Sample Cash Record Search", "GET", "orders", 200, params={"order_type": "cash", "customer_name": "Kartik", "limit": 100})
+        
+        kartik_found = False
+        if success3 and cash_orders:
+            for order in cash_orders:
+                if ("Kartik" in order.get('customer_name', '') and 
+                    order.get('phone') == '7350009241' and
+                    order.get('cash_driver_name') == 'Meshram' and
+                    order.get('cash_service_type') == 'FBT' and
+                    order.get('amount_received') == 2000.0):
+                    kartik_found = True
+                    self.log_test("Sample Cash Record Found", True, f"Found Kartik record: {order.get('customer_name')}, {order.get('phone')}")
+                    break
+        
+        if not kartik_found:
+            self.log_test("Sample Cash Record Found", False, "Could not find expected Kartik cash order record")
+        
+        # Test 4: Sample Record Verification - Company order with Sachi
+        success4, company_orders = self.run_test("Sample Company Record Search", "GET", "orders", 200, params={"order_type": "company", "customer_name": "Sachi", "limit": 100})
+        
+        sachi_found = False
+        if success4 and company_orders:
+            for order in company_orders:
+                if ("Sachi" in order.get('customer_name', '') and 
+                    order.get('phone') == '9545617572' and
+                    order.get('company_name') == 'Europ Assistance' and
+                    order.get('company_service_type') == '2 Wheeler Towing'):
+                    sachi_found = True
+                    self.log_test("Sample Company Record Found", True, f"Found Sachi record: {order.get('customer_name')}, {order.get('company_name')}")
+                    break
+        
+        if not sachi_found:
+            self.log_test("Sample Company Record Found", False, "Could not find expected Sachi company order record")
+        
+        # Test 5: Date Filtering - September 2025 data
+        success5, sept_orders = self.run_test("September 2025 Date Filter", "GET", "orders", 200, params={"limit": 1000})
+        
+        sept_2025_count = 0
+        if success5 and sept_orders:
+            for order in sept_orders:
+                date_time = order.get('date_time', '')
+                if '2025-09-' in str(date_time):
+                    sept_2025_count += 1
+            
+            if sept_2025_count >= 200:  # Most imported records should be from Sept 2025
+                self.log_test("September 2025 Data Verification", True, f"Found {sept_2025_count} orders from September 2025")
+            else:
+                self.log_test("September 2025 Data Verification", False, f"Found {sept_2025_count} orders from September 2025, expected more")
+        
+        # Test 6: Filtering by order type
+        success6, cash_filter = self.run_test("Filter Cash Orders", "GET", "orders", 200, params={"order_type": "cash", "limit": 1000})
+        success7, company_filter = self.run_test("Filter Company Orders", "GET", "orders", 200, params={"order_type": "company", "limit": 1000})
+        
+        cash_filter_count = len(cash_filter) if success6 and cash_filter else 0
+        company_filter_count = len(company_filter) if success7 and company_filter else 0
+        
+        if cash_filter_count >= 157 and company_filter_count >= 48:
+            self.log_test("Order Type Filtering", True, f"Cash filter: {cash_filter_count}, Company filter: {company_filter_count}")
+        else:
+            self.log_test("Order Type Filtering", False, f"Cash filter: {cash_filter_count}, Company filter: {company_filter_count}")
+        
+        return all([success1, success2, success3 or True, success4 or True, success5, success6, success7])  # Allow sample records to be optional
+    
+    def test_reports_with_imported_data(self):
+        """Test reports integration with imported data"""
+        print("\n📊 Testing Reports Integration with Imported Data...")
+        
+        # Test 1: Expense by Driver Report for September 2025
+        success1, expense_report = self.run_test("Expense Report Sept 2025", "GET", "reports/expense-by-driver", 200, params={"month": 9, "year": 2025})
+        
+        drivers_found = []
+        if success1 and expense_report:
+            data = expense_report.get('data', [])
+            for driver_data in data:
+                driver_name = driver_data.get('driver_name', '')
+                if driver_name in ['Meshram', 'Akshay', 'Vikas']:
+                    drivers_found.append(driver_name)
+            
+            if len(drivers_found) >= 2:
+                self.log_test("Imported Drivers in Expense Report", True, f"Found drivers: {', '.join(drivers_found)}")
+            else:
+                self.log_test("Imported Drivers in Expense Report", False, f"Only found drivers: {', '.join(drivers_found)}")
+        
+        # Test 2: Revenue by Vehicle Type Report for September 2025
+        success2, revenue_report = self.run_test("Revenue Report Sept 2025", "GET", "reports/revenue-by-vehicle-type", 200, params={"month": 9, "year": 2025})
+        
+        service_types_found = []
+        if success2 and revenue_report:
+            data = revenue_report.get('data', [])
+            for service_data in data:
+                service_type = service_data.get('service_type', '')
+                if service_type in ['FBT', '2 Wheeler Towing', 'Under-lift']:
+                    service_types_found.append(service_type)
+            
+            if len(service_types_found) >= 2:
+                self.log_test("Imported Service Types in Revenue Report", True, f"Found service types: {', '.join(service_types_found)}")
+            else:
+                self.log_test("Imported Service Types in Revenue Report", False, f"Only found service types: {', '.join(service_types_found)}")
+        
+        # Test 3: Revenue by Towing Vehicle Report for September 2025
+        success3, towing_report = self.run_test("Towing Vehicle Report Sept 2025", "GET", "reports/revenue-by-towing-vehicle", 200, params={"month": 9, "year": 2025})
+        
+        towing_vehicles_found = []
+        if success3 and towing_report:
+            data = towing_report.get('data', [])
+            for vehicle_data in data:
+                vehicle_name = vehicle_data.get('towing_vehicle', '')
+                if vehicle_name and vehicle_name != 'Unknown Vehicle':
+                    towing_vehicles_found.append(vehicle_name)
+            
+            if len(towing_vehicles_found) >= 1:
+                self.log_test("Imported Towing Vehicles in Report", True, f"Found towing vehicles: {', '.join(towing_vehicles_found[:3])}")
+            else:
+                self.log_test("Imported Towing Vehicles in Report", False, "No towing vehicles found in report")
+        
+        return success1 and success2 and success3
+    
+    def test_company_order_financials_imported(self):
+        """Test company order financials with imported data"""
+        print("\n💰 Testing Company Order Financials with Imported Data...")
+        
+        # Find a company order from imported data
+        success1, company_orders = self.run_test("Get Company Orders for Financial Test", "GET", "orders", 200, params={"order_type": "company", "limit": 50})
+        
+        financial_test_passed = False
+        if success1 and company_orders:
+            for order in company_orders:
+                if (order.get('company_name') == 'Europ Assistance' and 
+                    order.get('company_service_type') == '2 Wheeler Towing'):
+                    
+                    order_id = order.get('id')
+                    success2, financials = self.run_test(f"Get Financials for Imported Order", "GET", f"orders/{order_id}/financials", 200)
+                    
+                    if success2 and financials:
+                        base_revenue = financials.get('base_revenue', 0)
+                        total_revenue = financials.get('total_revenue', 0)
+                        calculation_details = financials.get('calculation_details', '')
+                        
+                        if base_revenue > 0:
+                            self.log_test("Imported Company Order Financials", True, f"Base: ₹{base_revenue}, Total: ₹{total_revenue}, Details: {calculation_details}")
+                            financial_test_passed = True
+                            break
+                        else:
+                            self.log_test("Imported Company Order Financials", False, f"Base revenue is 0, Details: {calculation_details}")
+        
+        if not financial_test_passed:
+            self.log_test("Imported Company Order Financials", False, "Could not find suitable company order for financial testing")
+        
+        return financial_test_passed
+    
+    def test_no_pydantic_validation_errors(self):
+        """Test that imported records don't cause Pydantic validation errors"""
+        print("\n🔍 Testing No Pydantic Validation Errors...")
+        
+        # Test getting all orders without any validation errors
+        success1, all_orders = self.run_test("Get All Orders - No Validation Errors", "GET", "orders", 200, params={"limit": 1000})
+        
+        if success1 and all_orders:
+            # Check if we got a proper response without server errors
+            if len(all_orders) >= 200:
+                self.log_test("No Pydantic Validation Errors", True, f"Successfully retrieved {len(all_orders)} orders without validation errors")
+                return True
+            else:
+                self.log_test("No Pydantic Validation Errors", False, f"Only retrieved {len(all_orders)} orders, expected more")
+        else:
+            self.log_test("No Pydantic Validation Errors", False, "Failed to retrieve orders - possible validation errors")
+        
+        return False
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
