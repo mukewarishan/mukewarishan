@@ -288,6 +288,14 @@ const Header = () => {
               </Button>
             </Link>
             
+            {/* Rates - All authenticated users can view */}
+            <Link to="/rates">
+              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
+                <span className="mr-2">💰</span>
+                Rates
+              </Button>
+            </Link>
+            
             {hasRole(['super_admin', 'admin']) && (
               <>
                 <Link to="/users">
@@ -308,13 +316,6 @@ const Header = () => {
                   <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
                     <FileText size={16} className="mr-2" />
                     Import Data
-                  </Button>
-                </Link>
-                
-                <Link to="/rates">
-                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
-                    <span className="mr-2">💰</span>
-                    Rates
                   </Button>
                 </Link>
                 
