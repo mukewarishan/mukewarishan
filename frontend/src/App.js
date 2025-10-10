@@ -1300,6 +1300,7 @@ const OrderForm = ({ orderId = null }) => {
   
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
+  const { hasRole, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
