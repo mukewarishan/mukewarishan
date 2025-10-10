@@ -155,7 +155,7 @@ class CraneOrder(BaseModel):
     company_vehicle_number: Optional[str] = None
     company_service_type: str = ""  # Made mandatory
     company_vehicle_details: Optional[str] = None
-    company_driver_details: Optional[str] = None
+    company_driver_details: str = ""  # Made mandatory (Driver)
     company_trip_from: Optional[str] = None
     company_trip_to: Optional[str] = None
     reach_time: Optional[datetime] = None
@@ -202,7 +202,7 @@ class CraneOrderCreate(BaseModel):
     company_vehicle_number: Optional[str] = None
     company_service_type: str = ""  # Made mandatory
     company_vehicle_details: Optional[str] = None
-    company_driver_details: Optional[str] = None
+    company_driver_details: str = ""  # Made mandatory (Driver)
     company_trip_from: Optional[str] = None
     company_trip_to: Optional[str] = None
     reach_time: Optional[datetime] = None
@@ -255,7 +255,7 @@ class CraneOrderUpdate(BaseModel):
     company_vehicle_number: Optional[str] = None
     company_service_type: str = ""  # Made mandatory
     company_vehicle_details: Optional[str] = None
-    company_driver_details: Optional[str] = None
+    company_driver_details: str = ""  # Made mandatory (Driver)
     company_trip_from: Optional[str] = None
     company_trip_to: Optional[str] = None
     reach_time: Optional[datetime] = None
