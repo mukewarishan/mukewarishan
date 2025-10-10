@@ -1242,6 +1242,132 @@ async def import_excel_data(
     # This endpoint will be implemented for file upload functionality
     return {"message": "Excel import functionality available. Use the frontend upload interface."}
 
+# Service rates calculation functions
+async def initialize_service_rates():
+    """Initialize service rates from SK_Rates data"""
+    try:
+        # Check if rates already exist
+        existing_rates = await db.service_rates.count_documents({})
+        if existing_rates > 0:
+            return  # Rates already initialized
+        
+        # SK_Rates data based on the provided Excel file
+        rates_data = [
+            # Kawale Cranes - Europ Assistance
+            {"name_of_firm": "Kawale Cranes", "company_name": "Europ Assistance", "service_type": "2 Wheeler Towing", "base_rate": 1200, "rate_per_km_beyond": 12},
+            {"name_of_firm": "Kawale Cranes", "company_name": "Europ Assistance", "service_type": "Under-lift", "base_rate": 1500, "rate_per_km_beyond": 15},
+            {"name_of_firm": "Kawale Cranes", "company_name": "Europ Assistance", "service_type": "FBT", "base_rate": 1900, "rate_per_km_beyond": 21},
+            
+            # Vidharbha Towing - Europ Assistance  
+            {"name_of_firm": "Vidharbha Towing", "company_name": "Europ Assistance", "service_type": "2 Wheeler Towing", "base_rate": 1200, "rate_per_km_beyond": 12},
+            {"name_of_firm": "Vidharbha Towing", "company_name": "Europ Assistance", "service_type": "Under-lift", "base_rate": 1500, "rate_per_km_beyond": 15},
+            {"name_of_firm": "Vidharbha Towing", "company_name": "Europ Assistance", "service_type": "FBT", "base_rate": 1900, "rate_per_km_beyond": 21},
+            
+            # Vira Towing - Europ Assistance
+            {"name_of_firm": "Vira Towing", "company_name": "Europ Assistance", "service_type": "2 Wheeler Towing", "base_rate": 1200, "rate_per_km_beyond": 12},
+            {"name_of_firm": "Vira Towing", "company_name": "Europ Assistance", "service_type": "Under-lift", "base_rate": 1500, "rate_per_km_beyond": 15},
+            {"name_of_firm": "Vira Towing", "company_name": "Europ Assistance", "service_type": "FBT", "base_rate": 1900, "rate_per_km_beyond": 21},
+            
+            # Sarang Cranes - Europ Assistance
+            {"name_of_firm": "Sarang Cranes", "company_name": "Europ Assistance", "service_type": "2 Wheeler Towing", "base_rate": 1200, "rate_per_km_beyond": 12},
+            {"name_of_firm": "Sarang Cranes", "company_name": "Europ Assistance", "service_type": "Under-lift", "base_rate": 1500, "rate_per_km_beyond": 15},
+            {"name_of_firm": "Sarang Cranes", "company_name": "Europ Assistance", "service_type": "FBT", "base_rate": 1900, "rate_per_km_beyond": 21},
+            
+            # Kawale Cranes - Mondial
+            {"name_of_firm": "Kawale Cranes", "company_name": "Mondial", "service_type": "2 Wheeler Towing", "base_rate": 1200, "rate_per_km_beyond": 13},
+            {"name_of_firm": "Kawale Cranes", "company_name": "Mondial", "service_type": "Under-lift", "base_rate": 1400, "rate_per_km_beyond": 15},
+            
+            # Vidharbha Towing - TVS
+            {"name_of_firm": "Vidharbha Towing", "company_name": "TVS", "service_type": "Under-lift", "base_rate": 1700, "rate_per_km_beyond": 17},
+            {"name_of_firm": "Vidharbha Towing", "company_name": "TVS", "service_type": "FBT", "base_rate": 2000, "rate_per_km_beyond": 20},
+            
+            # Vidharbha Towing - Mondial
+            {"name_of_firm": "Vidharbha Towing", "company_name": "Mondial", "service_type": "FBT", "base_rate": 1700, "rate_per_km_beyond": 20},
+        ]
+        
+        # Convert to ServiceRate objects and insert
+        service_rates = []
+        for rate_data in rates_data:
+            service_rate = ServiceRate(**rate_data)
+            service_rates.append(prepare_for_mongo(service_rate.model_dump()))
+        
+        await db.service_rates.insert_many(service_rates)
+        logging.info(f"Initialized {len(service_rates)} service rates")
+        
+    except Exception as e:
+        logging.error(f"Error initializing service rates: {str(e)}")
+
+async def calculate_order_financials(order: dict) -> CalculatedOrderFinancials:
+    """Calculate financial details for a company order based on rates"""
+    try:
+        # Only calculate for company orders
+        if order.get("order_type") != "company":
+            return CalculatedOrderFinancials()
+        
+        # Extract required fields
+        name_of_firm = order.get("name_of_firm", "")
+        company_name = order.get("company_name", "")
+        service_type = order.get("company_service_type", "")
+        kms_travelled = order.get("company_kms_travelled", 0) or 0
+        incentive_amount = order.get("incentive_amount", 0) or 0
+        
+        if not all([name_of_firm, company_name, service_type]):
+            return CalculatedOrderFinancials(
+                incentive_amount=incentive_amount,
+                total_revenue=incentive_amount,
+                calculation_details="Missing firm, company, or service type information"
+            )
+        
+        # Find matching rate
+        rate_query = {
+            "name_of_firm": name_of_firm,
+            "company_name": company_name,
+            "service_type": service_type
+        }
+        
+        rate_doc = await db.service_rates.find_one(rate_query, {"_id": 0})
+        
+        if not rate_doc:
+            return CalculatedOrderFinancials(
+                incentive_amount=incentive_amount,
+                total_revenue=incentive_amount,
+                calculation_details=f"No rate found for {name_of_firm} - {company_name} - {service_type}"
+            )
+        
+        # Calculate base revenue
+        base_rate = rate_doc.get("base_rate", 0)
+        base_distance = rate_doc.get("base_distance_km", 40)
+        rate_per_km_beyond = rate_doc.get("rate_per_km_beyond", 0)
+        
+        if kms_travelled <= base_distance:
+            base_revenue = base_rate
+            calculation_details = f"Base rate: ₹{base_rate} for {kms_travelled}km (≤{base_distance}km)"
+        else:
+            excess_km = kms_travelled - base_distance
+            excess_charges = excess_km * rate_per_km_beyond
+            base_revenue = base_rate + excess_charges
+            calculation_details = f"Base: ₹{base_rate} + Extra {excess_km}km × ₹{rate_per_km_beyond} = ₹{base_revenue}"
+        
+        total_revenue = base_revenue + incentive_amount
+        
+        if incentive_amount > 0:
+            calculation_details += f" + Incentive: ₹{incentive_amount}"
+        
+        return CalculatedOrderFinancials(
+            base_revenue=base_revenue,
+            incentive_amount=incentive_amount,
+            total_revenue=total_revenue,
+            calculation_details=calculation_details
+        )
+        
+    except Exception as e:
+        logging.error(f"Error calculating order financials: {str(e)}")
+        return CalculatedOrderFinancials(
+            incentive_amount=order.get("incentive_amount", 0) or 0,
+            total_revenue=order.get("incentive_amount", 0) or 0,
+            calculation_details=f"Calculation error: {str(e)}"
+        )
+
 # Initialize default super admin user
 async def create_default_super_admin():
     """Create default super admin user if none exists"""
