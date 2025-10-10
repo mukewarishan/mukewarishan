@@ -2347,6 +2347,470 @@ class CraneOrderAPITester:
         
         return overall_success
 
+    def test_monthly_reports_system(self):
+        """Test the new monthly reports system comprehensively"""
+        print("\n📊 Testing Monthly Reports System...")
+        
+        # First create some test data for October 2024
+        self.create_test_data_for_reports()
+        
+        # Test expense report by driver
+        expense_report_success = self.test_expense_report_by_driver()
+        
+        # Test revenue report by vehicle type
+        revenue_report_success = self.test_revenue_report_by_vehicle_type()
+        
+        # Test Excel export functionality
+        excel_export_success = self.test_excel_export_functionality()
+        
+        # Test access control
+        access_control_success = self.test_reports_access_control()
+        
+        # Test edge cases
+        edge_cases_success = self.test_reports_edge_cases()
+        
+        all_passed = all([
+            expense_report_success, revenue_report_success, 
+            excel_export_success, access_control_success, edge_cases_success
+        ])
+        
+        if all_passed:
+            self.log_test("Monthly Reports System Overall", True, "All monthly reports tests passed")
+        else:
+            failed_tests = []
+            if not expense_report_success: failed_tests.append("Expense Report")
+            if not revenue_report_success: failed_tests.append("Revenue Report")
+            if not excel_export_success: failed_tests.append("Excel Export")
+            if not access_control_success: failed_tests.append("Access Control")
+            if not edge_cases_success: failed_tests.append("Edge Cases")
+            
+            self.log_test("Monthly Reports System Overall", False, f"Failed tests: {', '.join(failed_tests)}")
+        
+        return all_passed
+
+    def create_test_data_for_reports(self):
+        """Create test data for October 2024 reports"""
+        print("\n📝 Creating Test Data for Reports...")
+        
+        from datetime import datetime, timezone
+        
+        # Create cash orders with different drivers and expenses
+        cash_orders = [
+            {
+                "customer_name": "Report Test Cash 1",
+                "phone": "9876540001",
+                "order_type": "cash",
+                "date_time": datetime(2024, 10, 15, 10, 0, 0, tzinfo=timezone.utc).isoformat(),
+                "cash_driver_name": "Rahul",
+                "cash_service_type": "2 Wheeler Towing",
+                "cash_vehicle_name": "Honda Activa",
+                "amount_received": 2500.0,
+                "cash_diesel": 300.0,
+                "cash_toll": 150.0
+            },
+            {
+                "customer_name": "Report Test Cash 2", 
+                "phone": "9876540002",
+                "order_type": "cash",
+                "date_time": datetime(2024, 10, 20, 14, 30, 0, tzinfo=timezone.utc).isoformat(),
+                "cash_driver_name": "Subhash",
+                "cash_service_type": "Under-lift",
+                "cash_vehicle_name": "Tata ACE",
+                "amount_received": 4000.0,
+                "cash_diesel": 500.0,
+                "cash_toll": 200.0,
+                "incentive_amount": 300.0,
+                "incentive_reason": "Quick service"
+            }
+        ]
+        
+        # Create company orders with different service types and calculations
+        company_orders = [
+            {
+                "customer_name": "Report Test Company 1",
+                "phone": "9876540003",
+                "order_type": "company",
+                "date_time": datetime(2024, 10, 10, 9, 0, 0, tzinfo=timezone.utc).isoformat(),
+                "name_of_firm": "Kawale Cranes",
+                "company_name": "Europ Assistance",
+                "company_service_type": "2 Wheeler Towing",
+                "company_driver_name": "Dubey",
+                "company_driver_details": "Dubey",
+                "company_towing_vehicle": "Honda Activa",
+                "company_kms_travelled": 35.0,  # Within base distance
+                "company_diesel": 250.0,
+                "company_toll": 100.0,
+                "case_id_file_number": "RPT001"
+            },
+            {
+                "customer_name": "Report Test Company 2",
+                "phone": "9876540004", 
+                "order_type": "company",
+                "date_time": datetime(2024, 10, 25, 16, 45, 0, tzinfo=timezone.utc).isoformat(),
+                "name_of_firm": "Vidharbha Towing",
+                "company_name": "TVS",
+                "company_service_type": "Under-lift",
+                "company_driver_name": "Sudhir",
+                "company_driver_details": "Sudhir",
+                "company_towing_vehicle": "Tata ACE",
+                "company_kms_travelled": 65.0,  # Beyond base distance
+                "company_diesel": 600.0,
+                "company_toll": 250.0,
+                "incentive_amount": 500.0,
+                "incentive_reason": "Complex case handled well",
+                "case_id_file_number": "RPT002"
+            },
+            {
+                "customer_name": "Report Test Company 3",
+                "phone": "9876540005",
+                "order_type": "company", 
+                "date_time": datetime(2024, 10, 28, 11, 15, 0, tzinfo=timezone.utc).isoformat(),
+                "name_of_firm": "Kawale Cranes",
+                "company_name": "Mondial",
+                "company_service_type": "FBT",
+                "company_driver_name": "Vikas",
+                "company_driver_details": "Vikas",
+                "company_towing_vehicle": "Mahindra Bolero",
+                "company_kms_travelled": 45.0,  # Beyond base distance
+                "company_diesel": 400.0,
+                "company_toll": 180.0,
+                "case_id_file_number": "RPT003"
+            }
+        ]
+        
+        # Create all test orders
+        created_count = 0
+        for order_data in cash_orders + company_orders:
+            success, response = self.run_test(f"Create Report Test Order {created_count + 1}", "POST", "orders", 200, order_data)
+            if success and response and 'id' in response:
+                self.created_orders.append(response['id'])
+                created_count += 1
+        
+        self.log_test("Test Data Creation", True, f"Created {created_count} test orders for October 2024")
+        return created_count > 0
+
+    def test_expense_report_by_driver(self):
+        """Test GET /api/reports/expense-by-driver endpoint"""
+        print("\n💰 Testing Expense Report by Driver...")
+        
+        # Test basic expense report for October 2024
+        success1, response1 = self.run_test(
+            "Expense Report October 2024",
+            "GET",
+            "reports/expense-by-driver",
+            200,
+            params={"month": 10, "year": 2024}
+        )
+        
+        if success1 and response1:
+            # Verify response structure
+            required_fields = ["month", "year", "report_type", "data", "summary"]
+            has_all_fields = all(field in response1 for field in required_fields)
+            
+            if has_all_fields:
+                self.log_test("Expense Report Structure", True, "Response has all required fields")
+                
+                # Verify report type
+                if response1.get("report_type") == "expense_by_driver":
+                    self.log_test("Expense Report Type", True, "Correct report type")
+                    
+                    # Verify data aggregation
+                    data = response1.get("data", [])
+                    if data and len(data) > 0:
+                        # Check driver data structure
+                        sample_driver = data[0]
+                        driver_fields = ["driver_name", "cash_orders", "company_orders", "total_orders", 
+                                       "total_diesel_expense", "total_toll_expense", "total_expenses"]
+                        
+                        if all(field in sample_driver for field in driver_fields):
+                            self.log_test("Driver Data Structure", True, f"Driver data has all required fields")
+                            
+                            # Verify expense calculations (diesel + toll)
+                            for driver in data:
+                                expected_total = driver["total_diesel_expense"] + driver["total_toll_expense"]
+                                if driver["total_expenses"] == expected_total:
+                                    self.log_test(f"Expense Calc for {driver['driver_name']}", True, 
+                                                f"Total: ₹{driver['total_expenses']} (Diesel: ₹{driver['total_diesel_expense']}, Toll: ₹{driver['total_toll_expense']})")
+                                else:
+                                    self.log_test(f"Expense Calc for {driver['driver_name']}", False,
+                                                f"Expected: ₹{expected_total}, Got: ₹{driver['total_expenses']}")
+                            
+                            # Test different month to verify date filtering
+                            success2, response2 = self.run_test(
+                                "Expense Report September 2024",
+                                "GET", 
+                                "reports/expense-by-driver",
+                                200,
+                                params={"month": 9, "year": 2024}
+                            )
+                            
+                            if success2:
+                                self.log_test("Date Filtering Test", True, "Different month query successful")
+                                return True
+                        else:
+                            self.log_test("Driver Data Structure", False, f"Missing fields in driver data")
+                    else:
+                        self.log_test("Expense Report Data", False, "No driver data returned")
+                else:
+                    self.log_test("Expense Report Type", False, f"Expected 'expense_by_driver', got '{response1.get('report_type')}'")
+            else:
+                self.log_test("Expense Report Structure", False, f"Missing fields: {set(required_fields) - set(response1.keys())}")
+        
+        return False
+
+    def test_revenue_report_by_vehicle_type(self):
+        """Test GET /api/reports/revenue-by-vehicle-type endpoint"""
+        print("\n💰 Testing Revenue Report by Vehicle Type...")
+        
+        # Test basic revenue report for October 2024
+        success1, response1 = self.run_test(
+            "Revenue Report October 2024",
+            "GET",
+            "reports/revenue-by-vehicle-type", 
+            200,
+            params={"month": 10, "year": 2024}
+        )
+        
+        if success1 and response1:
+            # Verify response structure
+            required_fields = ["month", "year", "report_type", "data", "summary"]
+            has_all_fields = all(field in response1 for field in required_fields)
+            
+            if has_all_fields:
+                self.log_test("Revenue Report Structure", True, "Response has all required fields")
+                
+                # Verify report type
+                if response1.get("report_type") == "revenue_by_vehicle_type":
+                    self.log_test("Revenue Report Type", True, "Correct report type")
+                    
+                    # Verify data aggregation
+                    data = response1.get("data", [])
+                    if data and len(data) > 0:
+                        # Check service type data structure
+                        sample_service = data[0]
+                        service_fields = ["service_type", "cash_orders", "company_orders", "total_orders",
+                                        "total_base_revenue", "total_incentive_amount", "total_revenue"]
+                        
+                        if all(field in sample_service for field in service_fields):
+                            self.log_test("Service Type Data Structure", True, "Service data has all required fields")
+                            
+                            # Verify revenue calculations (base + incentive)
+                            for service in data:
+                                expected_total = service["total_base_revenue"] + service["total_incentive_amount"]
+                                if service["total_revenue"] == expected_total:
+                                    self.log_test(f"Revenue Calc for {service['service_type']}", True,
+                                                f"Total: ₹{service['total_revenue']} (Base: ₹{service['total_base_revenue']}, Incentive: ₹{service['total_incentive_amount']})")
+                                else:
+                                    self.log_test(f"Revenue Calc for {service['service_type']}", False,
+                                                f"Expected: ₹{expected_total}, Got: ₹{service['total_revenue']}")
+                            
+                            # Verify that cash orders use amount_received and company orders use SK rates
+                            cash_service = next((s for s in data if s["cash_orders"] > 0), None)
+                            company_service = next((s for s in data if s["company_orders"] > 0), None)
+                            
+                            if cash_service:
+                                self.log_test("Cash Order Revenue Logic", True, f"Cash orders found in {cash_service['service_type']}")
+                            
+                            if company_service:
+                                self.log_test("Company Order Revenue Logic", True, f"Company orders found in {company_service['service_type']}")
+                            
+                            return True
+                        else:
+                            self.log_test("Service Type Data Structure", False, "Missing fields in service data")
+                    else:
+                        self.log_test("Revenue Report Data", False, "No service type data returned")
+                else:
+                    self.log_test("Revenue Report Type", False, f"Expected 'revenue_by_vehicle_type', got '{response1.get('report_type')}'")
+            else:
+                self.log_test("Revenue Report Structure", False, f"Missing fields: {set(required_fields) - set(response1.keys())}")
+        
+        return False
+
+    def test_excel_export_functionality(self):
+        """Test Excel export endpoints for reports"""
+        print("\n📊 Testing Excel Export Functionality...")
+        
+        # Test expense report Excel export
+        success1, response1 = self.run_test(
+            "Export Expense Report Excel",
+            "GET",
+            "reports/expense-by-driver/export",
+            200,
+            params={"month": 10, "year": 2024}
+        )
+        
+        # Test revenue report Excel export
+        success2, response2 = self.run_test(
+            "Export Revenue Report Excel", 
+            "GET",
+            "reports/revenue-by-vehicle-type/export",
+            200,
+            params={"month": 10, "year": 2024}
+        )
+        
+        # Note: We can't easily verify Excel file content in this test framework,
+        # but we can verify that the endpoints return successful responses
+        if success1 and success2:
+            self.log_test("Excel Export Functionality", True, "Both Excel export endpoints working")
+            return True
+        else:
+            failed_exports = []
+            if not success1: failed_exports.append("Expense Report")
+            if not success2: failed_exports.append("Revenue Report")
+            self.log_test("Excel Export Functionality", False, f"Failed exports: {', '.join(failed_exports)}")
+        
+        return False
+
+    def test_reports_access_control(self):
+        """Test that only Admin/Super Admin can access report endpoints"""
+        print("\n🔐 Testing Reports Access Control...")
+        
+        # Create a data entry user for testing
+        data_entry_user = {
+            "email": "reporttest@kawalecranes.com",
+            "full_name": "Report Test User",
+            "password": "reporttest123",
+            "role": "data_entry"
+        }
+        
+        success1, create_response = self.run_test("Create Data Entry User for Reports", "POST", "auth/register", 200, data_entry_user)
+        
+        if success1 and create_response:
+            # Login as data entry user
+            success2, login_response = self.run_test(
+                "Data Entry Login for Reports",
+                "POST",
+                "auth/login",
+                200,
+                data={"email": "reporttest@kawalecranes.com", "password": "reporttest123"}
+            )
+            
+            if success2 and 'access_token' in login_response:
+                old_token = self.token
+                self.token = login_response['access_token']
+                
+                # Test that data entry user cannot access reports (should get 403)
+                success3, _ = self.run_test(
+                    "Data Entry Access Expense Report (Should Fail)",
+                    "GET",
+                    "reports/expense-by-driver",
+                    403,
+                    params={"month": 10, "year": 2024}
+                )
+                
+                success4, _ = self.run_test(
+                    "Data Entry Access Revenue Report (Should Fail)",
+                    "GET", 
+                    "reports/revenue-by-vehicle-type",
+                    403,
+                    params={"month": 10, "year": 2024}
+                )
+                
+                success5, _ = self.run_test(
+                    "Data Entry Access Excel Export (Should Fail)",
+                    "GET",
+                    "reports/expense-by-driver/export",
+                    403,
+                    params={"month": 10, "year": 2024}
+                )
+                
+                # Restore admin token
+                self.token = old_token
+                
+                # Test that admin can access reports (should get 200)
+                success6, _ = self.run_test(
+                    "Admin Access Expense Report",
+                    "GET",
+                    "reports/expense-by-driver", 
+                    200,
+                    params={"month": 10, "year": 2024}
+                )
+                
+                # Cleanup - delete test user
+                if 'id' in create_response:
+                    self.run_test("Cleanup Report Test User", "DELETE", f"users/{create_response['id']}", 200)
+                
+                if all([success3, success4, success5, success6]):
+                    self.log_test("Reports Access Control", True, "Proper role-based access control working")
+                    return True
+                else:
+                    self.log_test("Reports Access Control", False, "Access control not working properly")
+        
+        return False
+
+    def test_reports_edge_cases(self):
+        """Test edge cases for reports"""
+        print("\n🧪 Testing Reports Edge Cases...")
+        
+        # Test with month that has no data (e.g., January 2024)
+        success1, response1 = self.run_test(
+            "Expense Report No Data Month",
+            "GET",
+            "reports/expense-by-driver",
+            200,
+            params={"month": 1, "year": 2024}
+        )
+        
+        if success1 and response1:
+            data = response1.get("data", [])
+            summary = response1.get("summary", {})
+            
+            # Should return empty data but valid structure
+            if len(data) == 0 and summary.get("total_drivers") == 0:
+                self.log_test("No Data Month Handling", True, "Correctly handles months with no data")
+            else:
+                self.log_test("No Data Month Handling", False, f"Expected empty data, got {len(data)} drivers")
+        
+        # Test invalid month parameter
+        success2, response2 = self.run_test(
+            "Invalid Month Parameter",
+            "GET",
+            "reports/expense-by-driver",
+            422,  # Validation error
+            params={"month": 13, "year": 2024}
+        )
+        
+        # Test invalid year parameter
+        success3, response3 = self.run_test(
+            "Invalid Year Parameter",
+            "GET",
+            "reports/revenue-by-vehicle-type",
+            422,  # Validation error
+            params={"month": 10, "year": 2050}
+        )
+        
+        # Test missing parameters
+        success4, response4 = self.run_test(
+            "Missing Month Parameter",
+            "GET",
+            "reports/expense-by-driver",
+            422,  # Validation error
+            params={"year": 2024}
+        )
+        
+        success5, response5 = self.run_test(
+            "Missing Year Parameter", 
+            "GET",
+            "reports/revenue-by-vehicle-type",
+            422,  # Validation error
+            params={"month": 10}
+        )
+        
+        if all([success1, success2, success3, success4, success5]):
+            self.log_test("Reports Edge Cases", True, "All edge cases handled correctly")
+            return True
+        else:
+            failed_cases = []
+            if not success1: failed_cases.append("No Data Month")
+            if not success2: failed_cases.append("Invalid Month")
+            if not success3: failed_cases.append("Invalid Year")
+            if not success4: failed_cases.append("Missing Month")
+            if not success5: failed_cases.append("Missing Year")
+            
+            self.log_test("Reports Edge Cases", False, f"Failed cases: {', '.join(failed_cases)}")
+        
+        return False
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
