@@ -31,7 +31,7 @@ const Header = () => {
               <span className="text-white font-bold text-lg">🏗️</span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Crane Orders</h1>
+              <h1 className="text-2xl font-bold text-white">Kawale Cranes</h1>
               <p className="text-slate-300 text-sm">Data Entry System</p>
             </div>
           </Link>
