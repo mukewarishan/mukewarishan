@@ -2604,6 +2604,291 @@ const EditOrderPage = () => {
   return <OrderForm orderId={orderId} />;
 };
 
+// Reports Component
+const Reports = () => {
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [expenseData, setExpenseData] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('expense');
+
+  const months = [
+    { value: 1, label: 'January' },
+    { value: 2, label: 'February' },
+    { value: 3, label: 'March' },
+    { value: 4, label: 'April' },
+    { value: 5, label: 'May' },
+    { value: 6, label: 'June' },
+    { value: 7, label: 'July' },
+    { value: 8, label: 'August' },
+    { value: 9, label: 'September' },
+    { value: 10, label: 'October' },
+    { value: 11, label: 'November' },
+    { value: 12, label: 'December' }
+  ];
+
+  const years = Array.from({ length: 11 }, (_, i) => 2020 + i);
+
+  const fetchExpenseReport = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/reports/expense-by-driver?month=${selectedMonth}&year=${selectedYear}`);
+      setExpenseData(response.data.data);
+    } catch (error) {
+      console.error('Error fetching expense report:', error);
+      toast.error('Failed to fetch expense report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRevenueReport = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/reports/revenue-by-vehicle-type?month=${selectedMonth}&year=${selectedYear}`);
+      setRevenueData(response.data.data);
+    } catch (error) {
+      console.error('Error fetching revenue report:', error);
+      toast.error('Failed to fetch revenue report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportExpenseReport = async () => {
+    try {
+      toast.info('Generating expense report...');
+      const response = await axios.get(`${API}/reports/expense-by-driver/export?month=${selectedMonth}&year=${selectedYear}`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kawale_expense_by_driver_${selectedYear}_${selectedMonth.toString().padStart(2, '0')}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Expense report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting expense report:', error);
+      toast.error('Failed to export expense report');
+    }
+  };
+
+  const exportRevenueReport = async () => {
+    try {
+      toast.info('Generating revenue report...');
+      const response = await axios.get(`${API}/reports/revenue-by-vehicle-type/export?month=${selectedMonth}&year=${selectedYear}`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kawale_revenue_by_vehicle_type_${selectedYear}_${selectedMonth.toString().padStart(2, '0')}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Revenue report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting revenue report:', error);
+      toast.error('Failed to export revenue report');
+    }
+  };
+
+  const handleMonthYearChange = () => {
+    if (activeTab === 'expense') {
+      fetchExpenseReport();
+    } else {
+      fetchRevenueReport();
+    }
+  };
+
+  useEffect(() => {
+    handleMonthYearChange();
+  }, [selectedMonth, selectedYear, activeTab]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Card className="bg-white shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-t-lg">
+            <CardTitle className="text-2xl font-bold flex items-center">
+              <span className="mr-3">📊</span>
+              Monthly Reports
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="p-6">
+            {/* Month/Year Selector */}
+            <div className="flex items-center space-x-4 mb-6">
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Month</Label>
+                <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value.toString()}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Year</Label>
+                <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Tabs for Reports */}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="expense">Expense by Driver</TabsTrigger>
+                <TabsTrigger value="revenue">Revenue by Vehicle Type</TabsTrigger>
+              </TabsList>
+
+              {/* Expense Report Tab */}
+              <TabsContent value="expense">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">
+                      Expense Report by Driver - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                    </h3>
+                    <Button onClick={exportExpenseReport} className="bg-green-600 hover:bg-green-700 text-white">
+                      <span className="mr-2">📥</span>
+                      Export Excel
+                    </Button>
+                  </div>
+
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-slate-300">
+                        <thead>
+                          <tr className="bg-slate-100">
+                            <th className="border border-slate-300 px-4 py-2 text-left">Driver Name</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Diesel Expense (₹)</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Toll Expense (₹)</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Total Expense (₹)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {expenseData.map((driver, index) => (
+                            <tr key={index} className="hover:bg-slate-50">
+                              <td className="border border-slate-300 px-4 py-2 font-medium">{driver.driver_name}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{driver.cash_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{driver.company_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{driver.total_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right">₹{driver.total_diesel_expense?.toLocaleString('en-IN')}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right">₹{driver.total_toll_expense?.toLocaleString('en-IN')}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{driver.total_expenses?.toLocaleString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {expenseData.length === 0 && !loading && (
+                    <div className="text-center py-8 text-slate-500">
+                      No expense data found for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Revenue Report Tab */}
+              <TabsContent value="revenue">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">
+                      Revenue Report by Vehicle Type - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                    </h3>
+                    <Button onClick={exportRevenueReport} className="bg-green-600 hover:bg-green-700 text-white">
+                      <span className="mr-2">📥</span>
+                      Export Excel
+                    </Button>
+                  </div>
+
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-slate-300">
+                        <thead>
+                          <tr className="bg-slate-100">
+                            <th className="border border-slate-300 px-4 py-2 text-left">Service Type</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Base Revenue (₹)</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Incentive (₹)</th>
+                            <th className="border border-slate-300 px-4 py-2 text-right">Total Revenue (₹)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {revenueData.map((vehicle, index) => (
+                            <tr key={index} className="hover:bg-slate-50">
+                              <td className="border border-slate-300 px-4 py-2 font-medium">{vehicle.service_type}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.cash_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.company_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.total_orders}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_base_revenue?.toLocaleString('en-IN')}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_incentive_amount?.toLocaleString('en-IN')}</td>
+                              <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{vehicle.total_revenue?.toLocaleString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {revenueData.length === 0 && !loading && (
+                    <div className="text-center py-8 text-slate-500">
+                      No revenue data found for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 // Rates Management Component
 const RatesManagement = () => {
   const [rates, setRates] = useState([]);
