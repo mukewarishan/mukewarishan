@@ -390,8 +390,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Dashboard Orders Pydantic Validation Fix"
-    - "Rates Management System"
+    - "Monthly Reports System"
   stuck_tasks: 
     - "Google Sheets API Integration"
   test_all: false
