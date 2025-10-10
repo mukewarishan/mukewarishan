@@ -126,6 +126,7 @@ class CraneOrder(BaseModel):
     diesel: Optional[str] = None
     cash_diesel: Optional[float] = None
     cash_diesel_refill_location: Optional[str] = None
+    cash_driver_name: Optional[str] = None
     
     # Company order fields
     name_of_firm: Optional[str] = None
