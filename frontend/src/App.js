@@ -943,8 +943,8 @@ const DataImport = () => {
                   {importStatus.message}
                 </p>
                 {importStatus.success && (
-                  <div className=\"mt-3\">
-                    <p className=\"text-green-700\">
+                  <div className="mt-3">
+                    <p className="text-green-700">
                       Imported: {importStatus.imported} orders | Failed: {importStatus.failed} orders
                     </p>
                   </div>
@@ -952,9 +952,9 @@ const DataImport = () => {
               </div>
             )}
             
-            <div className=\"flex justify-center\">
-              <Link to=\"/\">
-                <Button className=\"bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700\">
+            <div className="flex justify-center">
+              <Link to="/">
+                <Button className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700">
                   View Dashboard
                 </Button>
               </Link>
