@@ -889,24 +889,24 @@ const DataImport = () => {
             <p className="text-slate-600 mt-1">Import crane orders data from Excel files</p>
           </CardHeader>
           
-          <CardContent className=\"space-y-6\">
-            <div className=\"bg-green-50 border border-green-200 rounded-lg p-4\">
-              <h3 className=\"text-lg font-semibold text-green-800 mb-2\">✅ Import Completed Successfully</h3>
-              <p className=\"text-green-700\">
+          <CardContent className="space-y-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">✅ Import Completed Successfully</h3>
+              <p className="text-green-700">
                 The Excel data has been successfully imported into the system.
               </p>
-              <div className=\"mt-4 grid grid-cols-1 md:grid-cols-3 gap-4\">
-                <div className=\"bg-white rounded p-3 text-center\">
-                  <div className=\"text-2xl font-bold text-green-600\">205</div>
-                  <div className=\"text-sm text-slate-600\">Total Records</div>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded p-3 text-center">
+                  <div className="text-2xl font-bold text-green-600">205</div>
+                  <div className="text-sm text-slate-600">Total Records</div>
                 </div>
-                <div className=\"bg-white rounded p-3 text-center\">
-                  <div className=\"text-2xl font-bold text-green-600\">158</div>
-                  <div className=\"text-sm text-slate-600\">Cash Orders</div>
+                <div className="bg-white rounded p-3 text-center">
+                  <div className="text-2xl font-bold text-green-600">158</div>
+                  <div className="text-sm text-slate-600">Cash Orders</div>
                 </div>
-                <div className=\"bg-white rounded p-3 text-center\">
-                  <div className=\"text-2xl font-bold text-green-600\">50</div>
-                  <div className=\"text-sm text-slate-600\">Company Orders</div>
+                <div className="bg-white rounded p-3 text-center">
+                  <div className="text-2xl font-bold text-green-600">50</div>
+                  <div className="text-sm text-slate-600">Company Orders</div>
                 </div>
               </div>
             </div>
