@@ -2043,6 +2043,50 @@ const OrderForm = ({ orderId = null }) => {
                 </TabsContent>
               </Tabs>
               
+              {/* Incentive Section - Admin Only */}
+              {hasRole(['super_admin', 'admin']) && (
+                <div className="mt-8">
+                  <Separator className="my-6" />
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-orange-800 mb-4 flex items-center">
+                      <span className="mr-2">💰</span>
+                      Admin - Incentive Management
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="incentive_amount" className="text-sm font-medium text-slate-700">
+                          Incentive Amount (₹)
+                        </Label>
+                        <Input
+                          id="incentive_amount"
+                          type="number"
+                          step="0.01"
+                          value={formData.incentive_amount}
+                          onChange={(e) => handleInputChange('incentive_amount', e.target.value)}
+                          placeholder="Enter incentive amount"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="incentive_reason" className="text-sm font-medium text-slate-700">
+                          Incentive Reason
+                        </Label>
+                        <Input
+                          id="incentive_reason"
+                          value={formData.incentive_reason}
+                          onChange={(e) => handleInputChange('incentive_reason', e.target.value)}
+                          placeholder="Reason for incentive (optional)"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-orange-600 mt-2">
+                      * Incentive details are only visible and editable by Admin and Super Admin users
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <Separator className="my-8" />
               
               <div className="flex justify-end space-x-4">
