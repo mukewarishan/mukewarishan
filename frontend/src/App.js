@@ -1527,6 +1527,32 @@ const OrderForm = ({ orderId = null }) => {
                         </div>
                         
                         <div>
+                          <Label className="text-sm font-medium text-slate-700">
+                            Driver
+                          </Label>
+                          <Select 
+                            value={formData.cash_driver_name} 
+                            onValueChange={(value) => handleInputChange('cash_driver_name', value)}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select driver" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Rahul">Rahul</SelectItem>
+                              <SelectItem value="Subhash">Subhash</SelectItem>
+                              <SelectItem value="Dubey">Dubey</SelectItem>
+                              <SelectItem value="Sudhir">Sudhir</SelectItem>
+                              <SelectItem value="Vikas">Vikas</SelectItem>
+                              <SelectItem value="Meshram">Meshram</SelectItem>
+                              <SelectItem value="Ashish">Ashish</SelectItem>
+                              <SelectItem value="Sanjay">Sanjay</SelectItem>
+                              <SelectItem value="Shantanu">Shantanu</SelectItem>
+                              <SelectItem value="Akshay">Akshay</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
                           <Label htmlFor="cash_kms_travelled" className="text-sm font-medium text-slate-700">
                             KMs Travelled
                           </Label>
