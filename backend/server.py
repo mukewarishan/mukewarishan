@@ -153,7 +153,7 @@ class CraneOrder(BaseModel):
     case_id_file_number: Optional[str] = None
     company_vehicle_name: Optional[str] = None
     company_vehicle_number: Optional[str] = None
-    company_service_type: Optional[str] = None
+    company_service_type: str = ""  # Made mandatory
     company_vehicle_details: Optional[str] = None
     company_driver_details: Optional[str] = None
     company_trip_from: Optional[str] = None
@@ -200,7 +200,7 @@ class CraneOrderCreate(BaseModel):
     case_id_file_number: Optional[str] = None
     company_vehicle_name: Optional[str] = None
     company_vehicle_number: Optional[str] = None
-    company_service_type: Optional[str] = None
+    company_service_type: str = ""  # Made mandatory
     company_vehicle_details: Optional[str] = None
     company_driver_details: Optional[str] = None
     company_trip_from: Optional[str] = None
@@ -253,7 +253,7 @@ class CraneOrderUpdate(BaseModel):
     case_id_file_number: Optional[str] = None
     company_vehicle_name: Optional[str] = None
     company_vehicle_number: Optional[str] = None
-    company_service_type: Optional[str] = None
+    company_service_type: str = ""  # Made mandatory
     company_vehicle_details: Optional[str] = None
     company_driver_details: Optional[str] = None
     company_trip_from: Optional[str] = None
