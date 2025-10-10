@@ -248,6 +248,7 @@ class CraneOrderUpdate(BaseModel):
     company_diesel: Optional[float] = None
     company_diesel_refill_location: Optional[str] = None
     company_driver_name: Optional[str] = None
+    company_towing_vehicle: Optional[str] = None
 
 # Helper functions for MongoDB serialization
 def prepare_for_mongo(data):
