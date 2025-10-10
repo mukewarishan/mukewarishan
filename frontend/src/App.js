@@ -1187,7 +1187,8 @@ const OrderForm = ({ orderId = null }) => {
     company_toll: '',
     diesel_name: '',
     company_diesel: '',
-    company_diesel_refill_location: ''
+    company_diesel_refill_location: '',
+    company_driver_name: ''
   });
   
   const [loading, setLoading] = useState(false);
