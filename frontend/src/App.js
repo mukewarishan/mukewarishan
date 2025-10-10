@@ -3269,7 +3269,9 @@ const RatesManagement = () => {
                     <th className="border border-slate-300 px-4 py-2 text-right">Base Rate (₹)</th>
                     <th className="border border-slate-300 px-4 py-2 text-right">Base Distance (km)</th>
                     <th className="border border-slate-300 px-4 py-2 text-right">Rate/km Beyond (₹)</th>
-                    <th className="border border-slate-300 px-4 py-2 text-center">Actions</th>
+                    {hasRole(['super_admin', 'admin']) && (
+                      <th className="border border-slate-300 px-4 py-2 text-center">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -3281,15 +3283,17 @@ const RatesManagement = () => {
                       <td className="border border-slate-300 px-4 py-2 text-right">₹{rate.base_rate?.toLocaleString('en-IN')}</td>
                       <td className="border border-slate-300 px-4 py-2 text-right">{rate.base_distance_km || 40} km</td>
                       <td className="border border-slate-300 px-4 py-2 text-right">₹{rate.rate_per_km_beyond}</td>
-                      <td className="border border-slate-300 px-4 py-2 text-center">
-                        <Button
-                          size="sm"
-                          onClick={() => handleEditRate(rate)}
-                          className="bg-blue-500 hover:bg-blue-600 text-white"
-                        >
-                          Edit
-                        </Button>
-                      </td>
+                      {hasRole(['super_admin', 'admin']) && (
+                        <td className="border border-slate-300 px-4 py-2 text-center">
+                          <Button
+                            size="sm"
+                            onClick={() => handleEditRate(rate)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                          >
+                            Edit
+                          </Button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
