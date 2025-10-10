@@ -1,0 +1,44 @@
+{
+  "summary": "Successfully completed comprehensive testing of Company Name (Secondary) field relocation from Additional Info tab to Basic Info tab. All required functionality is working correctly - field appears only when Order Type is set to Company Order, is properly positioned in Basic Info tab alongside Name of Firm and Case ID fields, and is no longer present in Additional Info tab.",
+  
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Login functionality with admin credentials (admin@kawalecranes.com)",
+    "Navigation to New Order form from dashboard",
+    "Basic Info tab displays correctly with all required fields",
+    "Company Name (Secondary) field is NOT visible when no order type is selected",
+    "Company Name (Secondary) field is NOT visible when Order Type is Cash",
+    "Company Name (Secondary) field IS visible when Order Type is Company",
+    "Company Name (Secondary) field is positioned correctly alongside Name of Firm and Case ID fields in Basic Info tab",
+    "Company Name (Secondary) field has correct label 'Company Name (Secondary)'",
+    "Company Name (Secondary) field is NOT present in Additional Info tab",
+    "Form layout and responsiveness in Basic Info tab with company fields",
+    "Field conditional visibility logic works correctly",
+    "Order type dropdown functionality works",
+    "Tab navigation between Basic Info and Additional Info works"
+  ],
+  
+  "test_report_links": [],
+  
+  "action_item_for_main_agent": "",
+  
+  "updated_files": [],
+  
+  "success_percentage": {
+    "backend": "N/A (backend testing not required for this feature)",
+    "frontend": "100% (13/13 tests passed - all Company Name field requirements met)"
+  },
+  
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "false"
+}
