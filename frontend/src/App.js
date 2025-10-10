@@ -422,6 +422,71 @@ const Dashboard = () => {
     setFilters({ order_type: 'all', customer_name: '', phone: '' });
   };
 
+  const handleSelectOrder = (orderId) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedOrders(
+      selectedOrders.length === orders.length 
+        ? [] 
+        : orders.map(order => order.id)
+    );
+  };
+
+  const bulkDeleteOrders = async () => {
+    if (!hasRole(['super_admin', 'admin'])) {
+      toast.error('You do not have permission to delete orders');
+      return;
+    }
+    
+    if (selectedOrders.length === 0) {
+      toast.error('Please select orders to delete');
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete ${selectedOrders.length} selected order(s)?`)) {
+      return;
+    }
+    
+    setBulkDeleting(true);
+    let deletedCount = 0;
+    let failedCount = 0;
+    
+    try {
+      for (const orderId of selectedOrders) {
+        try {
+          await axios.delete(`${API}/orders/${orderId}`);
+          deletedCount++;
+        } catch (error) {
+          console.error(`Failed to delete order ${orderId}:`, error);
+          failedCount++;
+        }
+      }
+      
+      if (deletedCount > 0) {
+        toast.success(`Successfully deleted ${deletedCount} order(s)`);
+        if (failedCount > 0) {
+          toast.warning(`Failed to delete ${failedCount} order(s)`);
+        }
+        setSelectedOrders([]);
+        fetchOrders();
+        fetchStats();
+      } else {
+        toast.error('Failed to delete any orders');
+      }
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      toast.error('Failed to delete orders');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
