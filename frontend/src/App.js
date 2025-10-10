@@ -2667,6 +2667,32 @@ const Reports = () => {
     }
   };
 
+  const fetchTowingVehicleReport = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/reports/revenue-by-towing-vehicle?month=${selectedMonth}&year=${selectedYear}`);
+      setTowingVehicleData(response.data.data);
+    } catch (error) {
+      console.error('Error fetching towing vehicle report:', error);
+      toast.error('Failed to fetch towing vehicle report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCustomReport = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API}/reports/custom`, customConfig);
+      setCustomReportData(response.data.data);
+    } catch (error) {
+      console.error('Error fetching custom report:', error);
+      toast.error('Failed to fetch custom report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const exportExpenseReport = async () => {
     try {
       toast.info('Generating expense report...');
