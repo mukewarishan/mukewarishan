@@ -1161,6 +1161,7 @@ const OrderForm = ({ orderId = null }) => {
     cash_vehicle_name: '',
     cash_vehicle_number: '',
     cash_service_type: '',
+    cash_towing_vehicle: '',
     amount_received: '',
     advance_amount: '',
     cash_kms_travelled: '',
