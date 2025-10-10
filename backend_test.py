@@ -1283,6 +1283,454 @@ class CraneOrderAPITester:
         
         return all_passed
 
+    def test_mandatory_fields_validation_comprehensive(self):
+        """Comprehensive test of mandatory fields validation for company orders"""
+        print("\n🔒 Testing Mandatory Fields Validation - COMPREHENSIVE...")
+        
+        # Test 1: Company order missing Company Name (should fail with HTTP 422)
+        missing_company_name = {
+            "customer_name": "Test Missing Company Name",
+            "phone": "9876543290",
+            "order_type": "company",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": "Tata ACE"
+            # Missing company_name
+        }
+        
+        success1, response1 = self.run_test("Company Order Missing Company Name", "POST", "orders", 422, missing_company_name)
+        if success1 and response1:
+            detail = response1.get('detail', '')
+            if 'Company Name' in detail:
+                self.log_test("Company Name Error Message", True, f"Correct error: {detail}")
+            else:
+                self.log_test("Company Name Error Message", False, f"Unexpected error: {detail}")
+        
+        # Test 2: Company order with empty Company Name (should fail with HTTP 422)
+        empty_company_name = {
+            "customer_name": "Test Empty Company Name",
+            "phone": "9876543291",
+            "order_type": "company",
+            "company_name": "",  # Empty string
+            "company_service_type": "Under-lift",
+            "company_driver_details": "Subhash",
+            "company_towing_vehicle": "Mahindra Bolero"
+        }
+        
+        success2, response2 = self.run_test("Company Order Empty Company Name", "POST", "orders", 422, empty_company_name)
+        
+        # Test 3: Company order missing Service Type (should fail with HTTP 422)
+        missing_service_type = {
+            "customer_name": "Test Missing Service Type",
+            "phone": "9876543292",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_driver_details": "Dubey",
+            "company_towing_vehicle": "Tata ACE"
+            # Missing company_service_type
+        }
+        
+        success3, response3 = self.run_test("Company Order Missing Service Type", "POST", "orders", 422, missing_service_type)
+        if success3 and response3:
+            detail = response3.get('detail', '')
+            if 'Service Type' in detail:
+                self.log_test("Service Type Error Message", True, f"Correct error: {detail}")
+            else:
+                self.log_test("Service Type Error Message", False, f"Unexpected error: {detail}")
+        
+        # Test 4: Company order with empty Service Type (should fail with HTTP 422)
+        empty_service_type = {
+            "customer_name": "Test Empty Service Type",
+            "phone": "9876543293",
+            "order_type": "company",
+            "company_name": "Mondial",
+            "company_service_type": "",  # Empty string
+            "company_driver_details": "Sudhir",
+            "company_towing_vehicle": "Mahindra Bolero"
+        }
+        
+        success4, response4 = self.run_test("Company Order Empty Service Type", "POST", "orders", 422, empty_service_type)
+        
+        # Test 5: Company order missing Driver (should fail with HTTP 422)
+        missing_driver = {
+            "customer_name": "Test Missing Driver",
+            "phone": "9876543294",
+            "order_type": "company",
+            "company_name": "TVS",
+            "company_service_type": "FBT",
+            "company_towing_vehicle": "Tata ACE"
+            # Missing company_driver_details
+        }
+        
+        success5, response5 = self.run_test("Company Order Missing Driver", "POST", "orders", 422, missing_driver)
+        if success5 and response5:
+            detail = response5.get('detail', '')
+            if 'Driver' in detail:
+                self.log_test("Driver Error Message", True, f"Correct error: {detail}")
+            else:
+                self.log_test("Driver Error Message", False, f"Unexpected error: {detail}")
+        
+        # Test 6: Company order with empty Driver (should fail with HTTP 422)
+        empty_driver = {
+            "customer_name": "Test Empty Driver",
+            "phone": "9876543295",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "",  # Empty string
+            "company_towing_vehicle": "Tata ACE"
+        }
+        
+        success6, response6 = self.run_test("Company Order Empty Driver", "POST", "orders", 422, empty_driver)
+        
+        # Test 7: Company order missing Towing Vehicle (should fail with HTTP 422)
+        missing_towing_vehicle = {
+            "customer_name": "Test Missing Towing Vehicle",
+            "phone": "9876543296",
+            "order_type": "company",
+            "company_name": "Mondial",
+            "company_service_type": "Under-lift",
+            "company_driver_details": "Vikas"
+            # Missing company_towing_vehicle
+        }
+        
+        success7, response7 = self.run_test("Company Order Missing Towing Vehicle", "POST", "orders", 422, missing_towing_vehicle)
+        if success7 and response7:
+            detail = response7.get('detail', '')
+            if 'Towing Vehicle' in detail:
+                self.log_test("Towing Vehicle Error Message", True, f"Correct error: {detail}")
+            else:
+                self.log_test("Towing Vehicle Error Message", False, f"Unexpected error: {detail}")
+        
+        # Test 8: Company order with empty Towing Vehicle (should fail with HTTP 422)
+        empty_towing_vehicle = {
+            "customer_name": "Test Empty Towing Vehicle",
+            "phone": "9876543297",
+            "order_type": "company",
+            "company_name": "TVS",
+            "company_service_type": "FBT",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": ""  # Empty string
+        }
+        
+        success8, response8 = self.run_test("Company Order Empty Towing Vehicle", "POST", "orders", 422, empty_towing_vehicle)
+        
+        # Test 9: Company order missing multiple fields (should fail with HTTP 422 listing all)
+        missing_multiple_fields = {
+            "customer_name": "Test Missing Multiple Fields",
+            "phone": "9876543298",
+            "order_type": "company"
+            # Missing company_name, company_service_type, company_driver_details, company_towing_vehicle
+        }
+        
+        success9, response9 = self.run_test("Company Order Missing Multiple Fields", "POST", "orders", 422, missing_multiple_fields)
+        if success9 and response9:
+            detail = response9.get('detail', '')
+            required_fields = ['Company Name', 'Service Type', 'Driver', 'Towing Vehicle']
+            found_fields = sum(1 for field in required_fields if field in detail)
+            if found_fields >= 3:  # Should mention most/all missing fields
+                self.log_test("Multiple Fields Error Message", True, f"Lists multiple missing fields: {detail}")
+            else:
+                self.log_test("Multiple Fields Error Message", False, f"Should list multiple fields: {detail}")
+        
+        # Test 10: Valid company order with all mandatory fields (should succeed with HTTP 200/201)
+        valid_company_order = {
+            "customer_name": "Test Valid Company Order",
+            "phone": "9876543299",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": "Tata ACE",
+            "name_of_firm": "Kawale Cranes",
+            "case_id_file_number": "VALID001",
+            "company_trip_from": "Mumbai",
+            "company_trip_to": "Pune"
+        }
+        
+        success10, response10 = self.run_test("Valid Company Order with All Mandatory Fields", "POST", "orders", 200, valid_company_order)
+        if success10 and 'id' in response10:
+            self.created_orders.append(response10['id'])
+            # Verify all mandatory fields are stored correctly
+            checks = [
+                ('company_name', 'Europ Assistance'),
+                ('company_service_type', '2 Wheeler Towing'),
+                ('company_driver_details', 'Rahul'),
+                ('company_towing_vehicle', 'Tata ACE')
+            ]
+            
+            all_correct = True
+            for field, expected in checks:
+                actual = response10.get(field)
+                if actual != expected:
+                    self.log_test(f"Valid Order {field} Storage", False, f"Expected: {expected}, Got: {actual}")
+                    all_correct = False
+            
+            if all_correct:
+                self.log_test("Valid Order Mandatory Fields Storage", True, "All mandatory fields stored correctly")
+        
+        # Count successful validation tests (should fail appropriately)
+        validation_tests = [success1, success2, success3, success4, success5, success6, success7, success8, success9]
+        validation_success_count = sum(validation_tests)
+        
+        # Valid order should succeed
+        overall_success = validation_success_count == 9 and success10
+        
+        if overall_success:
+            self.log_test("Mandatory Fields Validation Overall", True, f"All validation tests passed: {validation_success_count}/9 validation failures + 1 valid success")
+        else:
+            self.log_test("Mandatory Fields Validation Overall", False, f"Validation tests: {validation_success_count}/9, Valid order: {success10}")
+        
+        return overall_success
+
+    def test_mandatory_fields_update_validation(self):
+        """Test mandatory fields validation on order updates"""
+        print("\n🔄 Testing Mandatory Fields Validation - UPDATE Operations...")
+        
+        # First create a valid company order
+        valid_company_order = {
+            "customer_name": "Update Test Order",
+            "phone": "9876543302",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": "Tata ACE",
+            "name_of_firm": "Kawale Cranes",
+            "case_id_file_number": "UPDATE001"
+        }
+        
+        success_create, response_create = self.run_test("Create Order for Update Test", "POST", "orders", 200, valid_company_order)
+        if not success_create or 'id' not in response_create:
+            return self.log_test("Update Validation Test", False, "Failed to create test order")
+        
+        order_id = response_create['id']
+        self.created_orders.append(order_id)
+        
+        # Test 1: Update to remove Company Name (should fail)
+        update_remove_company_name = {
+            "company_name": ""  # Empty string
+        }
+        
+        success1, _ = self.run_test("Update Remove Company Name", "PUT", f"orders/{order_id}", 422, update_remove_company_name)
+        
+        # Test 2: Update to remove Service Type (should fail)
+        update_remove_service_type = {
+            "company_service_type": ""  # Empty string
+        }
+        
+        success2, _ = self.run_test("Update Remove Service Type", "PUT", f"orders/{order_id}", 422, update_remove_service_type)
+        
+        # Test 3: Update to remove Driver (should fail)
+        update_remove_driver = {
+            "company_driver_details": ""  # Empty string
+        }
+        
+        success3, _ = self.run_test("Update Remove Driver", "PUT", f"orders/{order_id}", 422, update_remove_driver)
+        
+        # Test 4: Update to remove Towing Vehicle (should fail)
+        update_remove_towing_vehicle = {
+            "company_towing_vehicle": ""  # Empty string
+        }
+        
+        success4, _ = self.run_test("Update Remove Towing Vehicle", "PUT", f"orders/{order_id}", 422, update_remove_towing_vehicle)
+        
+        # Test 5: Valid update (should succeed)
+        valid_update = {
+            "company_name": "Mondial",
+            "company_service_type": "Under-lift",
+            "company_driver_details": "Subhash",
+            "company_towing_vehicle": "Mahindra Bolero"
+        }
+        
+        success5, response5 = self.run_test("Valid Update with All Mandatory Fields", "PUT", f"orders/{order_id}", 200, valid_update)
+        
+        # Verify the update worked
+        if success5 and response5:
+            checks = [
+                ('company_name', 'Mondial'),
+                ('company_service_type', 'Under-lift'),
+                ('company_driver_details', 'Subhash'),
+                ('company_towing_vehicle', 'Mahindra Bolero')
+            ]
+            
+            all_correct = True
+            for field, expected in checks:
+                actual = response5.get(field)
+                if actual != expected:
+                    self.log_test(f"Update {field} Verification", False, f"Expected: {expected}, Got: {actual}")
+                    all_correct = False
+            
+            if all_correct:
+                self.log_test("Valid Update Verification", True, "All mandatory fields updated correctly")
+        
+        validation_tests = [success1, success2, success3, success4]
+        validation_success_count = sum(validation_tests)
+        overall_success = validation_success_count == 4 and success5
+        
+        if overall_success:
+            self.log_test("Update Validation Overall", True, f"All update validation tests passed: {validation_success_count}/4 validation failures + 1 valid success")
+        else:
+            self.log_test("Update Validation Overall", False, f"Update validation tests: {validation_success_count}/4, Valid update: {success5}")
+        
+        return overall_success
+
+    def test_cash_orders_no_validation(self):
+        """Test that cash orders don't require company mandatory fields"""
+        print("\n💰 Testing Cash Orders - No Company Field Validation...")
+        
+        # Test 1: Cash order without any company fields (should succeed)
+        cash_order_no_company_fields = {
+            "customer_name": "Cash Order No Company Fields",
+            "phone": "9876543300",
+            "order_type": "cash",
+            "cash_trip_from": "Mumbai",
+            "cash_trip_to": "Pune",
+            "cash_vehicle_name": "Tata ACE",
+            "amount_received": 5000.0
+        }
+        
+        success1, response1 = self.run_test("Cash Order No Company Fields", "POST", "orders", 200, cash_order_no_company_fields)
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+        
+        # Test 2: Cash order with empty company fields (should succeed)
+        cash_order_empty_company_fields = {
+            "customer_name": "Cash Order Empty Company Fields",
+            "phone": "9876543301",
+            "order_type": "cash",
+            "company_name": "",  # Empty - should be allowed for cash orders
+            "company_service_type": "",  # Empty - should be allowed for cash orders
+            "company_driver_details": "",  # Empty - should be allowed for cash orders
+            "company_towing_vehicle": "",  # Empty - should be allowed for cash orders
+            "cash_trip_from": "Delhi",
+            "cash_trip_to": "Gurgaon",
+            "cash_vehicle_name": "Mahindra Bolero",
+            "amount_received": 3000.0
+        }
+        
+        success2, response2 = self.run_test("Cash Order Empty Company Fields", "POST", "orders", 200, cash_order_empty_company_fields)
+        if success2 and 'id' in response2:
+            self.created_orders.append(response2['id'])
+        
+        overall_success = success1 and success2
+        
+        if overall_success:
+            self.log_test("Cash Orders No Validation", True, "Cash orders correctly bypass company field validation")
+        else:
+            self.log_test("Cash Orders No Validation", False, f"Cash order tests failed: {success1}, {success2}")
+        
+        return overall_success
+
+    def test_incentive_functionality_regression(self):
+        """Test that incentive functionality still works for both order types"""
+        print("\n🎁 Testing Incentive Functionality - Regression Test...")
+        
+        # Test 1: Cash order with incentive (should succeed)
+        cash_order_with_incentive = {
+            "customer_name": "Cash Incentive Test",
+            "phone": "9876543303",
+            "order_type": "cash",
+            "cash_trip_from": "Mumbai",
+            "cash_trip_to": "Pune",
+            "cash_vehicle_name": "Tata ACE",
+            "amount_received": 5000.0,
+            "incentive_amount": 500.0,
+            "incentive_reason": "Excellent service"
+        }
+        
+        success1, response1 = self.run_test("Cash Order with Incentive", "POST", "orders", 200, cash_order_with_incentive)
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+            # Verify incentive fields
+            if (response1.get('incentive_amount') == 500.0 and 
+                response1.get('incentive_reason') == "Excellent service"):
+                self.log_test("Cash Order Incentive Storage", True, "Incentive fields stored correctly")
+            else:
+                self.log_test("Cash Order Incentive Storage", False, f"Incentive: {response1.get('incentive_amount')}, Reason: {response1.get('incentive_reason')}")
+        
+        # Test 2: Company order with incentive (should succeed)
+        company_order_with_incentive = {
+            "customer_name": "Company Incentive Test",
+            "phone": "9876543304",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": "Tata ACE",
+            "name_of_firm": "Kawale Cranes",
+            "case_id_file_number": "INC001",
+            "incentive_amount": 750.0,
+            "incentive_reason": "Quick response time"
+        }
+        
+        success2, response2 = self.run_test("Company Order with Incentive", "POST", "orders", 200, company_order_with_incentive)
+        if success2 and 'id' in response2:
+            self.created_orders.append(response2['id'])
+            # Verify incentive fields
+            if (response2.get('incentive_amount') == 750.0 and 
+                response2.get('incentive_reason') == "Quick response time"):
+                self.log_test("Company Order Incentive Storage", True, "Incentive fields stored correctly")
+            else:
+                self.log_test("Company Order Incentive Storage", False, f"Incentive: {response2.get('incentive_amount')}, Reason: {response2.get('incentive_reason')}")
+        
+        overall_success = success1 and success2
+        
+        if overall_success:
+            self.log_test("Incentive Functionality Regression", True, "Incentive functionality working for both order types")
+        else:
+            self.log_test("Incentive Functionality Regression", False, f"Incentive tests failed: Cash={success1}, Company={success2}")
+        
+        return overall_success
+
+    def test_revenue_calculations_regression(self):
+        """Test that revenue calculations still work after validation changes"""
+        print("\n💰 Testing Revenue Calculations - Regression Test...")
+        
+        # Create a company order with all mandatory fields and known rate
+        company_order_for_revenue = {
+            "customer_name": "Revenue Calculation Test",
+            "phone": "9876543305",
+            "order_type": "company",
+            "name_of_firm": "Kawale Cranes",
+            "company_name": "Europ Assistance",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": "Tata ACE",
+            "case_id_file_number": "REV001",
+            "company_kms_travelled": 30.0,  # Within base distance
+            "incentive_amount": 200.0,
+            "incentive_reason": "Good service"
+        }
+        
+        success1, response1 = self.run_test("Create Order for Revenue Test", "POST", "orders", 200, company_order_for_revenue)
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+            order_id = response1['id']
+            
+            # Test financial calculation
+            success2, response2 = self.run_test("Get Revenue Calculation", "GET", f"orders/{order_id}/financials", 200)
+            
+            if success2 and response2:
+                base_revenue = response2.get('base_revenue', 0)
+                incentive_amount = response2.get('incentive_amount', 0)
+                total_revenue = response2.get('total_revenue', 0)
+                
+                # Expected: Kawale Cranes - Europ Assistance - 2 Wheeler Towing = 1200 base + 200 incentive = 1400
+                expected_base = 1200.0
+                expected_incentive = 200.0
+                expected_total = 1400.0
+                
+                if (base_revenue == expected_base and 
+                    incentive_amount == expected_incentive and 
+                    total_revenue == expected_total):
+                    self.log_test("Revenue Calculation Regression", True, f"Base: ₹{base_revenue}, Incentive: ₹{incentive_amount}, Total: ₹{total_revenue}")
+                    return True
+                else:
+                    self.log_test("Revenue Calculation Regression", False, f"Expected Base: ₹{expected_base}, Incentive: ₹{expected_incentive}, Total: ₹{expected_total}, Got Base: ₹{base_revenue}, Incentive: ₹{incentive_amount}, Total: ₹{total_revenue}")
+        
+        return False
+
     def cleanup_created_orders(self):
         """Clean up any remaining test orders"""
         print("\n🧹 Cleaning up test orders...")
