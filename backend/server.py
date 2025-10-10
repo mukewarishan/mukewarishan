@@ -274,6 +274,26 @@ class CraneOrderUpdate(BaseModel):
     incentive_added_by: Optional[str] = None
     incentive_added_at: Optional[datetime] = None
 
+class ServiceRate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name_of_firm: str
+    company_name: str
+    service_type: str
+    base_rate: float  # Rate for base distance (up to 40km)
+    base_distance_km: float = Field(default=40.0)  # Base distance in km
+    rate_per_km_beyond: float  # Rate per km beyond base distance
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CalculatedOrderFinancials(BaseModel):
+    """Calculated financial data for an order"""
+    base_revenue: float = 0.0  # Revenue from rate calculation
+    incentive_amount: float = 0.0  # Incentive paid
+    total_revenue: float = 0.0  # base_revenue + incentive_amount
+    calculation_details: Optional[str] = None  # Details of how calculation was done
+
 # Helper functions for MongoDB serialization
 def prepare_for_mongo(data):
     """Convert datetime objects to ISO strings for MongoDB storage"""
