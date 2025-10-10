@@ -143,7 +143,7 @@ backend:
 
 frontend:
   - task: "Google Sheets Export Button"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "App.js"
     stuck_count: 0
@@ -152,7 +152,7 @@ frontend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Need to add Google Sheets export button alongside existing PDF/Excel buttons"
+        comment: "Added Google Sheets export button and updated exportData function to handle Google Sheets response format (JSON instead of blob)"
 
   - task: "PDF Export Button"
     implemented: true
