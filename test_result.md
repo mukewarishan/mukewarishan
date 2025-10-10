@@ -450,10 +450,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Revenue by Towing Vehicle Report"
-    - "Custom Reports System"
-    - "Create New Rates Functionality"
-    - "Excel Import Display Investigation"
+    - "Excel Data Import - Kawale_Cranes_23092025.xlsx"
   stuck_tasks: 
     - "Google Sheets API Integration"
   test_all: false
