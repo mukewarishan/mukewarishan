@@ -1297,6 +1297,335 @@ class CraneOrderAPITester:
             except Exception as e:
                 print(f"⚠️ Error cleaning up order {order_id}: {str(e)}")
 
+    def test_mandatory_fields_validation(self):
+        """Test mandatory fields validation for company orders"""
+        print("\n🔒 Testing Mandatory Fields Validation...")
+        
+        # Test 1: Company order missing Company Name (should fail)
+        missing_company_name = {
+            "customer_name": "Test Missing Company Name",
+            "phone": "9876543290",
+            "order_type": "company",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": "Tata ACE"
+            # Missing company_name
+        }
+        
+        success1, _ = self.run_test("Company Order Missing Company Name", "POST", "orders", 422, missing_company_name)
+        
+        # Test 2: Company order missing Service Type (should fail)
+        missing_service_type = {
+            "customer_name": "Test Missing Service Type",
+            "phone": "9876543291",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_driver_details": "Subhash",
+            "company_towing_vehicle": "Mahindra Bolero"
+            # Missing company_service_type
+        }
+        
+        success2, _ = self.run_test("Company Order Missing Service Type", "POST", "orders", 422, missing_service_type)
+        
+        # Test 3: Company order missing Driver (should fail)
+        missing_driver = {
+            "customer_name": "Test Missing Driver",
+            "phone": "9876543292",
+            "order_type": "company",
+            "company_name": "Mondial",
+            "company_service_type": "Under-lift",
+            "company_towing_vehicle": "Tata ACE"
+            # Missing company_driver_details
+        }
+        
+        success3, _ = self.run_test("Company Order Missing Driver", "POST", "orders", 422, missing_driver)
+        
+        # Test 4: Company order missing Towing Vehicle (should fail)
+        missing_towing_vehicle = {
+            "customer_name": "Test Missing Towing Vehicle",
+            "phone": "9876543293",
+            "order_type": "company",
+            "company_name": "TVS",
+            "company_service_type": "FBT",
+            "company_driver_details": "Vikas"
+            # Missing company_towing_vehicle
+        }
+        
+        success4, _ = self.run_test("Company Order Missing Towing Vehicle", "POST", "orders", 422, missing_towing_vehicle)
+        
+        # Test 5: Valid company order with all mandatory fields (should succeed)
+        valid_company_order = {
+            "customer_name": "Test Valid Company Order",
+            "phone": "9876543294",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Rahul",
+            "company_towing_vehicle": "Tata ACE",
+            "name_of_firm": "Kawale Cranes",
+            "case_id_file_number": "VALID001",
+            "company_trip_from": "Mumbai",
+            "company_trip_to": "Pune"
+        }
+        
+        success5, response5 = self.run_test("Valid Company Order with All Mandatory Fields", "POST", "orders", 200, valid_company_order)
+        if success5 and 'id' in response5:
+            self.created_orders.append(response5['id'])
+        
+        # Test 6: Cash order should not require company mandatory fields (should succeed)
+        cash_order_no_company_fields = {
+            "customer_name": "Test Cash Order",
+            "phone": "9876543295",
+            "order_type": "cash",
+            "cash_trip_from": "Delhi",
+            "cash_trip_to": "Gurgaon",
+            "amount_received": 3000.0
+            # No company fields required for cash orders
+        }
+        
+        success6, response6 = self.run_test("Cash Order Without Company Fields", "POST", "orders", 200, cash_order_no_company_fields)
+        if success6 and 'id' in response6:
+            self.created_orders.append(response6['id'])
+        
+        all_passed = success1 and success2 and success3 and success4 and success5 and success6
+        
+        if all_passed:
+            self.log_test("Mandatory Fields Validation Overall", True, "All mandatory field validation tests passed")
+        else:
+            failed_tests = []
+            if not success1: failed_tests.append("Missing Company Name")
+            if not success2: failed_tests.append("Missing Service Type")
+            if not success3: failed_tests.append("Missing Driver")
+            if not success4: failed_tests.append("Missing Towing Vehicle")
+            if not success5: failed_tests.append("Valid Company Order")
+            if not success6: failed_tests.append("Cash Order")
+            
+            self.log_test("Mandatory Fields Validation Overall", False, f"Failed tests: {', '.join(failed_tests)}")
+        
+        return all_passed
+
+    def test_incentive_functionality_company_orders(self):
+        """Test incentive functionality specifically for company orders"""
+        print("\n💰 Testing Incentive Functionality for Company Orders...")
+        
+        # Test 1: Create company order with incentive amount and reason
+        company_order_with_incentive = {
+            "customer_name": "Test Company Incentive",
+            "phone": "9876543296",
+            "order_type": "company",
+            "company_name": "Europ Assistance",
+            "company_service_type": "Under-lift",
+            "company_driver_details": "Subhash",
+            "company_towing_vehicle": "Mahindra Bolero",
+            "name_of_firm": "Kawale Cranes",
+            "case_id_file_number": "INC001",
+            "company_trip_from": "Mumbai",
+            "company_trip_to": "Pune",
+            "company_kms_travelled": 45.0,  # Beyond base distance for calculation
+            "incentive_amount": 750.0,
+            "incentive_reason": "Exceptional service and quick response time"
+        }
+        
+        success1, response1 = self.run_test("Company Order with Incentive", "POST", "orders", 200, company_order_with_incentive)
+        incentive_order_id = None
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+            incentive_order_id = response1['id']
+            
+            # Verify incentive fields are stored correctly
+            incentive_amount_correct = response1.get('incentive_amount') == 750.0
+            incentive_reason_correct = response1.get('incentive_reason') == "Exceptional service and quick response time"
+            
+            if incentive_amount_correct and incentive_reason_correct:
+                self.log_test("Company Incentive Fields Storage", True, f"Amount: ₹{response1['incentive_amount']}, Reason: {response1['incentive_reason']}")
+            else:
+                self.log_test("Company Incentive Fields Storage", False, f"Amount: {response1.get('incentive_amount')}, Reason: {response1.get('incentive_reason')}")
+        
+        # Test 2: Test financial calculation includes incentive for company orders
+        if incentive_order_id:
+            success2, response2 = self.run_test("Company Order Financials with Incentive", "GET", f"orders/{incentive_order_id}/financials", 200)
+            
+            if success2 and response2:
+                base_revenue = response2.get('base_revenue', 0)
+                incentive_amount = response2.get('incentive_amount', 0)
+                total_revenue = response2.get('total_revenue', 0)
+                calculation_details = response2.get('calculation_details', '')
+                
+                # Expected: Kawale Cranes - Europ Assistance - Under-lift = Base 1500 + (45-40) * 15 = 1500 + 75 = 1575
+                # Plus incentive: 1575 + 750 = 2325
+                expected_base_rate = 1500.0
+                expected_per_km = 15.0
+                kms_travelled = 45.0
+                excess_km = kms_travelled - 40.0  # 5km excess
+                expected_base_revenue = expected_base_rate + (excess_km * expected_per_km)  # 1500 + (5 * 15) = 1575
+                expected_incentive = 750.0
+                expected_total = expected_base_revenue + expected_incentive  # 1575 + 750 = 2325
+                
+                if (base_revenue == expected_base_revenue and 
+                    incentive_amount == expected_incentive and 
+                    total_revenue == expected_total and
+                    "Incentive" in calculation_details):
+                    self.log_test("Company Incentive Financial Calculation", True, f"Base: ₹{base_revenue}, Incentive: ₹{incentive_amount}, Total: ₹{total_revenue}")
+                    success2 = True
+                else:
+                    self.log_test("Company Incentive Financial Calculation", False, f"Expected Base: ₹{expected_base_revenue}, Incentive: ₹{expected_incentive}, Total: ₹{expected_total}, Got Base: ₹{base_revenue}, Incentive: ₹{incentive_amount}, Total: ₹{total_revenue}")
+                    success2 = False
+            else:
+                success2 = False
+        else:
+            success2 = False
+        
+        # Test 3: Company order without incentive (should work fine)
+        company_order_no_incentive = {
+            "customer_name": "Test Company No Incentive",
+            "phone": "9876543297",
+            "order_type": "company",
+            "company_name": "Mondial",
+            "company_service_type": "2 Wheeler Towing",
+            "company_driver_details": "Dubey",
+            "company_towing_vehicle": "Tata ACE",
+            "name_of_firm": "Kawale Cranes",
+            "case_id_file_number": "NOINC002",
+            "company_trip_from": "Delhi",
+            "company_trip_to": "Gurgaon",
+            "company_kms_travelled": 35.0  # Within base distance
+        }
+        
+        success3, response3 = self.run_test("Company Order without Incentive", "POST", "orders", 200, company_order_no_incentive)
+        no_incentive_order_id = None
+        if success3 and 'id' in response3:
+            self.created_orders.append(response3['id'])
+            no_incentive_order_id = response3['id']
+            
+            # Verify no incentive fields
+            incentive_amount_null = response3.get('incentive_amount') is None
+            incentive_reason_null = response3.get('incentive_reason') is None
+            
+            if incentive_amount_null and incentive_reason_null:
+                self.log_test("Company No Incentive Fields", True, "Incentive fields correctly null when not provided")
+            else:
+                self.log_test("Company No Incentive Fields", False, f"Amount: {response3.get('incentive_amount')}, Reason: {response3.get('incentive_reason')}")
+        
+        # Test 4: Financial calculation for company order without incentive
+        if no_incentive_order_id:
+            success4, response4 = self.run_test("Company Order Financials without Incentive", "GET", f"orders/{no_incentive_order_id}/financials", 200)
+            
+            if success4 and response4:
+                base_revenue = response4.get('base_revenue', 0)
+                incentive_amount = response4.get('incentive_amount', 0)
+                total_revenue = response4.get('total_revenue', 0)
+                
+                # Expected: Kawale Cranes - Mondial - 2 Wheeler Towing = Base 1200 (within 40km)
+                expected_base_revenue = 1200.0
+                expected_incentive = 0.0
+                expected_total = expected_base_revenue  # 1200 + 0 = 1200
+                
+                if (base_revenue == expected_base_revenue and 
+                    incentive_amount == expected_incentive and 
+                    total_revenue == expected_total):
+                    self.log_test("Company No Incentive Financial Calculation", True, f"Base: ₹{base_revenue}, Total: ₹{total_revenue}")
+                    success4 = True
+                else:
+                    self.log_test("Company No Incentive Financial Calculation", False, f"Expected Base: ₹{expected_base_revenue}, Total: ₹{expected_total}, Got Base: ₹{base_revenue}, Total: ₹{total_revenue}")
+                    success4 = False
+            else:
+                success4 = False
+        else:
+            success4 = False
+        
+        all_passed = success1 and success2 and success3 and success4
+        
+        if all_passed:
+            self.log_test("Company Incentive Functionality Overall", True, "All company incentive functionality tests passed")
+        else:
+            failed_tests = []
+            if not success1: failed_tests.append("Incentive Storage")
+            if not success2: failed_tests.append("Incentive Financial Calc")
+            if not success3: failed_tests.append("No Incentive Order")
+            if not success4: failed_tests.append("No Incentive Financial Calc")
+            
+            self.log_test("Company Incentive Functionality Overall", False, f"Failed tests: {', '.join(failed_tests)}")
+        
+        return all_passed
+
+    def test_existing_functionality_preservation(self):
+        """Test that existing functionality still works after mandatory fields changes"""
+        print("\n🔄 Testing Existing Functionality Preservation...")
+        
+        # Test 1: Cash order creation (should not be affected by company mandatory fields)
+        cash_order = {
+            "customer_name": "Test Cash Preservation",
+            "phone": "9876543298",
+            "order_type": "cash",
+            "cash_trip_from": "Mumbai",
+            "cash_trip_to": "Pune",
+            "cash_vehicle_name": "Tata ACE",
+            "cash_service_type": "2 Wheeler Towing",
+            "amount_received": 4500.0,
+            "advance_amount": 1000.0,
+            "cash_kms_travelled": 120.0,
+            "cash_toll": 300.0,
+            "cash_diesel": 800.0
+        }
+        
+        success1, response1 = self.run_test("Cash Order Creation Preservation", "POST", "orders", 200, cash_order)
+        if success1 and 'id' in response1:
+            self.created_orders.append(response1['id'])
+        
+        # Test 2: Revenue calculation for existing orders (should work)
+        success2, _ = self.run_test("Get Orders Summary Preservation", "GET", "orders/stats/summary", 200)
+        
+        # Test 3: Authentication still works
+        success3, _ = self.run_test("Authentication Preservation", "GET", "auth/me", 200)
+        
+        # Test 4: Role-based access control still works
+        success4, _ = self.run_test("RBAC Preservation", "GET", "users", 200)
+        
+        all_passed = success1 and success2 and success3 and success4
+        
+        if all_passed:
+            self.log_test("Existing Functionality Preservation Overall", True, "All existing functionality preserved")
+        else:
+            failed_tests = []
+            if not success1: failed_tests.append("Cash Order Creation")
+            if not success2: failed_tests.append("Revenue Calculation")
+            if not success3: failed_tests.append("Authentication")
+            if not success4: failed_tests.append("RBAC")
+            
+            self.log_test("Existing Functionality Preservation Overall", False, f"Failed tests: {', '.join(failed_tests)}")
+        
+        return all_passed
+
+    def test_mandatory_fields_and_incentives_comprehensive(self):
+        """Comprehensive test of mandatory fields and incentive functionality"""
+        print("\n🎯 COMPREHENSIVE MANDATORY FIELDS & INCENTIVES TESTING")
+        print("=" * 60)
+        
+        # Test mandatory fields validation
+        mandatory_fields_passed = self.test_mandatory_fields_validation()
+        
+        # Test incentive functionality for company orders
+        incentive_functionality_passed = self.test_incentive_functionality_company_orders()
+        
+        # Test existing functionality preservation
+        existing_functionality_passed = self.test_existing_functionality_preservation()
+        
+        # Overall result
+        all_comprehensive_passed = mandatory_fields_passed and incentive_functionality_passed and existing_functionality_passed
+        
+        if all_comprehensive_passed:
+            self.log_test("MANDATORY FIELDS & INCENTIVES COMPREHENSIVE", True, "✅ All mandatory fields and incentive tests passed successfully")
+        else:
+            failed_areas = []
+            if not mandatory_fields_passed: failed_areas.append("Mandatory Fields Validation")
+            if not incentive_functionality_passed: failed_areas.append("Incentive Functionality")
+            if not existing_functionality_passed: failed_areas.append("Existing Functionality")
+            
+            self.log_test("MANDATORY FIELDS & INCENTIVES COMPREHENSIVE", False, f"❌ Failed areas: {', '.join(failed_areas)}")
+        
+        print("=" * 60)
+        return all_comprehensive_passed
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
