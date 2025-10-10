@@ -1589,6 +1589,32 @@ const OrderForm = ({ orderId = null }) => {
                         </div>
                         
                         <div>
+                          <Label htmlFor="cash_reach_time" className="text-sm font-medium text-slate-700">
+                            Reach Time
+                          </Label>
+                          <Input
+                            id="cash_reach_time"
+                            type="datetime-local"
+                            value={formData.cash_reach_time}
+                            onChange={(e) => handleInputChange('cash_reach_time', e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="cash_drop_time" className="text-sm font-medium text-slate-700">
+                            Drop Time
+                          </Label>
+                          <Input
+                            id="cash_drop_time"
+                            type="datetime-local"
+                            value={formData.cash_drop_time}
+                            onChange={(e) => handleInputChange('cash_drop_time', e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
                           <Label htmlFor="cash_kms_travelled" className="text-sm font-medium text-slate-700">
                             KMs Travelled
                           </Label>
