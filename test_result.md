@@ -135,6 +135,18 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE SK RATES TESTING COMPLETED: Service rates properly initialized (17 rates found), /api/rates endpoint working ✅, rate structure correct ✅, financial calculations accurate ✅. Base distance (≤40km): ₹1200 ✅, Beyond distance (65km): ₹2125 (1700+25*17) ✅, With incentive: Base+Incentive=Total ✅, No rate found handling ✅, Cash orders return 0 ✅. All rate calculation logic working perfectly for Kawale Cranes, Vidharbha Towing, Sarang Cranes, Vira Towing with Europ Assistance, Mondial, TVS companies."
 
+  - task: "Backend Mandatory Fields Validation"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated CraneOrder model to make company_name, company_service_type, company_driver_details, and company_towing_vehicle mandatory fields for company orders."
+
   - task: "PDF Export"
     implemented: true
     working: true
