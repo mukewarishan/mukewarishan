@@ -1537,6 +1537,33 @@ const OrderForm = ({ orderId = null }) => {
                         
                         <div>
                           <Label className="text-sm font-medium text-slate-700">
+                            Towing Vehicle
+                          </Label>
+                          <Select 
+                            value={formData.cash_towing_vehicle} 
+                            onValueChange={(value) => handleInputChange('cash_towing_vehicle', value)}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select towing vehicle" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Ace 1">Ace 1</SelectItem>
+                              <SelectItem value="Ace 2">Ace 2</SelectItem>
+                              <SelectItem value="Ace 3">Ace 3</SelectItem>
+                              <SelectItem value="Xenon 1">Xenon 1</SelectItem>
+                              <SelectItem value="Xenon 2">Xenon 2</SelectItem>
+                              <SelectItem value="Xenon 3">Xenon 3</SelectItem>
+                              <SelectItem value="H407">H407</SelectItem>
+                              <SelectItem value="2901">2901</SelectItem>
+                              <SelectItem value="7868">7868</SelectItem>
+                              <SelectItem value="700">700</SelectItem>
+                              <SelectItem value="4282">4282</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium text-slate-700">
                             Driver
                           </Label>
                           <Select 
