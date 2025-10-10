@@ -2520,19 +2520,6 @@ const OrderForm = ({ orderId = null }) => {
                           />
                         </div>
                         
-                        <div>
-                          <Label htmlFor="company_diesel_refill_location_costs" className="text-sm font-medium text-slate-700">
-                            Diesel Refill Location
-                          </Label>
-                          <Input
-                            id="company_diesel_refill_location_costs"
-                            value={formData.company_diesel_refill_location}
-                            onChange={(e) => handleInputChange('company_diesel_refill_location', e.target.value)}
-                            placeholder="Where diesel was refilled"
-                            className="mt-1"
-                          />
-                        </div>
-                        
                         {/* Incentive Fields - Admin Only for Company Orders */}
                         {hasRole(['super_admin', 'admin']) && (
                           <>
