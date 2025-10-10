@@ -291,9 +291,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Google Sheets API Integration"
     - "Google Sheets Export Button"
-  stuck_tasks: []
+  stuck_tasks: 
+    - "Google Sheets API Integration"
   test_all: false
   test_priority: "high_first"
 
