@@ -2741,6 +2741,54 @@ const Reports = () => {
     }
   };
 
+  const exportTowingVehicleReport = async () => {
+    try {
+      toast.info('Generating towing vehicle report...');
+      const response = await axios.get(`${API}/reports/revenue-by-towing-vehicle/export?month=${selectedMonth}&year=${selectedYear}`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kawale_revenue_by_towing_vehicle_${selectedYear}_${selectedMonth.toString().padStart(2, '0')}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Towing vehicle report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting towing vehicle report:', error);
+      toast.error('Failed to export towing vehicle report');
+    }
+  };
+
+  const exportCustomReport = async () => {
+    try {
+      toast.info('Generating custom report...');
+      const response = await axios.post(`${API}/reports/custom/export`, customConfig, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kawale_custom_report_${customConfig.group_by}_${Date.now()}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Custom report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting custom report:', error);
+      toast.error('Failed to export custom report');
+    }
+  };
+
   const handleMonthYearChange = () => {
     if (activeTab === 'expense') {
       fetchExpenseReport();
