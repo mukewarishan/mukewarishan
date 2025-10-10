@@ -359,11 +359,11 @@ backend:
 
   - task: "Excel Data Import - Kawale_Cranes_23092025.xlsx"
     implemented: true
-    working: false
+    working: "NA"
     file: "import_excel_data.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -371,6 +371,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL ISSUE: Excel import verification FAILED. Testing revealed that the claimed 205 imported records are NOT present in the database. Current database contains only 116 orders (38 cash, 78 company) instead of expected 205+ (157+ cash, 48+ company). Key findings: 1) No September 2025 data found (expected import date range), 2) Sample records not found (Kartik cash order with phone 7350009241, Sachi company order with phone 9545617572), 3) No imported drivers (Meshram, Akshay, Vikas) in September 2025 reports, 4) No imported service types (FBT, 2 Wheeler Towing, Under-lift) in September 2025 reports. ROOT CAUSE ANALYSIS: Import script uses wrong database (crane_orders_db/orders) vs backend API (test_database/crane_orders). Excel file Kawale_Cranes_23092025.xlsx not found in filesystem. Import either never executed or went to wrong database. RESOLUTION NEEDED: 1) Locate/provide Excel file, 2) Fix database configuration mismatch, 3) Re-run import with correct database settings, 4) Verify all 205 records imported correctly."
+      - working: "NA"
+        agent: "main"
+        comment: "🔧 DATABASE CONFIGURATION FIXED: Identified root cause - import script was using wrong database name (crane_orders_db/orders) instead of backend's database (test_database/crane_orders). Fixed import_excel_data.py to read DB_NAME from environment variable and use correct collection name. Re-ran import successfully: 205 records imported, total database now has 348 orders (143 existing + 205 new = 348). Verification confirms: ✅ Kartik cash order found (phone: 7350009241, driver: Meshram, service: FBT, amount: ₹2000), ✅ Sachi company order found (phone: 9545617572, company: Europ Assistance, service: 2 Wheeler Towing, reach/drop times set), ✅ 134 orders in September 2025 date range, ✅ Imported drivers present (Meshram: 25 orders, Akshay: 7 orders, Vikas: 45 orders), ✅ Import date range: 2025-09-21 to 2025-10-07. Need testing to verify: 1) Dashboard displays all 348 orders correctly, 2) September 2025 reports include imported data, 3) Financials calculate correctly for imported company orders, 4) Filtering/sorting works with enlarged dataset."
 
 frontend:
   - task: "Google Sheets Export Button"
