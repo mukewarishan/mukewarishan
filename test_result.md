@@ -194,4 +194,4 @@ test_plan:
 
 agent_communication:
   - agent: "main"
-    message: "Starting implementation of Google Sheets export functionality. Current PDF/Excel export confirmed working from previous test iteration_7.json. Need to add Google Sheets as third export option."
+    message: "Implemented Google Sheets export (skipped setup per user request). Fixed incentive field visibility - moved Incentive Amount & Reason to Costs & Charges section, only visible for Cash orders and Admin/Super Admin users."
