@@ -134,8 +134,6 @@ class CraneOrder(BaseModel):
     cash_diesel_refill_location: Optional[str] = None
     cash_driver_name: Optional[str] = None
     cash_towing_vehicle: Optional[str] = None
-    cash_reach_time: Optional[datetime] = None
-    cash_drop_time: Optional[datetime] = None
     
     # Company order fields
     name_of_firm: Optional[str] = None
@@ -183,8 +181,6 @@ class CraneOrderCreate(BaseModel):
     cash_diesel_refill_location: Optional[str] = None
     cash_driver_name: Optional[str] = None
     cash_towing_vehicle: Optional[str] = None
-    cash_reach_time: Optional[datetime] = None
-    cash_drop_time: Optional[datetime] = None
     
     # Company order fields
     name_of_firm: Optional[str] = None
@@ -232,8 +228,6 @@ class CraneOrderUpdate(BaseModel):
     cash_diesel_refill_location: Optional[str] = None
     cash_driver_name: Optional[str] = None
     cash_towing_vehicle: Optional[str] = None
-    cash_reach_time: Optional[datetime] = None
-    cash_drop_time: Optional[datetime] = None
     
     # Company order fields
     name_of_firm: Optional[str] = None
