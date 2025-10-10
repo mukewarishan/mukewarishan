@@ -213,7 +213,7 @@ class CraneOrderCreate(BaseModel):
     company_diesel: Optional[float] = None
     company_diesel_refill_location: Optional[str] = None
     company_driver_name: Optional[str] = None
-    company_towing_vehicle: Optional[str] = None
+    company_towing_vehicle: str = ""  # Made mandatory (Towing Vehicle)
     
     # Incentive fields (admin only)
     incentive_amount: Optional[float] = None
@@ -266,7 +266,7 @@ class CraneOrderUpdate(BaseModel):
     company_diesel: Optional[float] = None
     company_diesel_refill_location: Optional[str] = None
     company_driver_name: Optional[str] = None
-    company_towing_vehicle: Optional[str] = None
+    company_towing_vehicle: str = ""  # Made mandatory (Towing Vehicle)
     
     # Incentive fields (admin only)
     incentive_amount: Optional[float] = None
