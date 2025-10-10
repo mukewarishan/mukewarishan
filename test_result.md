@@ -286,6 +286,18 @@ frontend:
         agent: "main"
         comment: "Added revenue calculation display for company orders. Shows base revenue, incentive amount, and total revenue with calculation details from SK rates."
 
+  - task: "Mandatory Fields & Incentive Visibility"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Made Service Type, Towing Vehicle, Driver, Company Name mandatory fields (marked with * and validation). Extended incentive fields visibility to Company orders as well. Added form validation for mandatory company order fields."
+
   - task: "PDF Export Button"
     implemented: true
     working: true
