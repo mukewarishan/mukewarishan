@@ -137,7 +137,7 @@ backend:
 
   - task: "Backend Mandatory Fields Validation"
     implemented: true
-    working: false
+    working: true
     file: "server.py"
     stuck_count: 1
     priority: "high"
@@ -149,6 +149,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL ISSUE: Mandatory fields validation is NOT working. Backend accepts company orders even when mandatory fields are missing/empty. Tests expected HTTP 422 validation errors but got HTTP 200 success. The Pydantic model defines these fields as strings with default empty values ('') but lacks custom validation logic to enforce non-empty values for company orders. Need to implement validation in create_order endpoint to check: if order_type == 'company', then company_name, company_service_type, company_driver_details, and company_towing_vehicle must be non-empty strings."
+      - working: true
+        agent: "testing"
+        comment: "✅ MANDATORY FIELDS VALIDATION FIXED AND WORKING PERFECTLY! Comprehensive testing completed with 100% success rate for validation logic: ✅ Missing Company Name → HTTP 422 with correct error message ✅ Missing Service Type → HTTP 422 with correct error message ✅ Missing Driver → HTTP 422 with correct error message ✅ Missing Towing Vehicle → HTTP 422 with correct error message ✅ Empty string fields → HTTP 422 validation ✅ Multiple missing fields → HTTP 422 listing all missing fields ✅ Valid company order with all mandatory fields → HTTP 200 success ✅ Update validation working (removing mandatory fields → HTTP 422) ✅ Cash orders bypass validation correctly ✅ Incentive functionality preserved for both order types ✅ Revenue calculations working correctly. The validation logic in create_order and update_order endpoints (lines 612-633, 724-749) is functioning as expected."
 
   - task: "PDF Export"
     implemented: true
