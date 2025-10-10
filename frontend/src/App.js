@@ -303,6 +303,13 @@ const Header = () => {
                     Audit Logs
                   </Button>
                 </Link>
+                
+                <Link to="/import-data">
+                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
+                    <FileText size={16} className="mr-2" />
+                    Import Data
+                  </Button>
+                </Link>
               </>
             )}
             
