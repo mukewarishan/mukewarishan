@@ -1867,6 +1867,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/import-data"
+              element={
+                <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                  <Header />
+                  <DataImport />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </BrowserRouter>
         <Toaster position="top-right" richColors />
