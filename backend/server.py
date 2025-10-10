@@ -149,7 +149,7 @@ class CraneOrder(BaseModel):
     
     # Company order fields
     name_of_firm: Optional[str] = None
-    company_name: Optional[str] = None
+    company_name: str = ""  # Made mandatory
     case_id_file_number: Optional[str] = None
     company_vehicle_name: Optional[str] = None
     company_vehicle_number: Optional[str] = None
@@ -196,7 +196,7 @@ class CraneOrderCreate(BaseModel):
     
     # Company order fields
     name_of_firm: Optional[str] = None
-    company_name: Optional[str] = None
+    company_name: str = ""  # Made mandatory
     case_id_file_number: Optional[str] = None
     company_vehicle_name: Optional[str] = None
     company_vehicle_number: Optional[str] = None
@@ -249,7 +249,7 @@ class CraneOrderUpdate(BaseModel):
     
     # Company order fields
     name_of_firm: Optional[str] = None
-    company_name: Optional[str] = None
+    company_name: str = ""  # Made mandatory
     case_id_file_number: Optional[str] = None
     company_vehicle_name: Optional[str] = None
     company_vehicle_number: Optional[str] = None
