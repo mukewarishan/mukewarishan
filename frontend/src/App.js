@@ -1023,6 +1023,37 @@ const UserManagement = () => {
     }
   };
 
+  const resetPassword = (user) => {
+    setResetPasswordUser(user);
+    setNewPassword('');
+    setShowResetPasswordDialog(true);
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setResettingPassword(true);
+    try {
+      await axios.put(`${API}/users/${resetPasswordUser.id}/reset-password`, {
+        new_password: newPassword
+      });
+      toast.success(`Password reset successfully for ${resetPasswordUser.full_name}`);
+      setShowResetPasswordDialog(false);
+      setResetPasswordUser(null);
+      setNewPassword('');
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast.error(error.response?.data?.detail || 'Failed to reset password');
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
+
   const getRoleBadge = (role) => {
     const roleConfig = {
       super_admin: { color: 'bg-red-100 text-red-800', label: 'Super Admin' },
