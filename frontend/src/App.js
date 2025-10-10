@@ -203,14 +203,6 @@ const LoginPage = () => {
               )}
             </Button>
           </form>
-          
-          <div className="mt-6 p-3 bg-slate-50 rounded-lg">
-            <p className="text-xs text-slate-600 text-center">
-              <strong>Demo Credentials:</strong><br />
-              Email: admin@kawalecranes.com<br />
-              Password: admin123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
