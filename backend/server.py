@@ -521,6 +521,44 @@ async def update_user(
     updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "hashed_password": 0})
     return User(**parse_from_mongo(updated_user))
 
+@api_router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN]))
+):
+    """Delete user (Super Admin only)"""
+    try:
+        # Prevent self-deletion
+        if user_id == current_user["id"]:
+            raise HTTPException(status_code=400, detail="Cannot delete your own account")
+        
+        # Get user for audit log
+        existing_user = await db.users.find_one({"id": user_id}, {"_id": 0, "hashed_password": 0})
+        if not existing_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        result = await db.users.delete_one({"id": user_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="DELETE",
+            resource_type="USER",
+            resource_id=user_id,
+            old_data=existing_user
+        )
+        
+        return {"message": "User deleted successfully"}
+    
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
+
 # Order endpoints (with authentication and audit)
 @api_router.post("/orders", response_model=CraneOrder)
 async def create_order(
