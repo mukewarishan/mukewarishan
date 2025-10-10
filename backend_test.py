@@ -41,6 +41,10 @@ class CraneOrderAPITester:
         url = f"{self.api_url}/{endpoint}"
         headers = {'Content-Type': 'application/json'}
         
+        # Add authentication token if available
+        if self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
+        
         try:
             if method == 'GET':
                 response = requests.get(url, headers=headers, params=params, timeout=10)
