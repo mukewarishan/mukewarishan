@@ -1476,6 +1476,343 @@ async def delete_service_rate(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting service rate: {str(e)}")
 
+# Reports endpoints
+@api_router.get("/reports/expense-by-driver")
+async def get_expense_report_by_driver(
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    year: int = Query(..., ge=2020, le=2030, description="Year (2020-2030)"),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get expense report by driver for a specific month (Admin and Super Admin only)"""
+    try:
+        # Create date range for the month
+        start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+        
+        # Query orders for the specified month
+        query = {
+            "date_time": {
+                "$gte": start_date.isoformat(),
+                "$lt": end_date.isoformat()
+            }
+        }
+        
+        orders = await db.crane_orders.find(query, {"_id": 0}).to_list(10000)
+        parsed_orders = [parse_from_mongo(order) for order in orders]
+        
+        # Aggregate expenses by driver
+        driver_expenses = {}
+        
+        for order in parsed_orders:
+            # Determine driver name based on order type
+            if order.get("order_type") == "cash":
+                driver = order.get("cash_driver_name") or "Unknown Driver"
+                diesel_cost = order.get("cash_diesel", 0) or 0
+                toll_cost = order.get("cash_toll", 0) or 0
+            else:  # company order
+                driver = order.get("company_driver_name") or "Unknown Driver"
+                diesel_cost = order.get("company_diesel", 0) or 0
+                toll_cost = order.get("company_toll", 0) or 0
+            
+            if driver not in driver_expenses:
+                driver_expenses[driver] = {
+                    "driver_name": driver,
+                    "cash_orders": 0,
+                    "company_orders": 0,
+                    "total_orders": 0,
+                    "total_diesel_expense": 0,
+                    "total_toll_expense": 0,
+                    "total_expenses": 0
+                }
+            
+            # Update counts
+            if order.get("order_type") == "cash":
+                driver_expenses[driver]["cash_orders"] += 1
+            else:
+                driver_expenses[driver]["company_orders"] += 1
+            
+            driver_expenses[driver]["total_orders"] += 1
+            driver_expenses[driver]["total_diesel_expense"] += diesel_cost
+            driver_expenses[driver]["total_toll_expense"] += toll_cost
+            driver_expenses[driver]["total_expenses"] = (
+                driver_expenses[driver]["total_diesel_expense"] + 
+                driver_expenses[driver]["total_toll_expense"]
+            )
+        
+        # Convert to list and sort by total expenses
+        report_data = list(driver_expenses.values())
+        report_data.sort(key=lambda x: x["total_expenses"], reverse=True)
+        
+        return {
+            "month": month,
+            "year": year,
+            "report_type": "expense_by_driver",
+            "data": report_data,
+            "summary": {
+                "total_drivers": len(report_data),
+                "total_orders": sum(d["total_orders"] for d in report_data),
+                "total_expenses": sum(d["total_expenses"] for d in report_data)
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating expense report: {str(e)}")
+
+@api_router.get("/reports/revenue-by-vehicle-type")
+async def get_revenue_report_by_vehicle_type(
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    year: int = Query(..., ge=2020, le=2030, description="Year (2020-2030)"),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get revenue report by vehicle type for a specific month (Admin and Super Admin only)"""
+    try:
+        # Create date range for the month
+        start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+        
+        # Query orders for the specified month
+        query = {
+            "date_time": {
+                "$gte": start_date.isoformat(),
+                "$lt": end_date.isoformat()
+            }
+        }
+        
+        orders = await db.crane_orders.find(query, {"_id": 0}).to_list(10000)
+        parsed_orders = [parse_from_mongo(order) for order in orders]
+        
+        # Aggregate revenue by vehicle type (service type)
+        vehicle_revenue = {}
+        
+        for order in parsed_orders:
+            # Determine service type based on order type
+            if order.get("order_type") == "cash":
+                service_type = order.get("cash_service_type") or "Unknown Service"
+                # For cash orders, revenue is amount_received
+                base_revenue = order.get("amount_received", 0) or 0
+            else:  # company order
+                service_type = order.get("company_service_type") or "Unknown Service"
+                # For company orders, calculate revenue using rates
+                financials = await calculate_order_financials(order)
+                base_revenue = financials.base_revenue
+            
+            # Add incentive to revenue
+            incentive_amount = order.get("incentive_amount", 0) or 0
+            total_revenue = base_revenue + incentive_amount
+            
+            if service_type not in vehicle_revenue:
+                vehicle_revenue[service_type] = {
+                    "service_type": service_type,
+                    "cash_orders": 0,
+                    "company_orders": 0,
+                    "total_orders": 0,
+                    "total_base_revenue": 0,
+                    "total_incentive_amount": 0,
+                    "total_revenue": 0
+                }
+            
+            # Update counts and revenue
+            if order.get("order_type") == "cash":
+                vehicle_revenue[service_type]["cash_orders"] += 1
+            else:
+                vehicle_revenue[service_type]["company_orders"] += 1
+            
+            vehicle_revenue[service_type]["total_orders"] += 1
+            vehicle_revenue[service_type]["total_base_revenue"] += base_revenue
+            vehicle_revenue[service_type]["total_incentive_amount"] += incentive_amount
+            vehicle_revenue[service_type]["total_revenue"] += total_revenue
+        
+        # Convert to list and sort by total revenue
+        report_data = list(vehicle_revenue.values())
+        report_data.sort(key=lambda x: x["total_revenue"], reverse=True)
+        
+        return {
+            "month": month,
+            "year": year,
+            "report_type": "revenue_by_vehicle_type",
+            "data": report_data,
+            "summary": {
+                "total_service_types": len(report_data),
+                "total_orders": sum(d["total_orders"] for d in report_data),
+                "total_revenue": sum(d["total_revenue"] for d in report_data)
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating revenue report: {str(e)}")
+
+@api_router.get("/reports/expense-by-driver/export")
+async def export_expense_report_by_driver(
+    month: int = Query(..., ge=1, le=12),
+    year: int = Query(..., ge=2020, le=2030),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Export expense report by driver as Excel file"""
+    try:
+        # Get the report data
+        report_response = await get_expense_report_by_driver(month, year, current_user)
+        report_data = report_response["data"]
+        
+        # Create Excel workbook
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = f"Driver Expenses {year}-{month:02d}"
+        
+        # Headers
+        headers = [
+            "Driver Name", "Cash Orders", "Company Orders", "Total Orders",
+            "Diesel Expenses (₹)", "Toll Expenses (₹)", "Total Expenses (₹)"
+        ]
+        
+        for col, header in enumerate(headers, 1):
+            cell = worksheet.cell(row=1, column=col, value=header)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+        
+        # Data rows
+        for row_idx, driver_data in enumerate(report_data, 2):
+            worksheet.cell(row=row_idx, column=1, value=driver_data["driver_name"])
+            worksheet.cell(row=row_idx, column=2, value=driver_data["cash_orders"])
+            worksheet.cell(row=row_idx, column=3, value=driver_data["company_orders"])
+            worksheet.cell(row=row_idx, column=4, value=driver_data["total_orders"])
+            worksheet.cell(row=row_idx, column=5, value=driver_data["total_diesel_expense"])
+            worksheet.cell(row=row_idx, column=6, value=driver_data["total_toll_expense"])
+            worksheet.cell(row=row_idx, column=7, value=driver_data["total_expenses"])
+        
+        # Summary row
+        summary_row = len(report_data) + 3
+        worksheet.cell(row=summary_row, column=1, value="TOTAL")
+        worksheet.cell(row=summary_row, column=2, value=sum(d["cash_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=3, value=sum(d["company_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=4, value=sum(d["total_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=5, value=sum(d["total_diesel_expense"] for d in report_data))
+        worksheet.cell(row=summary_row, column=6, value=sum(d["total_toll_expense"] for d in report_data))
+        worksheet.cell(row=summary_row, column=7, value=sum(d["total_expenses"] for d in report_data))
+        
+        # Format summary row
+        for col in range(1, 8):
+            cell = worksheet.cell(row=summary_row, column=col)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
+        
+        # Auto-adjust column widths
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 30)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to bytes
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        filename = f"kawale_expense_by_driver_{year}_{month:02d}.xlsx"
+        
+        return Response(
+            content=excel_buffer.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting expense report: {str(e)}")
+
+@api_router.get("/reports/revenue-by-vehicle-type/export")
+async def export_revenue_report_by_vehicle_type(
+    month: int = Query(..., ge=1, le=12),
+    year: int = Query(..., ge=2020, le=2030),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Export revenue report by vehicle type as Excel file"""
+    try:
+        # Get the report data
+        report_response = await get_revenue_report_by_vehicle_type(month, year, current_user)
+        report_data = report_response["data"]
+        
+        # Create Excel workbook
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = f"Vehicle Revenue {year}-{month:02d}"
+        
+        # Headers
+        headers = [
+            "Service Type", "Cash Orders", "Company Orders", "Total Orders",
+            "Base Revenue (₹)", "Incentive Amount (₹)", "Total Revenue (₹)"
+        ]
+        
+        for col, header in enumerate(headers, 1):
+            cell = worksheet.cell(row=1, column=col, value=header)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+        
+        # Data rows
+        for row_idx, vehicle_data in enumerate(report_data, 2):
+            worksheet.cell(row=row_idx, column=1, value=vehicle_data["service_type"])
+            worksheet.cell(row=row_idx, column=2, value=vehicle_data["cash_orders"])
+            worksheet.cell(row=row_idx, column=3, value=vehicle_data["company_orders"])
+            worksheet.cell(row=row_idx, column=4, value=vehicle_data["total_orders"])
+            worksheet.cell(row=row_idx, column=5, value=vehicle_data["total_base_revenue"])
+            worksheet.cell(row=row_idx, column=6, value=vehicle_data["total_incentive_amount"])
+            worksheet.cell(row=row_idx, column=7, value=vehicle_data["total_revenue"])
+        
+        # Summary row
+        summary_row = len(report_data) + 3
+        worksheet.cell(row=summary_row, column=1, value="TOTAL")
+        worksheet.cell(row=summary_row, column=2, value=sum(d["cash_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=3, value=sum(d["company_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=4, value=sum(d["total_orders"] for d in report_data))
+        worksheet.cell(row=summary_row, column=5, value=sum(d["total_base_revenue"] for d in report_data))
+        worksheet.cell(row=summary_row, column=6, value=sum(d["total_incentive_amount"] for d in report_data))
+        worksheet.cell(row=summary_row, column=7, value=sum(d["total_revenue"] for d in report_data))
+        
+        # Format summary row
+        for col in range(1, 8):
+            cell = worksheet.cell(row=summary_row, column=col)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
+        
+        # Auto-adjust column widths
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 30)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to bytes
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        filename = f"kawale_revenue_by_vehicle_type_{year}_{month:02d}.xlsx"
+        
+        return Response(
+            content=excel_buffer.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting revenue report: {str(e)}")
+
 # Data import endpoint
 @api_router.post("/import/excel")
 async def import_excel_data(
