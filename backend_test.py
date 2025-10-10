@@ -14,6 +14,7 @@ class CraneOrderAPITester:
         self.tests_passed = 0
         self.test_results = []
         self.created_orders = []
+        self.token = None
 
     def log_test(self, name, success, details="", response_data=None):
         """Log test result"""
