@@ -317,6 +317,13 @@ const Header = () => {
                     Rates
                   </Button>
                 </Link>
+                
+                <Link to="/reports">
+                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
+                    <span className="mr-2">📊</span>
+                    Reports
+                  </Button>
+                </Link>
               </>
             )}
             
