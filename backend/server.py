@@ -1406,6 +1406,7 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_event():
     await create_default_super_admin()
+    await initialize_service_rates()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
