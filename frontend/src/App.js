@@ -487,6 +487,41 @@ const Dashboard = () => {
     }
   };
 
+  const exportData = async (format) => {
+    try {
+      toast.info(`Generating ${format.toUpperCase()} export...`);
+      
+      const params = new URLSearchParams();
+      if (filters.order_type && filters.order_type !== 'all') params.append('order_type', filters.order_type);
+      if (filters.customer_name) params.append('customer_name', filters.customer_name);
+      if (filters.phone) params.append('phone', filters.phone);
+      params.append('limit', '1000'); // Export up to 1000 records
+      
+      const response = await axios.get(`${API}/export/${format}?${params.toString()}`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `kawale_cranes_orders_${timestamp}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      link.download = filename;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`${format.toUpperCase()} export completed successfully!`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error(`Failed to export ${format.toUpperCase()} file`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
