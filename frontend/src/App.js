@@ -1781,6 +1781,32 @@ const OrderForm = ({ orderId = null }) => {
                             className="mt-1"
                           />
                         </div>
+                        
+                        <div>
+                          <Label htmlFor="diesel_name" className="text-sm font-medium text-slate-700">
+                            Diesel Name/Type
+                          </Label>
+                          <Input
+                            id="diesel_name"
+                            value={formData.diesel_name}
+                            onChange={(e) => handleInputChange('diesel_name', e.target.value)}
+                            placeholder="Diesel brand or type"
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="company_diesel_refill_location" className="text-sm font-medium text-slate-700">
+                            Diesel Refill Location
+                          </Label>
+                          <Input
+                            id="company_diesel_refill_location"
+                            value={formData.company_diesel_refill_location}
+                            onChange={(e) => handleInputChange('company_diesel_refill_location', e.target.value)}
+                            placeholder="Where diesel was refilled"
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
