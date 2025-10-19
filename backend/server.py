@@ -2481,6 +2481,16 @@ logger = logging.getLogger(__name__)
 async def startup_event():
     await create_default_super_admin()
     await initialize_service_rates()
+    
+    # Seed database with Excel data if empty (run in background)
+    try:
+        from seed_database import seed_database_if_empty
+        # Run seeding in a separate thread to avoid blocking startup
+        loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor() as executor:
+            await loop.run_in_executor(executor, seed_database_if_empty)
+    except Exception as e:
+        logging.error(f"Error during database seeding: {str(e)}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
