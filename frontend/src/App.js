@@ -580,7 +580,7 @@ const Dashboard = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ order_type: 'all', customer_name: '', phone: '' });
+    setFilters({ order_type: 'all', customer_name: '', phone: '', source: 'all' });
   };
 
   const handleSelectOrder = (orderId) => {
