@@ -457,6 +457,7 @@ const Header = () => {
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 
