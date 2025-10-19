@@ -369,8 +369,18 @@ const Header = () => {
             
             <Button 
               variant="ghost" 
+              onClick={() => setShowChangePasswordDialog(true)}
+              className="text-slate-300 hover:text-white hover:bg-slate-700"
+              title="Change Password"
+            >
+              <Shield size={16} />
+            </Button>
+            
+            <Button 
+              variant="ghost" 
               onClick={handleLogout}
               className="text-slate-300 hover:text-white hover:bg-slate-700"
+              title="Logout"
             >
               <LogOut size={16} />
             </Button>
@@ -378,6 +388,74 @@ const Header = () => {
         </div>
       </div>
     </header>
+    
+    {/* Change Password Dialog */}
+    <Dialog open={showChangePasswordDialog} onOpenChange={setShowChangePasswordDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Change Password</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleChangePassword} className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+            <p className="text-sm text-blue-900">
+              <strong>Changing password for:</strong> {user?.full_name} ({user?.email})
+            </p>
+          </div>
+          
+          <div>
+            <Label htmlFor="current_password">Current Password *</Label>
+            <Input
+              id="current_password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Enter current password"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="new_password">New Password *</Label>
+            <Input
+              id="new_password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Enter new password (min 6 characters)"
+              required
+              minLength={6}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="confirm_password">Confirm New Password *</Label>
+            <Input
+              id="confirm_password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm new password"
+              required
+              minLength={6}
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={() => {
+              setShowChangePasswordDialog(false);
+              setCurrentPassword('');
+              setNewPassword('');
+              setConfirmPassword('');
+            }}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={changingPassword} className="bg-blue-600 hover:bg-blue-700">
+              {changingPassword ? 'Changing...' : 'Change Password'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
