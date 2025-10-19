@@ -3964,6 +3964,11 @@ class CraneOrderAPITester:
         print("=" * 80)
         self.test_super_admin_password_reset_feature()
         self.test_data_entry_role_access_restrictions()
+        
+        # CHANGE PASSWORD FUNCTIONALITY TESTING - REVIEW REQUEST
+        print("\n🎯 CHANGE PASSWORD FUNCTIONALITY TESTING - REVIEW REQUEST")
+        print("=" * 80)
+        self.test_change_password_functionality()
 
         # Test sequence - organized by functionality
         test_methods = [
