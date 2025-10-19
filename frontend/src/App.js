@@ -906,6 +906,14 @@ const Dashboard = () => {
                         >
                           {order.order_type.toUpperCase()}
                         </Badge>
+                        <Badge 
+                          className={order.created_by === 'system_import' 
+                            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' 
+                            : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+                          }
+                        >
+                          {order.created_by === 'system_import' ? '📥 IMPORTED' : '✏️ CREATED'}
+                        </Badge>
                         <span className="text-sm text-slate-500">ID: {order.unique_id.slice(0, 8)}</span>
                       </div>
                       <div className="flex space-x-2">
