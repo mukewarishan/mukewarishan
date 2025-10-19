@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Add the feature to export all records to PDF or Microsoft Excel Sheet or Google Sheet"
+user_problem_statement: "Test the new Change Password functionality for user admin@kawalecranes.com in Kawale Cranes application"
 
 backend:
   - task: "Google Sheets API Integration"
