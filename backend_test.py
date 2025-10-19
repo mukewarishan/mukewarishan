@@ -3713,6 +3713,228 @@ class CraneOrderAPITester:
         
         return overall_success
 
+    def test_change_password_functionality(self):
+        """Comprehensive test of Change Password functionality"""
+        print("\n🔐 Testing Change Password Functionality...")
+        
+        # Step 1: Login as Admin to get token
+        success1, login_response = self.run_test(
+            "Admin Login for Password Change",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "admin@kawalecranes.com", "password": "admin123"}
+        )
+        
+        if not success1 or 'access_token' not in login_response:
+            self.log_test("Change Password Setup", False, "Failed to login as admin")
+            return False
+        
+        # Store the token for authenticated requests
+        old_token = self.token
+        self.token = login_response['access_token']
+        
+        # Step 2: Test Valid Password Change (admin123 -> newpass123)
+        change_password_data = {
+            "current_password": "admin123",
+            "new_password": "newpass123"
+        }
+        
+        success2, response2 = self.run_test(
+            "Valid Password Change",
+            "PUT",
+            "auth/change-password",
+            200,
+            data=change_password_data
+        )
+        
+        if success2 and response2:
+            message = response2.get('message', '')
+            if 'successfully' in message.lower():
+                self.log_test("Password Change Success Message", True, f"Message: {message}")
+            else:
+                self.log_test("Password Change Success Message", False, f"Unexpected message: {message}")
+        
+        # Step 3: Test Login with New Password (newpass123)
+        success3, new_login_response = self.run_test(
+            "Login with New Password",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "admin@kawalecranes.com", "password": "newpass123"}
+        )
+        
+        if success3 and 'access_token' in new_login_response:
+            self.log_test("New Password Login Token", True, "Successfully obtained token with new password")
+            # Update token for subsequent requests
+            self.token = new_login_response['access_token']
+        
+        # Step 4: Test Login with Old Password (Should Fail)
+        success4, old_login_response = self.run_test(
+            "Login with Old Password (Should Fail)",
+            "POST",
+            "auth/login",
+            401,
+            data={"email": "admin@kawalecranes.com", "password": "admin123"}
+        )
+        
+        if success4 and old_login_response:
+            detail = old_login_response.get('detail', '')
+            if 'incorrect' in detail.lower() or 'password' in detail.lower():
+                self.log_test("Old Password Rejection Message", True, f"Correct rejection: {detail}")
+            else:
+                self.log_test("Old Password Rejection Message", False, f"Unexpected error: {detail}")
+        
+        # Step 5: Change Password Back to Original (newpass123 -> admin123)
+        restore_password_data = {
+            "current_password": "newpass123",
+            "new_password": "admin123"
+        }
+        
+        success5, response5 = self.run_test(
+            "Restore Original Password",
+            "PUT",
+            "auth/change-password",
+            200,
+            data=restore_password_data
+        )
+        
+        # Step 6: Verify Original Password Works Again
+        success6, restore_login_response = self.run_test(
+            "Login with Restored Password",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "admin@kawalecranes.com", "password": "admin123"}
+        )
+        
+        if success6 and 'access_token' in restore_login_response:
+            self.token = restore_login_response['access_token']
+        
+        # Step 7: Test Error Cases
+        
+        # Test wrong current password
+        success7, response7 = self.run_test(
+            "Wrong Current Password",
+            "PUT",
+            "auth/change-password",
+            400,
+            data={"current_password": "wrongpassword", "new_password": "newpass123"}
+        )
+        
+        if success7 and response7:
+            detail = response7.get('detail', '')
+            if 'incorrect' in detail.lower() or 'current password' in detail.lower():
+                self.log_test("Wrong Current Password Error", True, f"Correct error: {detail}")
+            else:
+                self.log_test("Wrong Current Password Error", False, f"Unexpected error: {detail}")
+        
+        # Test short password (less than 6 characters)
+        success8, response8 = self.run_test(
+            "Short Password Validation",
+            "PUT",
+            "auth/change-password",
+            400,
+            data={"current_password": "admin123", "new_password": "12345"}
+        )
+        
+        if success8 and response8:
+            detail = response8.get('detail', '')
+            if '6 characters' in detail or 'least 6' in detail:
+                self.log_test("Short Password Error Message", True, f"Correct validation: {detail}")
+            else:
+                self.log_test("Short Password Error Message", False, f"Unexpected error: {detail}")
+        
+        # Test same password as current
+        success9, response9 = self.run_test(
+            "Same Password Validation",
+            "PUT",
+            "auth/change-password",
+            400,
+            data={"current_password": "admin123", "new_password": "admin123"}
+        )
+        
+        if success9 and response9:
+            detail = response9.get('detail', '')
+            if 'different' in detail.lower() or 'same' in detail.lower():
+                self.log_test("Same Password Error Message", True, f"Correct validation: {detail}")
+            else:
+                self.log_test("Same Password Error Message", False, f"Unexpected error: {detail}")
+        
+        # Test missing current password
+        success10, response10 = self.run_test(
+            "Missing Current Password",
+            "PUT",
+            "auth/change-password",
+            400,
+            data={"new_password": "newpass123"}
+        )
+        
+        if success10 and response10:
+            detail = response10.get('detail', '')
+            if 'required' in detail.lower() or 'current password' in detail.lower():
+                self.log_test("Missing Current Password Error", True, f"Correct validation: {detail}")
+            else:
+                self.log_test("Missing Current Password Error", False, f"Unexpected error: {detail}")
+        
+        # Test missing new password
+        success11, response11 = self.run_test(
+            "Missing New Password",
+            "PUT",
+            "auth/change-password",
+            400,
+            data={"current_password": "admin123"}
+        )
+        
+        if success11 and response11:
+            detail = response11.get('detail', '')
+            if 'required' in detail.lower() or 'new password' in detail.lower():
+                self.log_test("Missing New Password Error", True, f"Correct validation: {detail}")
+            else:
+                self.log_test("Missing New Password Error", False, f"Unexpected error: {detail}")
+        
+        # Test audit log creation for password change
+        success12, audit_response = self.run_test(
+            "Check Audit Log for Password Change",
+            "GET",
+            "audit-logs",
+            200,
+            params={"action": "UPDATE", "resource_type": "USER", "limit": 10}
+        )
+        
+        audit_found = False
+        if success12 and audit_response:
+            logs = audit_response if isinstance(audit_response, list) else []
+            for log in logs:
+                if (log.get('action') == 'UPDATE' and 
+                    log.get('resource_type') == 'USER' and
+                    log.get('user_email') == 'admin@kawalecranes.com' and
+                    log.get('new_data', {}).get('password') == '***'):
+                    audit_found = True
+                    break
+            
+            if audit_found:
+                self.log_test("Password Change Audit Log", True, "Password change properly logged in audit trail")
+            else:
+                self.log_test("Password Change Audit Log", False, "Password change audit log not found or incorrect format")
+        
+        # Restore original token
+        self.token = old_token
+        
+        # Calculate overall success
+        all_tests = [success1, success2, success3, success4, success5, success6, 
+                    success7, success8, success9, success10, success11, audit_found]
+        
+        overall_success = all(all_tests)
+        
+        if overall_success:
+            self.log_test("Change Password Overall", True, "All change password functionality tests passed")
+        else:
+            failed_count = len([s for s in all_tests if not s])
+            self.log_test("Change Password Overall", False, f"{failed_count} out of {len(all_tests)} tests failed")
+        
+        return overall_success
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
