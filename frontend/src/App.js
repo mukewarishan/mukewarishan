@@ -466,7 +466,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({ total_orders: 0, by_type: [] });
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ order_type: 'all', customer_name: '', phone: '' });
+  const [filters, setFilters] = useState({ order_type: 'all', customer_name: '', phone: '', source: 'all' });
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [orderFinancials, setOrderFinancials] = useState({}); // Store calculated financials
