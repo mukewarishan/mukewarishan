@@ -501,9 +501,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Google Sheets API Integration"
-  stuck_tasks: 
-    - "Google Sheets API Integration"
+    - "Change Password Functionality"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
