@@ -487,10 +487,21 @@ const Dashboard = () => {
       if (filters.phone) params.append('phone', filters.phone);
       
       const response = await axios.get(`${API}/orders?${params.toString()}`);
-      setOrders(response.data);
+      
+      // Apply source filter on frontend
+      let filteredOrders = response.data;
+      if (filters.source && filters.source !== 'all') {
+        if (filters.source === 'imported') {
+          filteredOrders = response.data.filter(order => order.created_by === 'system_import');
+        } else if (filters.source === 'created') {
+          filteredOrders = response.data.filter(order => order.created_by !== 'system_import');
+        }
+      }
+      
+      setOrders(filteredOrders);
       
       // Fetch financials for company orders
-      await fetchFinancialsForCompanyOrders(response.data);
+      await fetchFinancialsForCompanyOrders(filteredOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       if (error.response?.status === 401) {
