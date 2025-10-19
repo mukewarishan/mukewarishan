@@ -523,6 +523,68 @@ async def logout(current_user: dict = Depends(get_current_user)):
     
     return {"message": "Logged out successfully"}
 
+
+@api_router.put("/auth/change-password")
+async def change_password(
+    password_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Change current user's password"""
+    try:
+        # Validate input
+        current_password = password_data.get("current_password")
+        new_password = password_data.get("new_password")
+        
+        if not current_password or not new_password:
+            raise HTTPException(status_code=400, detail="Current password and new password are required")
+        
+        if len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+        
+        # Get user from database
+        user = await db.users.find_one({"id": current_user["id"]})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Verify current password
+        if not bcrypt.checkpw(current_password.encode('utf-8'), user["hashed_password"].encode('utf-8')):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        
+        # Check if new password is same as current
+        if current_password == new_password:
+            raise HTTPException(status_code=400, detail="New password must be different from current password")
+        
+        # Hash new password
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Update password
+        result = await db.users.update_one(
+            {"id": current_user["id"]},
+            {"$set": {"hashed_password": hashed_password}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="UPDATE",
+            resource_type="USER",
+            resource_id=current_user["id"],
+            old_data={"password": "***"},
+            new_data={"password": "***", "changed_by": "self"}
+        )
+        
+        return {"message": "Password changed successfully"}
+    
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error changing password: {str(e)}")
+
+
 # User management endpoints
 @api_router.get("/users", response_model=List[User])
 async def get_users(
