@@ -246,11 +246,48 @@ const ProtectedRoute = ({ children, requiredRoles }) => {
 const Header = () => {
   const { user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
+  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
     toast.success('Logged out successfully');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('New password and confirm password do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await axios.put(`${API}/auth/change-password`, {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+      toast.success('Password changed successfully');
+      setShowChangePasswordDialog(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error(error.response?.data?.detail || 'Failed to change password');
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   return (
