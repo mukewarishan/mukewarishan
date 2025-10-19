@@ -767,7 +767,7 @@ const Dashboard = () => {
             <CardTitle className="text-lg font-semibold text-slate-900">Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <Label className="text-sm font-medium text-slate-700">Order Type</Label>
                 <Select value={filters.order_type} onValueChange={(value) => 
@@ -780,6 +780,21 @@ const Dashboard = () => {
                     <SelectItem value="all">All types</SelectItem>
                     <SelectItem value="cash">Cash</SelectItem>
                     <SelectItem value="company">Company</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Source</Label>
+                <Select value={filters.source} onValueChange={(value) => 
+                  setFilters(prev => ({ ...prev, source: value }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="All sources" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All sources</SelectItem>
+                    <SelectItem value="imported">📥 Imported</SelectItem>
+                    <SelectItem value="created">✏️ Created in App</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
