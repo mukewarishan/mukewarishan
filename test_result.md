@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Remove Google Sheets export functionality from Kawale Cranes application - eliminate all related code, dependencies, UI elements, and environment variables"
+user_problem_statement: "Implement 5 UI/UX improvements for Kawale Cranes: 1) Enhanced login page with fancy KC logo, 2) Update super admin credentials to ad@kc.com/jaishriram, 3) Change browser title to 'KC - TMS', 4) Add Excel/PDF export buttons for Custom Columns report, 5) Fix extra rendering text in Reports section"
 
 backend:
   - task: "Google Sheets API Integration"
