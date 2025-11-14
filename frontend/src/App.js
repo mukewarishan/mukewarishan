@@ -305,7 +305,7 @@ const Header = () => {
             
             {/* Rates - All authenticated users can view */}
             <Link to="/rates">
-              <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+              <Button variant="ghost" className="text-slate-700 hover:text-pink-500 hover:bg-pink-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                 <span className="mr-2">💰</span>
                 Rates
               </Button>
@@ -314,28 +314,28 @@ const Header = () => {
             {hasRole(['super_admin', 'admin']) && (
               <>
                 <Link to="/users">
-                  <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+                  <Button variant="ghost" className="text-slate-700 hover:text-blue-500 hover:bg-blue-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                     <Users size={18} className="mr-2" />
                     Users
                   </Button>
                 </Link>
                 
                 <Link to="/audit-logs">
-                  <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+                  <Button variant="ghost" className="text-slate-700 hover:text-purple-500 hover:bg-purple-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                     <FileText size={18} className="mr-2" />
                     Audit Logs
                   </Button>
                 </Link>
                 
                 <Link to="/import-data">
-                  <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+                  <Button variant="ghost" className="text-slate-700 hover:text-indigo-500 hover:bg-indigo-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                     <FileText size={18} className="mr-2" />
                     Import Data
                   </Button>
                 </Link>
                 
                 <Link to="/reports">
-                  <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+                  <Button variant="ghost" className="text-slate-700 hover:text-teal-500 hover:bg-teal-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                     <span className="mr-2">📊</span>
                     Reports
                   </Button>
