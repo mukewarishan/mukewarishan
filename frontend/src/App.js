@@ -169,11 +169,11 @@ const LoginPage = () => {
         <CardHeader className="text-center space-y-6 pt-8 pb-6">
           {/* Fancy KC Logo */}
           <div className="relative w-32 h-32 mx-auto">
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-300 via-purple-300 to-blue-300 rounded-3xl opacity-20 blur-2xl animate-pulse"></div>
-            <div className="relative w-32 h-32 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 rounded-3xl flex items-center justify-center shadow-2xl float backdrop-blur-sm border-2 border-white/50 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 via-blue-400 to-indigo-500 rounded-3xl opacity-20 blur-2xl animate-pulse"></div>
+            <div className="relative w-32 h-32 bg-gradient-to-br from-cyan-100 via-blue-200 to-indigo-300 rounded-3xl flex items-center justify-center shadow-2xl float backdrop-blur-sm border-2 border-white/50 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-shimmer"></div>
               <div className="relative">
-                <span className="text-5xl font-black bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{fontFamily: 'Inter, sans-serif', letterSpacing: '-0.05em'}}>
+                <span className="text-5xl font-black bg-gradient-to-r from-cyan-600 via-blue-700 to-indigo-800 bg-clip-text text-transparent" style={{fontFamily: 'Inter, sans-serif', letterSpacing: '-0.05em'}}>
                   KC
                 </span>
               </div>
