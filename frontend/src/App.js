@@ -3448,11 +3448,13 @@ const Reports = () => {
 
             {/* Tabs for Reports */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="expense">Expense by Driver</TabsTrigger>
-                <TabsTrigger value="revenue">Revenue by Vehicle Type</TabsTrigger>
-                <TabsTrigger value="towing">Revenue by Towing Vehicle</TabsTrigger>
-                <TabsTrigger value="custom">Custom Reports</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-6 gap-1">
+                <TabsTrigger value="daily" className="text-sm">📅 Daily Summary</TabsTrigger>
+                <TabsTrigger value="custom-columns" className="text-sm">🎯 Custom Columns</TabsTrigger>
+                <TabsTrigger value="expense" className="text-sm">💰 Expense</TabsTrigger>
+                <TabsTrigger value="revenue" className="text-sm">📊 Revenue</TabsTrigger>
+                <TabsTrigger value="towing" className="text-sm">🚛 Towing</TabsTrigger>
+                <TabsTrigger value="custom" className="text-sm">⚙️ Custom</TabsTrigger>
               </TabsList>
 
               {/* Expense Report Tab */}
