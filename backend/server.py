@@ -332,6 +332,18 @@ class DriverSalary(BaseModel):
     added_by: str
     added_by_email: str
     added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class DriverDefaultSalary(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    driver_name: str
+    default_salary: float = 15000.0
+    updated_by: str
+    updated_by_email: str
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
     updated_by: Optional[str] = None
     updated_at: Optional[datetime] = None
 
