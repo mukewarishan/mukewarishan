@@ -3571,9 +3571,13 @@ const Reports = () => {
                             <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
                             <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
                             <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Diesel Expense (₹)</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Toll Expense (₹)</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Total Expense (₹)</th>
+                            {hasRole(['super_admin', 'admin']) && (
+                              <>
+                                <th className="border border-slate-300 px-4 py-2 text-right">Diesel Expense (₹)</th>
+                                <th className="border border-slate-300 px-4 py-2 text-right">Toll Expense (₹)</th>
+                                <th className="border border-slate-300 px-4 py-2 text-right">Total Expense (₹)</th>
+                              </>
+                            )}
                           </tr>
                         </thead>
                         <tbody>
@@ -3583,9 +3587,13 @@ const Reports = () => {
                               <td className="border border-slate-300 px-4 py-2 text-center">{driver.cash_orders}</td>
                               <td className="border border-slate-300 px-4 py-2 text-center">{driver.company_orders}</td>
                               <td className="border border-slate-300 px-4 py-2 text-center">{driver.total_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right">₹{driver.total_diesel_expense?.toLocaleString('en-IN')}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right">₹{driver.total_toll_expense?.toLocaleString('en-IN')}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{driver.total_expenses?.toLocaleString('en-IN')}</td>
+                              {hasRole(['super_admin', 'admin']) && (
+                                <>
+                                  <td className="border border-slate-300 px-4 py-2 text-right">₹{driver.total_diesel_expense?.toLocaleString('en-IN')}</td>
+                                  <td className="border border-slate-300 px-4 py-2 text-right">₹{driver.total_toll_expense?.toLocaleString('en-IN')}</td>
+                                  <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{driver.total_expenses?.toLocaleString('en-IN')}</td>
+                                </>
+                              )}
                             </tr>
                           ))}
                         </tbody>
