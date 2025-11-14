@@ -338,8 +338,8 @@ class CraneOrderAPITester:
         # Test Excel export  
         success2, excel_response = self.run_test("Excel Export", "GET", "export/excel", 200)
         
-        # Test Google Sheets export (should fail without proper config)
-        success3, sheets_response = self.run_test("Google Sheets Export", "GET", "export/googlesheets", 500)
+        # Test Google Sheets export (should return 404 Not Found after removal)
+        success3, sheets_response = self.run_test("Google Sheets Export (Should be 404)", "GET", "export/googlesheets", 404)
         
         # Test export with filters
         success4, _ = self.run_test("PDF Export with Filters", "GET", "export/pdf", 200, params={"order_type": "cash", "limit": 10})
