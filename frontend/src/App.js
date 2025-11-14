@@ -219,7 +219,7 @@ const LoginPage = () => {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-pink-200 via-purple-200 to-blue-200 hover:from-pink-300 hover:via-purple-300 hover:to-blue-300 text-slate-700 font-bold py-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 backdrop-blur-sm border-2 border-white/50 hover:border-white/70" disabled={loading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-700 hover:from-cyan-600 hover:via-blue-700 hover:to-indigo-800 text-white font-bold py-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 backdrop-blur-sm border-2 border-white/20 hover:border-white/30" disabled={loading}>
               {loading ? '🔄 Signing in...' : '✨ Sign In'}
             </Button>
           </form>
