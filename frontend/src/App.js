@@ -1630,26 +1630,35 @@ const DataImport = () => {
       const formData = new FormData();
       formData.append('file', selectedFile);
       
-      // For now, we'll simulate the import process
-      // In a real implementation, you would send the file to the backend
       toast.info('Processing Excel file...');
       
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Send file to backend
+      const response = await axios.post(`${API}/import/excel`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
-      toast.success('Import completed! Check the dashboard for updated data.');
+      toast.success(response.data.message);
       setImportStatus({
         success: true,
-        imported: Math.floor(Math.random() * 100) + 50,
-        failed: Math.floor(Math.random() * 5),
-        message: 'Excel file processed successfully!'
+        imported: response.data.imported,
+        failed: response.data.failed,
+        message: response.data.message,
+        errors: response.data.errors || []
       });
+      
+      // Refresh import history
+      fetchImportHistory();
+      
       setSelectedFile(null);
     } catch (error) {
-      toast.error('Import failed. Please try again.');
+      console.error('Import error:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Import failed';
+      toast.error(errorMsg);
       setImportStatus({
         success: false,
-        message: error.message
+        message: errorMsg
       });
     } finally {
       setImporting(false);
