@@ -2822,6 +2822,217 @@ async def save_import_history(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error exporting custom report: {str(e)}")
 
+
+
+@api_router.get("/reports/daily-summary")
+async def get_daily_summary(
+    start_date: str = Query(...),
+    end_date: str = Query(...),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get daily expense and revenue summary"""
+    try:
+        # Parse dates
+        start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        
+        # Query orders in date range
+        orders = await db.crane_orders.find({
+            "date_time": {
+                "$gte": start.isoformat(),
+                "$lte": end.isoformat()
+            }
+        }, {"_id": 0}).to_list(10000)
+        
+        # Group by date
+        daily_data = {}
+        
+        for order in orders:
+            date_str = order.get('date_time', '')[:10]  # Get YYYY-MM-DD
+            
+            if date_str not in daily_data:
+                daily_data[date_str] = {
+                    'date': date_str,
+                    'total_orders': 0,
+                    'cash_orders': 0,
+                    'company_orders': 0,
+                    'total_expense': 0.0,
+                    'total_revenue': 0.0,
+                    'cash_revenue': 0.0,
+                    'company_revenue': 0.0
+                }
+            
+            daily_data[date_str]['total_orders'] += 1
+            
+            if order.get('order_type') == 'cash':
+                daily_data[date_str]['cash_orders'] += 1
+                # Cash expenses (diesel, toll, etc.)
+                cash_diesel = order.get('cash_diesel', 0) or 0
+                cash_toll = order.get('cash_toll', 0) or 0
+                expense = float(cash_diesel) + float(cash_toll)
+                daily_data[date_str]['total_expense'] += expense
+                
+                # Cash revenue
+                amount = order.get('amount_received', 0) or 0
+                daily_data[date_str]['cash_revenue'] += float(amount)
+                daily_data[date_str]['total_revenue'] += float(amount)
+                
+            elif order.get('order_type') == 'company':
+                daily_data[date_str]['company_orders'] += 1
+                # Company expenses
+                company_diesel = order.get('company_diesel', 0) or 0
+                company_toll = order.get('company_toll', 0) or 0
+                expense = float(company_diesel) + float(company_toll)
+                daily_data[date_str]['total_expense'] += expense
+                
+                # Company revenue (calculated from rates if available)
+                # For now, use a placeholder calculation
+                # This can be enhanced with actual rate calculation
+                company_revenue = 0.0
+                # You can call calculate_financials here if needed
+                daily_data[date_str]['company_revenue'] += company_revenue
+                daily_data[date_str]['total_revenue'] += company_revenue
+        
+        # Convert to sorted list
+        summary = sorted(daily_data.values(), key=lambda x: x['date'])
+        
+        return {
+            "summary": summary,
+            "totals": {
+                "total_orders": sum(d['total_orders'] for d in summary),
+                "total_expense": sum(d['total_expense'] for d in summary),
+                "total_revenue": sum(d['total_revenue'] for d in summary),
+                "net_profit": sum(d['total_revenue'] - d['total_expense'] for d in summary)
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating daily summary: {str(e)}")
+
+@api_router.post("/reports/custom-columns")
+async def get_custom_column_report(
+    report_config: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Generate fully custom report with selected columns"""
+    try:
+        start_date_str = report_config.get("start_date")
+        end_date_str = report_config.get("end_date")
+        selected_columns = report_config.get("columns", [])
+        order_type_filter = report_config.get("order_type", "all")
+        
+        if not selected_columns:
+            raise HTTPException(status_code=400, detail="At least one column must be selected")
+        
+        # Parse dates
+        start = datetime.fromisoformat(start_date_str.replace('Z', '+00:00')) if start_date_str else datetime(2020, 1, 1, tzinfo=timezone.utc)
+        end = datetime.fromisoformat(end_date_str.replace('Z', '+00:00')) if end_date_str else datetime.now(timezone.utc)
+        
+        # Build query
+        query = {
+            "date_time": {
+                "$gte": start.isoformat(),
+                "$lte": end.isoformat()
+            }
+        }
+        
+        if order_type_filter != "all":
+            query["order_type"] = order_type_filter
+        
+        # Build projection for selected columns
+        projection = {"_id": 0, "id": 1}
+        for col in selected_columns:
+            projection[col] = 1
+        
+        # Fetch orders with only selected columns
+        orders = await db.crane_orders.find(query, projection).to_list(10000)
+        
+        # Parse and format data
+        formatted_orders = []
+        for order in orders:
+            formatted_order = {}
+            for col in selected_columns:
+                value = order.get(col)
+                # Format based on column type
+                if col in ['amount_received', 'advance_amount', 'cash_toll', 'company_toll', 
+                          'cash_diesel', 'company_diesel', 'incentive_amount', 'care_off_amount',
+                          'base_rate', 'total_expense', 'total_revenue']:
+                    formatted_order[col] = float(value) if value else 0.0
+                elif col in ['date_time', 'added_time', 'reach_time', 'drop_time']:
+                    formatted_order[col] = value if value else None
+                else:
+                    formatted_order[col] = value if value else ''
+            
+            formatted_orders.append(formatted_order)
+        
+        return {
+            "data": formatted_orders,
+            "columns": selected_columns,
+            "total_records": len(formatted_orders),
+            "date_range": {
+                "start": start.isoformat(),
+                "end": end.isoformat()
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating custom report: {str(e)}")
+
+@api_router.get("/reports/available-columns")
+async def get_available_columns(
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get list of all available columns for custom reports"""
+    columns = [
+        {"key": "unique_id", "label": "Order ID", "category": "Basic"},
+        {"key": "date_time", "label": "Date & Time", "category": "Basic"},
+        {"key": "customer_name", "label": "Customer Name", "category": "Basic"},
+        {"key": "phone", "label": "Phone", "category": "Basic"},
+        {"key": "order_type", "label": "Order Type", "category": "Basic"},
+        {"key": "created_by", "label": "Created By", "category": "Basic"},
+        
+        # Cash Order Fields
+        {"key": "cash_trip_from", "label": "Trip From (Cash)", "category": "Cash"},
+        {"key": "cash_trip_to", "label": "Trip To (Cash)", "category": "Cash"},
+        {"key": "cash_driver_name", "label": "Driver (Cash)", "category": "Cash"},
+        {"key": "cash_towing_vehicle", "label": "Towing Vehicle (Cash)", "category": "Cash"},
+        {"key": "cash_service_type", "label": "Service Type (Cash)", "category": "Cash"},
+        {"key": "cash_vehicle_name", "label": "Vehicle Name (Cash)", "category": "Cash"},
+        {"key": "cash_vehicle_number", "label": "Vehicle Number (Cash)", "category": "Cash"},
+        {"key": "amount_received", "label": "Amount Received", "category": "Cash"},
+        {"key": "advance_amount", "label": "Advance Amount", "category": "Cash"},
+        {"key": "cash_kms_travelled", "label": "KMs Travelled (Cash)", "category": "Cash"},
+        {"key": "cash_toll", "label": "Toll (Cash)", "category": "Cash"},
+        {"key": "cash_diesel", "label": "Diesel (Cash)", "category": "Cash"},
+        {"key": "cash_diesel_refill_location", "label": "Diesel Refill Location", "category": "Cash"},
+        {"key": "care_off", "label": "Care Off", "category": "Cash"},
+        {"key": "care_off_amount", "label": "Care Off Amount", "category": "Cash"},
+        
+        # Company Order Fields
+        {"key": "name_of_firm", "label": "Name of Firm", "category": "Company"},
+        {"key": "company_name", "label": "Company Name", "category": "Company"},
+        {"key": "case_id_file_number", "label": "Case ID/File Number", "category": "Company"},
+        {"key": "company_trip_from", "label": "Trip From (Company)", "category": "Company"},
+        {"key": "company_trip_to", "label": "Trip To (Company)", "category": "Company"},
+        {"key": "company_driver_name", "label": "Driver (Company)", "category": "Company"},
+        {"key": "company_towing_vehicle", "label": "Towing Vehicle (Company)", "category": "Company"},
+        {"key": "company_service_type", "label": "Service Type (Company)", "category": "Company"},
+        {"key": "company_vehicle_name", "label": "Vehicle Name (Company)", "category": "Company"},
+        {"key": "company_vehicle_number", "label": "Vehicle Number (Company)", "category": "Company"},
+        {"key": "reach_time", "label": "Reach Time", "category": "Company"},
+        {"key": "drop_time", "label": "Drop Time", "category": "Company"},
+        {"key": "company_kms_travelled", "label": "KMs Travelled (Company)", "category": "Company"},
+        {"key": "company_toll", "label": "Toll (Company)", "category": "Company"},
+        {"key": "company_diesel", "label": "Diesel (Company)", "category": "Company"},
+        
+        # Incentives
+        {"key": "incentive_amount", "label": "Incentive Amount", "category": "Incentives"},
+        {"key": "incentive_reason", "label": "Incentive Reason", "category": "Incentives"},
+        {"key": "incentive_added_by", "label": "Incentive Added By", "category": "Incentives"},
+    ]
+    
+    return {"columns": columns}
+
 # Data import endpoint
 @api_router.post("/import/excel")
 async def import_excel_data(
