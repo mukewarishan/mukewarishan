@@ -2315,6 +2315,52 @@ async def export_custom_report(
         
         filename = f"kawale_custom_report_{group_by}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
         
+
+
+@api_router.get("/import/history")
+async def get_import_history(
+    limit: int = Query(10, ge=1, le=100),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get import history (Admin and Super Admin only)"""
+    try:
+        imports = await db.import_history.find({}).sort("imported_at", -1).limit(limit).to_list(length=None)
+        
+        # Convert datetime fields to ISO format
+        for import_record in imports:
+            if isinstance(import_record.get('imported_at'), datetime):
+                import_record['imported_at'] = import_record['imported_at'].isoformat()
+        
+        return imports
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching import history: {str(e)}")
+
+@api_router.post("/import/save-history")
+async def save_import_history(
+    import_data: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Save import history metadata"""
+    try:
+        import_history = ImportHistory(
+            filename=import_data.get("filename", "unknown"),
+            imported_by=current_user["full_name"],
+            imported_by_email=current_user["email"],
+            total_records=import_data.get("total_records", 0),
+            success_count=import_data.get("success_count", 0),
+            error_count=import_data.get("error_count", 0),
+            cash_orders=import_data.get("cash_orders", 0),
+            company_orders=import_data.get("company_orders", 0),
+            sample_data=import_data.get("sample_data", [])
+        )
+        
+        import_dict = prepare_for_mongo(import_history.model_dump())
+        result = await db.import_history.insert_one(import_dict)
+        
+        return {"message": "Import history saved successfully", "id": import_history.id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving import history: {str(e)}")
+
         return Response(
             content=excel_buffer.getvalue(),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
