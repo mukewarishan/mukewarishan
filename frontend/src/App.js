@@ -3816,22 +3816,24 @@ const Reports = () => {
                   ) : customColumnsData.length > 0 ? (
                     <div className="space-y-4">
                       {/* Export Buttons */}
-                      <div className="flex justify-end gap-3">
-                        <Button
-                          onClick={exportCustomColumnsExcel}
-                          className="bg-gradient-to-r from-green-200 to-emerald-200 text-slate-700 hover:from-green-300 hover:to-emerald-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
-                        >
-                          <span className="mr-2">📥</span>
-                          Export Excel
-                        </Button>
-                        <Button
-                          onClick={exportCustomColumnsPDF}
-                          className="bg-gradient-to-r from-red-200 to-pink-200 text-slate-700 hover:from-red-300 hover:to-pink-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
-                        >
-                          <span className="mr-2">📄</span>
-                          Export PDF
-                        </Button>
-                      </div>
+                      {hasRole(['super_admin', 'admin']) && (
+                        <div className="flex justify-end gap-3">
+                          <Button
+                            onClick={exportCustomColumnsExcel}
+                            className="bg-gradient-to-r from-green-200 to-emerald-200 text-slate-700 hover:from-green-300 hover:to-emerald-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
+                          >
+                            <span className="mr-2">📥</span>
+                            Export Excel
+                          </Button>
+                          <Button
+                            onClick={exportCustomColumnsPDF}
+                            className="bg-gradient-to-r from-red-200 to-pink-200 text-slate-700 hover:from-red-300 hover:to-pink-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
+                          >
+                            <span className="mr-2">📄</span>
+                            Export PDF
+                          </Button>
+                        </div>
+                      )}
 
                       <div className="frosted-glass p-6 rounded-2xl">
                         <div className="overflow-x-auto">
