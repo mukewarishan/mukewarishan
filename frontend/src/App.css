@@ -357,27 +357,31 @@ textarea:focus {
 
 /* Badge Styles */
 .badge-modern {
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 /* Stat Card Gradient */
 .stat-card-gradient {
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.25) 100%);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
 .stat-card-gradient:hover {
-  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.1) 100%);
-  transform: scale(1.02);
+  background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.35) 100%);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.7);
 }
 
 /* Input Modern */
