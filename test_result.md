@@ -425,16 +425,19 @@ backend:
 
 frontend:
   - task: "Google Sheets Export Button"
-    implemented: true
-    working: "NA"
+    implemented: false
+    working: "removed"
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added Google Sheets export button and updated exportData function to handle Google Sheets response format (JSON instead of blob)"
+      - working: "removed"
+        agent: "main"
+        comment: "✅ GOOGLE SHEETS REMOVED FROM FRONTEND: Removed all Google Sheets related UI and logic: 1) Removed 'Export Google Sheets' button from Dashboard, 2) Simplified exportData function to remove all Google Sheets specific logic (JSON handling, spreadsheet URL opening, worksheet name display), 3) Now only handles Excel and PDF exports via blob downloads. Screenshot verification confirmed Google Sheets button is no longer visible in Dashboard - only Export Excel and Export PDF buttons remain."
 
   - task: "Incentive Fields Conditional Visibility"
     implemented: true
