@@ -3899,9 +3899,13 @@ const Reports = () => {
                             <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
                             <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
                             <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Base Revenue (₹)</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Incentive (₹)</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Total Revenue (₹)</th>
+                            {hasRole(['super_admin', 'admin']) && (
+                              <>
+                                <th className="border border-slate-300 px-4 py-2 text-right">Base Revenue (₹)</th>
+                                <th className="border border-slate-300 px-4 py-2 text-right">Incentive (₹)</th>
+                                <th className="border border-slate-300 px-4 py-2 text-right">Total Revenue (₹)</th>
+                              </>
+                            )}
                           </tr>
                         </thead>
                         <tbody>
@@ -3911,9 +3915,13 @@ const Reports = () => {
                               <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.cash_orders}</td>
                               <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.company_orders}</td>
                               <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.total_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_base_revenue?.toLocaleString('en-IN')}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_incentive_amount?.toLocaleString('en-IN')}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{vehicle.total_revenue?.toLocaleString('en-IN')}</td>
+                              {hasRole(['super_admin', 'admin']) && (
+                                <>
+                                  <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_base_revenue?.toLocaleString('en-IN')}</td>
+                                  <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_incentive_amount?.toLocaleString('en-IN')}</td>
+                                  <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{vehicle.total_revenue?.toLocaleString('en-IN')}</td>
+                                </>
+                              )}
                             </tr>
                           ))}
                         </tbody>
