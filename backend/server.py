@@ -316,6 +316,25 @@ class ImportHistory(BaseModel):
     error_count: int
     cash_orders: int = 0
     company_orders: int = 0
+
+
+class DriverSalary(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    driver_name: str
+    month: int  # 1-12
+    year: int
+    base_salary: float
+    total_incentives: float = 0.0
+    deductions: float = 0.0
+    notes: Optional[str] = None
+    added_by: str
+    added_by_email: str
+    added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_by: Optional[str] = None
+    updated_at: Optional[datetime] = None
+
     sample_data: List[Dict[str, Any]] = []  # First 5 records as preview
 
 def prepare_for_mongo(data):
