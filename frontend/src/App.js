@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './components/ui/dialog';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
-import { AlertCircle, Users, Shield, FileText, LogOut, User, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Users, Shield, FileText, LogOut, User, Eye, EyeOff, Home, PlusCircle } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
