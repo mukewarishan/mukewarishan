@@ -3718,38 +3718,58 @@ const Reports = () => {
                       <p className="text-slate-600 mt-4">Generating report...</p>
                     </div>
                   ) : customColumnsData.length > 0 ? (
-                    <div className="frosted-glass p-6 rounded-2xl">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 backdrop-blur-sm">
-                              {selectedColumns.map(colKey => {
-                                const col = availableColumns.find(c => c.key === colKey);
-                                return (
-                                  <th key={colKey} className="px-3 py-2 text-left text-xs font-semibold">{col?.label || colKey}</th>
-                                );
-                              })}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {customColumnsData.slice(0, 100).map((row, idx) => (
-                              <tr key={idx} className="border-t border-white/30 hover:bg-white/30 transition-colors">
-                                {selectedColumns.map(colKey => (
-                                  <td key={colKey} className="px-3 py-2 text-xs">
-                                    {typeof row[colKey] === 'number' && colKey.includes('amount') || colKey.includes('toll') || colKey.includes('diesel') 
-                                      ? `₹${row[colKey]?.toLocaleString('en-IN') || 0}`
-                                      : row[colKey] || '-'}
-                                  </td>
-                                ))}
+                    <div className="space-y-4">
+                      {/* Export Buttons */}
+                      <div className="flex justify-end gap-3">
+                        <Button
+                          onClick={exportCustomColumnsExcel}
+                          className="bg-gradient-to-r from-green-200 to-emerald-200 text-slate-700 hover:from-green-300 hover:to-emerald-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
+                        >
+                          <span className="mr-2">📥</span>
+                          Export Excel
+                        </Button>
+                        <Button
+                          onClick={exportCustomColumnsPDF}
+                          className="bg-gradient-to-r from-red-200 to-pink-200 text-slate-700 hover:from-red-300 hover:to-pink-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
+                        >
+                          <span className="mr-2">📄</span>
+                          Export PDF
+                        </Button>
+                      </div>
+
+                      <div className="frosted-glass p-6 rounded-2xl">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 backdrop-blur-sm">
+                                {selectedColumns.map(colKey => {
+                                  const col = availableColumns.find(c => c.key === colKey);
+                                  return (
+                                    <th key={colKey} className="px-3 py-2 text-left text-xs font-semibold">{col?.label || colKey}</th>
+                                  );
+                                })}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        {customColumnsData.length > 100 && (
-                          <p className="text-center text-sm text-slate-500 mt-4">
-                            Showing first 100 of {customColumnsData.length} records
-                          </p>
-                        )}
+                            </thead>
+                            <tbody>
+                              {customColumnsData.slice(0, 100).map((row, idx) => (
+                                <tr key={idx} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                                  {selectedColumns.map(colKey => (
+                                    <td key={colKey} className="px-3 py-2 text-xs">
+                                      {typeof row[colKey] === 'number' && colKey.includes('amount') || colKey.includes('toll') || colKey.includes('diesel') 
+                                        ? `₹${row[colKey]?.toLocaleString('en-IN') || 0}`
+                                        : row[colKey] || '-'}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          {customColumnsData.length > 100 && (
+                            <p className="text-center text-sm text-slate-500 mt-4">
+                              Showing first 100 of {customColumnsData.length} records
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -3760,37 +3780,6 @@ const Reports = () => {
                   )}
                 </div>
               </TabsContent>
-
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-slate-300">
-                        <thead>
-                          <tr className="bg-slate-100">
-                            <th className="border border-slate-300 px-4 py-2 text-left">Service Type</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Base Revenue (₹)</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Incentive (₹)</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Total Revenue (₹)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {revenueData.map((vehicle, index) => (
-                            <tr key={index} className="hover:bg-slate-50">
-                              <td className="border border-slate-300 px-4 py-2 font-medium">{vehicle.service_type}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.cash_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.company_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.total_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_base_revenue?.toLocaleString('en-IN')}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_incentive_amount?.toLocaleString('en-IN')}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{vehicle.total_revenue?.toLocaleString('en-IN')}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
 
               {/* Towing Vehicle Revenue Report Tab */}
               <TabsContent value="towing">
