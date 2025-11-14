@@ -184,6 +184,37 @@ textarea:focus {
   .grid-mobile {
     grid-template-columns: 1fr;
   }
+
+  /* Mobile Glassmorphism Enhancements */
+  .modern-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(25px) saturate(180%);
+    border-radius: 20px;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+  }
+
+  .header-glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(25px) saturate(180%);
+  }
+
+  .input-modern {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(15px);
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+
+  /* Touch-friendly button sizes */
+  .gradient-button {
+    padding: 14px 24px;
+    min-height: 48px;
+  }
+
+  /* Mobile card spacing */
+  .stat-card-gradient {
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
 }
 
 /* Print styles */
