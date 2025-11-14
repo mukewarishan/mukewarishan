@@ -3891,10 +3891,12 @@ const Reports = () => {
                     <h3 className="text-lg font-semibold">
                       Revenue Report by Towing Vehicle - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
                     </h3>
-                    <Button onClick={exportTowingVehicleReport} className="bg-green-600 hover:bg-green-700 text-white">
-                      <span className="mr-2">📥</span>
-                      Export Excel
-                    </Button>
+                    {hasRole(['super_admin', 'admin']) && (
+                      <Button onClick={exportTowingVehicleReport} className="bg-green-600 hover:bg-green-700 text-white">
+                        <span className="mr-2">📥</span>
+                        Export Excel
+                      </Button>
+                    )}
                   </div>
 
                   {loading ? (
