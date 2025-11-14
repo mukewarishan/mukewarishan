@@ -347,6 +347,51 @@ class CraneOrderAPITester:
         
         return success1 and success2 and success3 and success4 and success5
 
+    def test_google_sheets_removal_verification(self):
+        """Comprehensive test to verify Google Sheets functionality has been completely removed"""
+        print("\n🗑️ Testing Google Sheets Removal Verification...")
+        
+        # Test 1: Google Sheets endpoint should return 404 Not Found
+        success1, response1 = self.run_test("Google Sheets Endpoint Removal", "GET", "export/googlesheets", 404)
+        
+        # Test 2: Verify no Google Sheets related imports cause errors
+        # This is tested implicitly by the server running without import errors
+        
+        # Test 3: Verify Excel export still works (should not be affected)
+        success2, response2 = self.run_test("Excel Export Still Works", "GET", "export/excel", 200)
+        
+        # Test 4: Verify PDF export still works (should not be affected)  
+        success3, response3 = self.run_test("PDF Export Still Works", "GET", "export/pdf", 200)
+        
+        # Test 5: Verify basic CRUD operations still work (no import errors)
+        test_order = {
+            "customer_name": "Google Sheets Removal Test",
+            "phone": "9876543999",
+            "order_type": "cash",
+            "cash_vehicle_name": "Test Vehicle",
+            "amount_received": 1000.0
+        }
+        
+        success4, response4 = self.run_test("CRUD Still Works After Removal", "POST", "orders", 200, test_order)
+        if success4 and 'id' in response4:
+            self.created_orders.append(response4['id'])
+        
+        # Overall verification
+        all_passed = success1 and success2 and success3 and success4
+        
+        if all_passed:
+            self.log_test("Google Sheets Removal Complete", True, "✅ Google Sheets functionality completely removed, other features intact")
+        else:
+            failed_tests = []
+            if not success1: failed_tests.append("Endpoint still exists")
+            if not success2: failed_tests.append("Excel export broken")
+            if not success3: failed_tests.append("PDF export broken")
+            if not success4: failed_tests.append("CRUD operations broken")
+            
+            self.log_test("Google Sheets Removal Complete", False, f"❌ Issues found: {', '.join(failed_tests)}")
+        
+        return all_passed
+
     def test_audit_logging(self):
         """Test audit logging functionality"""
         print("\n📋 Testing Audit Logging...")
