@@ -998,22 +998,26 @@ const Dashboard = () => {
                       </div>
                       
                       <div className="text-right">
-                        {order.order_type === 'cash' && order.amount_received && (
-                          <p className="text-lg font-bold text-green-600">
-                            ₹{order.amount_received.toLocaleString('en-IN')}
-                          </p>
-                        )}
-                        {order.order_type === 'cash' && order.advance_amount && (
-                          <p className="text-sm text-slate-600">
-                            Advance: ₹{order.advance_amount.toLocaleString('en-IN')}
-                          </p>
+                        {hasRole(['super_admin', 'admin']) && (
+                          <>
+                            {order.order_type === 'cash' && order.amount_received && (
+                              <p className="text-lg font-bold text-green-600">
+                                ₹{order.amount_received.toLocaleString('en-IN')}
+                              </p>
+                            )}
+                            {order.order_type === 'cash' && order.advance_amount && (
+                              <p className="text-sm text-slate-600">
+                                Advance: ₹{order.advance_amount.toLocaleString('en-IN')}
+                              </p>
+                            )}
+                          </>
                         )}
                         {order.order_type === 'company' && order.case_id_file_number && (
                           <p className="text-sm text-slate-600">
                             Case ID: {order.case_id_file_number}
                           </p>
                         )}
-                        {order.order_type === 'company' && orderFinancials[order.id] && (
+                        {hasRole(['super_admin', 'admin']) && order.order_type === 'company' && orderFinancials[order.id] && (
                           <div className="mt-1">
                             {orderFinancials[order.id].total_revenue > 0 && (
                               <p className="text-lg font-bold text-blue-600">
