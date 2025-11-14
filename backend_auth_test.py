@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import uuid
 
 class AuthenticationAPITester:
-    def __init__(self, base_url="https://kawale-fleet-hub.preview.emergentagent.com"):
+    def __init__(self, base_url="https://crane-fleet-hub.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0

@@ -10,7 +10,7 @@ import json
 import uuid
 
 class KawaleCranesDataImporter:
-    def __init__(self, excel_file_url, api_base_url="https://kawale-fleet-hub.preview.emergentagent.com/api"):
+    def __init__(self, excel_file_url, api_base_url="https://crane-fleet-hub.preview.emergentagent.com/api"):
         self.excel_file_url = excel_file_url
         self.api_base_url = api_base_url
         self.access_token = None
