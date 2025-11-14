@@ -1645,25 +1645,115 @@ const DataImport = () => {
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-green-800 mb-2">✅ Previous Import Status</h3>
-              <p className="text-green-700">
-                The Excel data has been successfully imported into the system.
-              </p>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded p-3 text-center">
-                  <div className="text-2xl font-bold text-green-600">205</div>
-                  <div className="text-sm text-slate-600">Total Records</div>
-                </div>
-                <div className="bg-white rounded p-3 text-center">
-                  <div className="text-2xl font-bold text-green-600">158</div>
-                  <div className="text-sm text-slate-600">Cash Orders</div>
-                </div>
-                <div className="bg-white rounded p-3 text-center">
-                  <div className="text-2xl font-bold text-green-600">50</div>
-                  <div className="text-sm text-slate-600">Company Orders</div>
-                </div>
+            {/* Import History Section */}
+            <div className="modern-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold bg-gradient-to-r from-pink-400 to-blue-400 bg-clip-text text-transparent">📜 Import History</h3>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={fetchImportHistory}
+                  className="backdrop-blur-sm border-white/40"
+                >
+                  🔄 Refresh
+                </Button>
               </div>
+              
+              {loadingHistory ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-400 mx-auto"></div>
+                  <p className="text-slate-600 mt-2">Loading history...</p>
+                </div>
+              ) : importHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">📭</div>
+                  <p className="text-slate-600">No import history yet. Upload your first file!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {importHistory.map((record, index) => (
+                    <div key={record.id || index} className="frosted-glass p-5 rounded-2xl space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <span className="text-lg">📄</span>
+                            <h4 className="font-bold text-slate-700">{record.filename}</h4>
+                            {index === 0 && (
+                              <Badge className="badge-pastel-pink">Latest</Badge>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                            <div className="frosted-glass p-3 rounded-xl text-center">
+                              <div className="text-2xl font-bold text-pink-500">{record.total_records}</div>
+                              <div className="text-xs text-slate-600">Total Records</div>
+                            </div>
+                            <div className="frosted-glass p-3 rounded-xl text-center">
+                              <div className="text-2xl font-bold text-green-500">{record.success_count}</div>
+                              <div className="text-xs text-slate-600">Imported</div>
+                            </div>
+                            <div className="frosted-glass p-3 rounded-xl text-center">
+                              <div className="text-2xl font-bold text-blue-500">{record.cash_orders}</div>
+                              <div className="text-xs text-slate-600">Cash</div>
+                            </div>
+                            <div className="frosted-glass p-3 rounded-xl text-center">
+                              <div className="text-2xl font-bold text-purple-500">{record.company_orders}</div>
+                              <div className="text-xs text-slate-600">Company</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="border-t border-white/30 pt-3 space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600">
+                            <strong>Imported by:</strong> {record.imported_by_email}
+                          </span>
+                          <span className="text-slate-500">
+                            {new Date(record.imported_at).toLocaleString('en-IN', {
+                              dateStyle: 'medium',
+                              timeStyle: 'short'
+                            })}
+                          </span>
+                        </div>
+                        
+                        {record.sample_data && record.sample_data.length > 0 && (
+                          <details className="mt-3">
+                            <summary className="cursor-pointer text-sm font-semibold text-blue-500 hover:text-blue-600">
+                              View Sample Data ({record.sample_data.length} records)
+                            </summary>
+                            <div className="mt-3 overflow-x-auto">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="bg-white/40 backdrop-blur-sm">
+                                    <th className="px-3 py-2 text-left">Customer</th>
+                                    <th className="px-3 py-2 text-left">Phone</th>
+                                    <th className="px-3 py-2 text-left">Type</th>
+                                    <th className="px-3 py-2 text-left">Date</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {record.sample_data.slice(0, 5).map((order, idx) => (
+                                    <tr key={idx} className="border-t border-white/20">
+                                      <td className="px-3 py-2">{order.customer_name}</td>
+                                      <td className="px-3 py-2">{order.phone}</td>
+                                      <td className="px-3 py-2">
+                                        <Badge className={order.order_type === 'cash' ? 'badge-pastel-pink' : 'badge-pastel-blue'}>
+                                          {order.order_type}
+                                        </Badge>
+                                      </td>
+                                      <td className="px-3 py-2">{new Date(order.date_time).toLocaleDateString()}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
