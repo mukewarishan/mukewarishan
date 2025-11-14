@@ -322,7 +322,7 @@ const Header = () => {
             
             {/* Rates - All authenticated users can view */}
             <Link to="/rates">
-              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
+              <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
                 <span className="mr-2">💰</span>
                 Rates
               </Button>
@@ -331,28 +331,28 @@ const Header = () => {
             {hasRole(['super_admin', 'admin']) && (
               <>
                 <Link to="/users">
-                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
-                    <Users size={16} className="mr-2" />
+                  <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+                    <Users size={18} className="mr-2" />
                     Users
                   </Button>
                 </Link>
                 
                 <Link to="/audit-logs">
-                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
-                    <FileText size={16} className="mr-2" />
+                  <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+                    <FileText size={18} className="mr-2" />
                     Audit Logs
                   </Button>
                 </Link>
                 
                 <Link to="/import-data">
-                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
-                    <FileText size={16} className="mr-2" />
+                  <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+                    <FileText size={18} className="mr-2" />
                     Import Data
                   </Button>
                 </Link>
                 
                 <Link to="/reports">
-                  <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
+                  <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
                     <span className="mr-2">📊</span>
                     Reports
                   </Button>
