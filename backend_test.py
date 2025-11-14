@@ -4142,6 +4142,81 @@ class CraneOrderAPITester:
             
             return 1
 
+    def run_google_sheets_removal_tests(self):
+        """Run tests specifically for Google Sheets removal verification"""
+        print("🗑️ Starting Google Sheets Removal Verification Tests...")
+        print(f"🌐 Testing against: {self.api_url}")
+        print("=" * 80)
+        
+        # Login first
+        if not self.test_login():
+            print("❌ Login failed - cannot continue with authenticated tests")
+            return False
+        
+        # Run specific tests for the review request
+        test_methods = [
+            # Authentication Test
+            self.test_authentication_system,
+            
+            # Orders API Test
+            self.test_get_all_orders,
+            self.test_create_cash_order,
+            self.test_create_company_order,
+            
+            # Export Endpoints Test
+            self.test_export_endpoints,
+            
+            # Google Sheets Removal Verification
+            self.test_google_sheets_removal_verification,
+            
+            # Basic CRUD Test
+            self.test_get_single_order,
+            self.test_update_order
+        ]
+        
+        print("\n📋 Running Google Sheets Removal Tests")
+        print("-" * 60)
+        
+        for test_method in test_methods:
+            try:
+                test_method()
+            except Exception as e:
+                self.log_test(test_method.__name__, False, f"Test execution error: {str(e)}")
+        
+        # Cleanup created orders
+        self.cleanup_created_orders()
+        
+        # Final summary
+        print("\n" + "=" * 80)
+        print("📊 GOOGLE SHEETS REMOVAL TEST SUMMARY")
+        print("=" * 80)
+        print(f"Total Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed / self.tests_run * 100):.1f}%")
+        
+        overall_success = self.tests_passed == self.tests_run
+        
+        if overall_success:
+            print("🎉 ALL GOOGLE SHEETS REMOVAL TESTS PASSED!")
+            print("✅ Authentication working with admin@kawalecranes.com / admin123")
+            print("✅ Orders API (GET /api/orders) working correctly")
+            print("✅ Excel export working correctly")
+            print("✅ PDF export working correctly")
+            print("✅ Google Sheets endpoint properly removed (404 Not Found)")
+            print("✅ Basic CRUD operations working correctly")
+        else:
+            print("⚠️  SOME TESTS FAILED - Check details above")
+            
+            # Show failed tests
+            failed_tests = [result for result in self.test_results if not result['success']]
+            if failed_tests:
+                print("\n❌ FAILED TESTS:")
+                for result in failed_tests:
+                    print(f"  - {result['test_name']}: {result['details']}")
+        
+        return overall_success
+
 def main():
     """Main test execution"""
     tester = CraneOrderAPITester()
@@ -4149,6 +4224,8 @@ def main():
     # Check if we should run focused dashboard test
     if len(sys.argv) > 1 and sys.argv[1] == "--dashboard":
         return 0 if tester.run_focused_dashboard_test() else 1
+    elif len(sys.argv) > 1 and sys.argv[1] == "--google-sheets-removal":
+        return 0 if tester.run_google_sheets_removal_tests() else 1
     else:
         return tester.run_all_tests()
 
