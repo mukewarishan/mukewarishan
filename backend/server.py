@@ -1648,6 +1648,149 @@ async def delete_service_rate(
 
 
 # Driver Salary Management endpoints
+@api_router.get("/drivers/list")
+async def get_all_drivers(
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get list of all unique drivers from orders"""
+    try:
+        # Get unique driver names from both cash and company orders
+        cash_drivers = await db.crane_orders.distinct("cash_driver_name")
+        company_drivers = await db.crane_orders.distinct("company_driver_name")
+        
+        # Combine and remove None/empty values
+        all_drivers = set()
+        for driver in cash_drivers:
+            if driver and str(driver).strip():
+                all_drivers.add(str(driver).strip())
+        for driver in company_drivers:
+            if driver and str(driver).strip():
+                all_drivers.add(str(driver).strip())
+        
+        # Get default salaries for these drivers
+        default_salaries = await db.driver_default_salaries.find({}).to_list(length=None)
+        salary_map = {ds["driver_name"]: ds["default_salary"] for ds in default_salaries}
+        
+        # Build response with default salary info
+        drivers_list = []
+        for driver in sorted(all_drivers):
+            drivers_list.append({
+                "name": driver,
+                "default_salary": salary_map.get(driver, 15000.0)
+            })
+        
+        return drivers_list
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching drivers: {str(e)}")
+
+@api_router.post("/drivers/default-salary")
+async def set_driver_default_salary(
+    data: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Set default salary for a driver (applies to all months)"""
+    try:
+        driver_name = data.get("driver_name")
+        default_salary = float(data.get("default_salary", 15000.0))
+        
+        if not driver_name:
+            raise HTTPException(status_code=400, detail="Driver name is required")
+        
+        # Check if default salary exists
+        existing = await db.driver_default_salaries.find_one({"driver_name": driver_name})
+        
+        if existing:
+            # Update existing
+            result = await db.driver_default_salaries.update_one(
+                {"driver_name": driver_name},
+                {
+                    "$set": {
+                        "default_salary": default_salary,
+                        "updated_by": current_user["full_name"],
+                        "updated_by_email": current_user["email"],
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            )
+        else:
+            # Create new
+            default_salary_record = DriverDefaultSalary(
+                driver_name=driver_name,
+                default_salary=default_salary,
+                updated_by=current_user["full_name"],
+                updated_by_email=current_user["email"]
+            )
+            salary_dict = prepare_for_mongo(default_salary_record.model_dump())
+            await db.driver_default_salaries.insert_one(salary_dict)
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="UPDATE",
+            resource_type="DRIVER_DEFAULT_SALARY",
+            resource_id=driver_name,
+            new_data={"driver_name": driver_name, "default_salary": default_salary}
+        )
+        
+        return {"message": f"Default salary set to ₹{default_salary} for {driver_name}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error setting default salary: {str(e)}")
+
+@api_router.post("/drivers/bulk-default-salary")
+async def set_bulk_default_salary(
+    data: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Set default salary for multiple drivers at once"""
+    try:
+        drivers = data.get("drivers", [])  # [{name, default_salary}]
+        
+        if not drivers:
+            raise HTTPException(status_code=400, detail="Drivers list is required")
+        
+        updated_count = 0
+        for driver_info in drivers:
+            driver_name = driver_info.get("name")
+            default_salary = float(driver_info.get("default_salary", 15000.0))
+            
+            if not driver_name:
+                continue
+            
+            existing = await db.driver_default_salaries.find_one({"driver_name": driver_name})
+            
+            if existing:
+                await db.driver_default_salaries.update_one(
+                    {"driver_name": driver_name},
+                    {
+                        "$set": {
+                            "default_salary": default_salary,
+                            "updated_by": current_user["full_name"],
+                            "updated_by_email": current_user["email"],
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }
+                    }
+                )
+            else:
+                default_salary_record = DriverDefaultSalary(
+                    driver_name=driver_name,
+                    default_salary=default_salary,
+                    updated_by=current_user["full_name"],
+                    updated_by_email=current_user["email"]
+                )
+                salary_dict = prepare_for_mongo(default_salary_record.model_dump())
+                await db.driver_default_salaries.insert_one(salary_dict)
+            
+            updated_count += 1
+        
+        return {"message": f"Default salaries updated for {updated_count} drivers"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error setting bulk default salaries: {str(e)}")
+
 @api_router.get("/driver-salaries")
 async def get_driver_salaries(
     month: Optional[int] = Query(None, ge=1, le=12),
