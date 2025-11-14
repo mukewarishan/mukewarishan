@@ -148,34 +148,29 @@ const LoginPage = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <Label htmlFor="email" className="text-sm font-medium text-slate-700">
-                Email Address
-              </Label>
+              <Label htmlFor="email" className="text-slate-700 font-semibold">Email Address</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="mt-1"
+                className="input-modern mt-2"
                 required
               />
             </div>
-            
             <div>
-              <Label htmlFor="password" className="text-sm font-medium text-slate-700">
-                Password
-              </Label>
-              <div className="relative mt-1">
+              <Label htmlFor="password" className="text-slate-700 font-semibold">Password</Label>
+              <div className="relative mt-2">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="pr-10"
+                  className="input-modern pr-10"
                   required
                 />
                 <button
@@ -187,20 +182,8 @@ const LoginPage = () => {
                 </button>
               </div>
             </div>
-            
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing In...
-                </>
-              ) : (
-                'Sign In'
-              )}
+            <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-semibold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" disabled={loading}>
+              {loading ? '🔄 Signing in...' : '🚀 Sign In'}
             </Button>
           </form>
         </CardContent>
