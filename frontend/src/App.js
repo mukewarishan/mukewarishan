@@ -389,7 +389,7 @@ const Header = () => {
               </>
             )}
             
-            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-pink-100/60 to-blue-100/60 rounded-2xl border border-white/40 backdrop-blur-sm shadow-sm">
+            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-cyan-100/60 to-blue-100/60 rounded-2xl border border-white/40 backdrop-blur-sm shadow-sm">
               <User size={18} className="text-pink-500" />
               <span className="text-sm font-medium text-slate-700">
                 {user?.full_name}
