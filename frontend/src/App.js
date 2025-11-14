@@ -3530,6 +3530,204 @@ const Reports = () => {
                     <div className="flex justify-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                     </div>
+
+
+              {/* Daily Summary Tab */}
+              <TabsContent value="daily">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-pink-400 to-blue-400 bg-clip-text text-transparent">
+                      📅 Daily Expense & Revenue Summary
+                    </h3>
+                  </div>
+
+                  {loading ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-400 mx-auto"></div>
+                      <p className="text-slate-600 mt-4">Loading daily summary...</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Summary Cards */}
+                      {dailyTotals && (
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                          <div className="frosted-glass p-4 rounded-2xl text-center">
+                            <div className="text-3xl font-bold text-blue-500">{dailyTotals.total_orders}</div>
+                            <div className="text-sm text-slate-600 mt-1">Total Orders</div>
+                          </div>
+                          <div className="frosted-glass p-4 rounded-2xl text-center">
+                            <div className="text-3xl font-bold text-red-500">₹{dailyTotals.total_expense.toLocaleString('en-IN')}</div>
+                            <div className="text-sm text-slate-600 mt-1">Total Expense</div>
+                          </div>
+                          <div className="frosted-glass p-4 rounded-2xl text-center">
+                            <div className="text-3xl font-bold text-green-500">₹{dailyTotals.total_revenue.toLocaleString('en-IN')}</div>
+                            <div className="text-sm text-slate-600 mt-1">Total Revenue</div>
+                          </div>
+                          <div className="frosted-glass p-4 rounded-2xl text-center">
+                            <div className={`text-3xl font-bold ${dailyTotals.net_profit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                              ₹{dailyTotals.net_profit.toLocaleString('en-IN')}
+                            </div>
+                            <div className="text-sm text-slate-600 mt-1">Net Profit</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Daily Table */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-gradient-to-r from-pink-50/50 to-blue-50/50 backdrop-blur-sm">
+                              <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                              <th className="px-4 py-3 text-center text-sm font-semibold">Orders</th>
+                              <th className="px-4 py-3 text-center text-sm font-semibold">Cash</th>
+                              <th className="px-4 py-3 text-center text-sm font-semibold">Company</th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold">Expense</th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold">Revenue</th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold">Profit</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dailySummary.map((day) => {
+                              const profit = day.total_revenue - day.total_expense;
+                              return (
+                                <tr key={day.date} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                                  <td className="px-4 py-3 font-medium">{new Date(day.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                                  <td className="px-4 py-3 text-center font-semibold text-blue-600">{day.total_orders}</td>
+                                  <td className="px-4 py-3 text-center text-green-600">{day.cash_orders}</td>
+                                  <td className="px-4 py-3 text-center text-purple-600">{day.company_orders}</td>
+                                  <td className="px-4 py-3 text-right text-red-600">₹{day.total_expense.toLocaleString('en-IN')}</td>
+                                  <td className="px-4 py-3 text-right text-green-600">₹{day.total_revenue.toLocaleString('en-IN')}</td>
+                                  <td className={`px-4 py-3 text-right font-bold ${profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                    ₹{profit.toLocaleString('en-IN')}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Custom Columns Tab */}
+              <TabsContent value="custom-columns">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                      🎯 Custom Column Report
+                    </h3>
+                    <Button 
+                      onClick={fetchCustomColumnsReport} 
+                      className="bg-gradient-to-r from-indigo-200 to-purple-200 text-slate-700 hover:from-indigo-300 hover:to-purple-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
+                    >
+                      Generate Report
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Column Selection */}
+                    <div className="frosted-glass p-6 rounded-2xl">
+                      <h4 className="font-bold text-slate-700 mb-4">Select Columns to Include</h4>
+                      <p className="text-sm text-slate-600 mb-4">Choose which columns you want to see in your report</p>
+                      
+                      {/* Group columns by category */}
+                      {['Basic', 'Cash', 'Company', 'Incentives'].map(category => {
+                        const categoryColumns = availableColumns.filter(col => col.category === category);
+                        if (categoryColumns.length === 0) return null;
+                        
+                        return (
+                          <div key={category} className="mb-4">
+                            <h5 className="font-semibold text-sm text-slate-700 mb-2">{category} Fields</h5>
+                            <div className="space-y-2 ml-2">
+                              {categoryColumns.map(col => (
+                                <label key={col.key} className="flex items-center space-x-2 cursor-pointer hover:bg-white/50 p-2 rounded">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedColumns.includes(col.key)}
+                                    onChange={() => toggleColumn(col.key)}
+                                    className="rounded border-pink-300 text-pink-500 focus:ring-pink-200"
+                                  />
+                                  <span className="text-sm text-slate-700">{col.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Selected Columns Preview */}
+                    <div className="frosted-glass p-6 rounded-2xl">
+                      <h4 className="font-bold text-slate-700 mb-4">Selected Columns ({selectedColumns.length})</h4>
+                      {selectedColumns.length === 0 ? (
+                        <p className="text-slate-500 text-sm">No columns selected. Please select at least one column.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedColumns.map(colKey => {
+                            const col = availableColumns.find(c => c.key === colKey);
+                            return (
+                              <Badge key={colKey} className="badge-pastel-purple cursor-pointer" onClick={() => toggleColumn(colKey)}>
+                                {col?.label || colKey} ✕
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Report Data */}
+                  {loading ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto"></div>
+                      <p className="text-slate-600 mt-4">Generating report...</p>
+                    </div>
+                  ) : customColumnsData.length > 0 ? (
+                    <div className="frosted-glass p-6 rounded-2xl">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 backdrop-blur-sm">
+                              {selectedColumns.map(colKey => {
+                                const col = availableColumns.find(c => c.key === colKey);
+                                return (
+                                  <th key={colKey} className="px-3 py-2 text-left text-xs font-semibold">{col?.label || colKey}</th>
+                                );
+                              })}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {customColumnsData.slice(0, 100).map((row, idx) => (
+                              <tr key={idx} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                                {selectedColumns.map(colKey => (
+                                  <td key={colKey} className="px-3 py-2 text-xs">
+                                    {typeof row[colKey] === 'number' && colKey.includes('amount') || colKey.includes('toll') || colKey.includes('diesel') 
+                                      ? `₹${row[colKey]?.toLocaleString('en-IN') || 0}`
+                                      : row[colKey] || '-'}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {customColumnsData.length > 100 && (
+                          <p className="text-center text-sm text-slate-500 mt-4">
+                            Showing first 100 of {customColumnsData.length} records
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 frosted-glass rounded-2xl">
+                      <div className="text-5xl mb-4">📊</div>
+                      <p className="text-slate-600">Select columns and click "Generate Report" to view data</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse border border-slate-300">
