@@ -16,9 +16,6 @@ email-validator==2.3.0
 et_xmlfile==2.0.0
 fastapi==0.110.1
 flake8==7.3.0
-google-auth==2.41.1
-google-auth-oauthlib==1.2.2
-gspread==6.2.1
 h11==0.16.0
 idna==3.10
 iniconfig==2.1.0
