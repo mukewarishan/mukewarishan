@@ -1002,6 +1002,42 @@ async def delete_order(
             raise e
         raise HTTPException(status_code=500, detail=f"Error deleting order: {str(e)}")
 
+
+@api_router.delete("/orders/delete-all")
+async def delete_all_orders(
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN]))
+):
+    """Delete all crane orders (Super Admin only - DANGEROUS!)"""
+    try:
+        # Count orders before deletion
+        count = await db.crane_orders.count_documents({})
+        
+        if count == 0:
+            raise HTTPException(status_code=404, detail="No orders found to delete")
+        
+        # Delete all orders
+        result = await db.crane_orders.delete_many({})
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="DELETE_ALL",
+            resource_type="ORDER",
+            new_data={"deleted_count": result.deleted_count}
+        )
+        
+        return {
+            "message": f"Successfully deleted all {result.deleted_count} orders",
+            "deleted_count": result.deleted_count
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting all orders: {str(e)}")
+
+
 @api_router.get("/orders/stats/summary")
 async def get_orders_summary(current_user: dict = Depends(get_current_user)):
     """Get summary statistics of orders"""
