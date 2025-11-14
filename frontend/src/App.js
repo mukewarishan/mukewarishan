@@ -2942,25 +2942,28 @@ const EditOrderPage = () => {
 
 // Driver Salaries Component
 const DriverSalaries = () => {
+  const [drivers, setDrivers] = useState([]);
   const [salaries, setSalaries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editingSalary, setEditingSalary] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [formData, setFormData] = useState({
-    driver_name: '',
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-    base_salary: '',
-    deductions: '0',
-    notes: ''
-  });
+  const [editingDriver, setEditingDriver] = useState(null);
+  const [editDefaultSalary, setEditDefaultSalary] = useState('');
 
   useEffect(() => {
-    fetchSalaries();
-  }, [selectedMonth, selectedYear]);
+    fetchAllDrivers();
+  }, []);
+
+  const fetchAllDrivers = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/drivers/list`);
+      setDrivers(response.data);
+    } catch (error) {
+      console.error('Error fetching drivers:', error);
+      toast.error('Failed to fetch drivers');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchSalaries = async () => {
     try {
