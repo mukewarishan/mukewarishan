@@ -3784,14 +3784,6 @@ const Reports = () => {
                     </div>
                   )}
 
-                  {revenueData.length === 0 && !loading && (
-                    <div className="text-center py-8 text-slate-500">
-                      No revenue data found for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
               {/* Towing Vehicle Revenue Report Tab */}
               <TabsContent value="towing">
                 <div className="space-y-4">
