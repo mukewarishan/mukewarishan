@@ -2795,6 +2795,306 @@ async def get_custom_column_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating custom report: {str(e)}")
 
+
+@api_router.post("/reports/custom-columns/export/excel")
+async def export_custom_columns_excel(
+    report_config: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Export custom column report to Excel"""
+    try:
+        start_date_str = report_config.get("start_date")
+        end_date_str = report_config.get("end_date")
+        selected_columns = report_config.get("columns", [])
+        order_type_filter = report_config.get("order_type", "all")
+        
+        if not selected_columns:
+            raise HTTPException(status_code=400, detail="At least one column must be selected")
+        
+        # Parse dates
+        start = datetime.fromisoformat(start_date_str.replace('Z', '+00:00')) if start_date_str else datetime(2020, 1, 1, tzinfo=timezone.utc)
+        end = datetime.fromisoformat(end_date_str.replace('Z', '+00:00')) if end_date_str else datetime.now(timezone.utc)
+        
+        # Build query
+        query = {
+            "date_time": {
+                "$gte": start.isoformat(),
+                "$lte": end.isoformat()
+            }
+        }
+        
+        if order_type_filter != "all":
+            query["order_type"] = order_type_filter
+        
+        # Build projection for selected columns
+        projection = {"_id": 0, "id": 1}
+        for col in selected_columns:
+            projection[col] = 1
+        
+        # Fetch orders with only selected columns
+        orders = await db.crane_orders.find(query, projection).to_list(10000)
+        
+        # Create workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Custom Report"
+        
+        # Get column labels
+        available_columns = [
+            {"key": "unique_id", "label": "Order ID"},
+            {"key": "date_time", "label": "Date & Time"},
+            {"key": "customer_name", "label": "Customer Name"},
+            {"key": "phone", "label": "Phone"},
+            {"key": "order_type", "label": "Order Type"},
+            {"key": "created_by", "label": "Created By"},
+            {"key": "cash_trip_from", "label": "Trip From (Cash)"},
+            {"key": "cash_trip_to", "label": "Trip To (Cash)"},
+            {"key": "cash_driver_name", "label": "Driver (Cash)"},
+            {"key": "cash_towing_vehicle", "label": "Towing Vehicle (Cash)"},
+            {"key": "cash_service_type", "label": "Service Type (Cash)"},
+            {"key": "cash_vehicle_name", "label": "Vehicle Name (Cash)"},
+            {"key": "cash_vehicle_number", "label": "Vehicle Number (Cash)"},
+            {"key": "amount_received", "label": "Amount Received"},
+            {"key": "advance_amount", "label": "Advance Amount"},
+            {"key": "cash_kms_travelled", "label": "KMs Travelled (Cash)"},
+            {"key": "cash_toll", "label": "Toll (Cash)"},
+            {"key": "cash_diesel", "label": "Diesel (Cash)"},
+            {"key": "cash_diesel_refill_location", "label": "Diesel Refill Location"},
+            {"key": "care_off", "label": "Care Off"},
+            {"key": "care_off_amount", "label": "Care Off Amount"},
+            {"key": "name_of_firm", "label": "Name of Firm"},
+            {"key": "company_name", "label": "Company Name"},
+            {"key": "case_id_file_number", "label": "Case ID/File Number"},
+            {"key": "company_trip_from", "label": "Trip From (Company)"},
+            {"key": "company_trip_to", "label": "Trip To (Company)"},
+            {"key": "company_driver_name", "label": "Driver (Company)"},
+            {"key": "company_towing_vehicle", "label": "Towing Vehicle (Company)"},
+            {"key": "company_service_type", "label": "Service Type (Company)"},
+            {"key": "company_vehicle_name", "label": "Vehicle Name (Company)"},
+            {"key": "company_vehicle_number", "label": "Vehicle Number (Company)"},
+            {"key": "reach_time", "label": "Reach Time"},
+            {"key": "drop_time", "label": "Drop Time"},
+            {"key": "company_kms_travelled", "label": "KMs Travelled (Company)"},
+            {"key": "company_toll", "label": "Toll (Company)"},
+            {"key": "company_diesel", "label": "Diesel (Company)"},
+            {"key": "incentive_amount", "label": "Incentive Amount"},
+            {"key": "incentive_reason", "label": "Incentive Reason"},
+            {"key": "incentive_added_by", "label": "Incentive Added By"},
+        ]
+        
+        col_map = {col["key"]: col["label"] for col in available_columns}
+        
+        # Write headers
+        headers = [col_map.get(col, col) for col in selected_columns]
+        ws.append(headers)
+        
+        # Style headers
+        header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Write data rows
+        for order in orders:
+            row = []
+            for col in selected_columns:
+                value = order.get(col, "")
+                if isinstance(value, (int, float)):
+                    row.append(value)
+                else:
+                    row.append(str(value) if value else "")
+            ws.append(row)
+        
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to bytes
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="EXPORT",
+            resource_type="REPORT",
+            new_data={"report_type": "custom_columns", "format": "excel", "columns": selected_columns}
+        )
+        
+        return Response(
+            content=output.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename=custom_report_{start.strftime('%Y%m%d')}_{end.strftime('%Y%m%d')}.xlsx"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting custom report: {str(e)}")
+
+@api_router.post("/reports/custom-columns/export/pdf")
+async def export_custom_columns_pdf(
+    report_config: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Export custom column report to PDF"""
+    try:
+        start_date_str = report_config.get("start_date")
+        end_date_str = report_config.get("end_date")
+        selected_columns = report_config.get("columns", [])
+        order_type_filter = report_config.get("order_type", "all")
+        
+        if not selected_columns:
+            raise HTTPException(status_code=400, detail="At least one column must be selected")
+        
+        # Parse dates
+        start = datetime.fromisoformat(start_date_str.replace('Z', '+00:00')) if start_date_str else datetime(2020, 1, 1, tzinfo=timezone.utc)
+        end = datetime.fromisoformat(end_date_str.replace('Z', '+00:00')) if end_date_str else datetime.now(timezone.utc)
+        
+        # Build query
+        query = {
+            "date_time": {
+                "$gte": start.isoformat(),
+                "$lte": end.isoformat()
+            }
+        }
+        
+        if order_type_filter != "all":
+            query["order_type"] = order_type_filter
+        
+        # Build projection for selected columns
+        projection = {"_id": 0, "id": 1}
+        for col in selected_columns:
+            projection[col] = 1
+        
+        # Fetch orders with only selected columns (limit to 1000 for PDF)
+        orders = await db.crane_orders.find(query, projection).limit(1000).to_list(1000)
+        
+        # Create PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        
+        # Title
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=30,
+            alignment=1
+        )
+        elements.append(Paragraph("Custom Column Report", title_style))
+        elements.append(Spacer(1, 12))
+        
+        # Date range
+        date_text = f"Period: {start.strftime('%Y-%m-%d')} to {end.strftime('%Y-%m-%d')}"
+        elements.append(Paragraph(date_text, styles['Normal']))
+        elements.append(Spacer(1, 20))
+        
+        # Get column labels
+        available_columns = [
+            {"key": "unique_id", "label": "Order ID"},
+            {"key": "date_time", "label": "Date & Time"},
+            {"key": "customer_name", "label": "Customer"},
+            {"key": "phone", "label": "Phone"},
+            {"key": "order_type", "label": "Type"},
+            {"key": "created_by", "label": "Created By"},
+            {"key": "cash_trip_from", "label": "From (Cash)"},
+            {"key": "cash_trip_to", "label": "To (Cash)"},
+            {"key": "cash_driver_name", "label": "Driver (Cash)"},
+            {"key": "cash_service_type", "label": "Service (Cash)"},
+            {"key": "amount_received", "label": "Amount"},
+            {"key": "company_name", "label": "Company"},
+            {"key": "company_service_type", "label": "Service (Co)"},
+            {"key": "company_driver_name", "label": "Driver (Co)"},
+        ]
+        
+        col_map = {col["key"]: col["label"] for col in available_columns}
+        
+        # Create table data - limit columns to fit PDF width
+        max_cols = min(len(selected_columns), 6)  # Limit to 6 columns for better PDF layout
+        display_columns = selected_columns[:max_cols]
+        
+        table_data = [[col_map.get(col, col) for col in display_columns]]
+        
+        for order in orders[:100]:  # Limit to 100 rows for PDF
+            row = []
+            for col in display_columns:
+                value = order.get(col, "")
+                if isinstance(value, (int, float)):
+                    row.append(str(value))
+                else:
+                    val_str = str(value) if value else "-"
+                    # Truncate long values
+                    row.append(val_str[:30] + "..." if len(val_str) > 30 else val_str)
+            table_data.append(row)
+        
+        # Create table
+        col_widths = [A4[0] / max_cols * 0.9] * max_cols
+        table = Table(table_data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3b82f6')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        elements.append(table)
+        
+        if len(orders) > 100:
+            elements.append(Spacer(1, 12))
+            elements.append(Paragraph(f"Showing first 100 of {len(orders)} records", styles['Italic']))
+        
+        # Build PDF
+        doc.build(elements)
+        buffer.seek(0)
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="EXPORT",
+            resource_type="REPORT",
+            new_data={"report_type": "custom_columns", "format": "pdf", "columns": selected_columns}
+        )
+        
+        return Response(
+            content=buffer.getvalue(),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=custom_report_{start.strftime('%Y%m%d')}_{end.strftime('%Y%m%d')}.pdf"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting custom report PDF: {str(e)}")
+
 @api_router.get("/reports/available-columns")
 async def get_available_columns(
     current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
