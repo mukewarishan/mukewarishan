@@ -3391,6 +3391,82 @@ const Reports = () => {
     }
   };
 
+
+
+  const exportCustomColumnsExcel = async () => {
+    if (customColumnsData.length === 0) {
+      toast.error('No data to export. Please generate a report first.');
+      return;
+    }
+    
+    try {
+      toast.info('Exporting to Excel...');
+      const startDate = new Date(selectedYear, selectedMonth - 1, 1).toISOString();
+      const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59).toISOString();
+      
+      const response = await axios.post(`${API}/reports/custom-columns/export/excel`, {
+        start_date: startDate,
+        end_date: endDate,
+        columns: selectedColumns,
+        order_type: 'all'
+      }, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `custom_columns_report_${selectedYear}_${selectedMonth.toString().padStart(2, '0')}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Excel report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting custom columns Excel:', error);
+      toast.error('Failed to export Excel report');
+    }
+  };
+
+  const exportCustomColumnsPDF = async () => {
+    if (customColumnsData.length === 0) {
+      toast.error('No data to export. Please generate a report first.');
+      return;
+    }
+    
+    try {
+      toast.info('Exporting to PDF...');
+      const startDate = new Date(selectedYear, selectedMonth - 1, 1).toISOString();
+      const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59).toISOString();
+      
+      const response = await axios.post(`${API}/reports/custom-columns/export/pdf`, {
+        start_date: startDate,
+        end_date: endDate,
+        columns: selectedColumns,
+        order_type: 'all'
+      }, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `custom_columns_report_${selectedYear}_${selectedMonth.toString().padStart(2, '0')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('PDF report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting custom columns PDF:', error);
+      toast.error('Failed to export PDF report');
+    }
+  };
+
   const handleMonthYearChange = () => {
     if (activeTab === 'expense') {
       fetchExpenseReport();
