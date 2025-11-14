@@ -11,11 +11,12 @@ body {
   font-feature-settings: 'cv11', 'ss01';
   font-variation-settings: 'opsz' 32;
   line-height: 1.6;
-  color: #0f172a;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #334155;
+  background: linear-gradient(135deg, #fde1d3 0%, #d4e4f7 50%, #e5dff5 100%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
 body::before {
@@ -26,11 +27,22 @@ body::before {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 119, 206, 0.3), transparent 50%),
-    radial-gradient(circle at 40% 20%, rgba(138, 92, 246, 0.3), transparent 50%);
+    radial-gradient(circle at 15% 30%, rgba(255, 182, 193, 0.15), transparent 40%),
+    radial-gradient(circle at 85% 70%, rgba(173, 216, 230, 0.15), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(221, 160, 221, 0.1), transparent 50%),
+    radial-gradient(circle at 30% 80%, rgba(255, 218, 185, 0.12), transparent 45%);
   pointer-events: none;
   z-index: 0;
+  animation: float-background 20s ease-in-out infinite;
+}
+
+@keyframes float-background {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .App {
