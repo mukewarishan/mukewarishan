@@ -378,12 +378,14 @@ const Header = () => {
                   </Button>
                 </Link>
                 
-                <Link to="/driver-salaries">
-                  <Button variant="ghost" className="text-slate-700 hover:text-emerald-500 hover:bg-emerald-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
-                    <span className="mr-2">💰</span>
-                    Driver Salaries
-                  </Button>
-                </Link>
+                {hasRole(['super_admin', 'admin']) && (
+                  <Link to="/driver-salaries">
+                    <Button variant="ghost" className="text-slate-700 hover:text-emerald-500 hover:bg-emerald-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
+                      <span className="mr-2">💰</span>
+                      Driver Salaries
+                    </Button>
+                  </Link>
+                )}
               </>
             )}
             
