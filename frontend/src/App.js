@@ -295,13 +295,13 @@ const Header = () => {
     <header className="header-glass sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6">
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">🚛</span>
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+              <span className="text-white font-bold text-2xl">🚛</span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Kawale Cranes</h1>
-              <p className="text-slate-300 text-sm">Data Entry System</p>
+              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Kawale Cranes</h1>
+              <p className="text-slate-600 text-sm font-medium">Fleet Management System</p>
             </div>
           </Link>
           
