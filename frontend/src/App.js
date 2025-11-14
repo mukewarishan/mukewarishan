@@ -748,7 +748,7 @@ const Dashboard = () => {
                       {stat._id === 'cash' ? 'Cash Orders' : 'Company Orders'}
                     </p>
                     <p className="text-3xl font-bold text-slate-900">{stat.count}</p>
-                    {stat._id === 'cash' && stat.total_amount > 0 && (
+                    {hasRole(['super_admin', 'admin']) && stat._id === 'cash' && stat.total_amount > 0 && (
                       <p className="text-sm text-green-600 font-medium mt-1">
                         ₹{stat.total_amount.toLocaleString('en-IN')}
                       </p>
