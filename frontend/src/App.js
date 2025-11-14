@@ -504,6 +504,7 @@ const Dashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0); // Add refresh trigger
   const { hasRole } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Fetch data on mount and when filters or refreshKey changes
   useEffect(() => {
