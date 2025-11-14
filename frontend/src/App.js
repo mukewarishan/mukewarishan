@@ -307,13 +307,15 @@ const Header = () => {
           
           <nav className="flex items-center space-x-4">
             <Link to="/">
-              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-700">
+              <Button variant="ghost" className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 font-medium transition-all duration-200">
+                <Home size={18} className="mr-2" />
                 Dashboard
               </Button>
             </Link>
             
             <Link to="/new-order">
-              <Button className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white">
+              <Button className="bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                <PlusCircle size={18} className="mr-2" />
                 New Order
               </Button>
             </Link>
