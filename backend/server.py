@@ -1633,6 +1633,275 @@ async def delete_service_rate(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting service rate: {str(e)}")
 
+
+
+# Driver Salary Management endpoints
+@api_router.get("/driver-salaries")
+async def get_driver_salaries(
+    month: Optional[int] = Query(None, ge=1, le=12),
+    year: Optional[int] = Query(None, ge=2020, le=2030),
+    driver_name: Optional[str] = None,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get driver salaries with optional filters"""
+    try:
+        query = {}
+        if month:
+            query["month"] = month
+        if year:
+            query["year"] = year
+        if driver_name:
+            query["driver_name"] = driver_name
+        
+        salaries = await db.driver_salaries.find(query).sort([("year", -1), ("month", -1)]).to_list(length=None)
+        
+        # Convert datetime fields
+        for salary in salaries:
+            if isinstance(salary.get('added_at'), datetime):
+                salary['added_at'] = salary['added_at'].isoformat()
+            if isinstance(salary.get('updated_at'), datetime):
+                salary['updated_at'] = salary['updated_at'].isoformat()
+        
+        return salaries
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching driver salaries: {str(e)}")
+
+@api_router.post("/driver-salaries")
+async def create_driver_salary(
+    salary_data: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Create new driver salary record"""
+    try:
+        # Check if salary already exists for this driver/month/year
+        existing = await db.driver_salaries.find_one({
+            "driver_name": salary_data.get("driver_name"),
+            "month": salary_data.get("month"),
+            "year": salary_data.get("year")
+        })
+        
+        if existing:
+            raise HTTPException(status_code=400, detail="Salary record already exists for this driver/month/year")
+        
+        # Calculate total incentives for the month
+        start_date = datetime(salary_data["year"], salary_data["month"], 1, tzinfo=timezone.utc)
+        if salary_data["month"] == 12:
+            end_date = datetime(salary_data["year"] + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(salary_data["year"], salary_data["month"] + 1, 1, tzinfo=timezone.utc)
+        
+        # Get incentives from orders
+        incentives_pipeline = [
+            {
+                "$match": {
+                    "$or": [
+                        {"cash_driver_name": salary_data.get("driver_name")},
+                        {"company_driver_name": salary_data.get("driver_name")}
+                    ],
+                    "date_time": {
+                        "$gte": start_date.isoformat(),
+                        "$lt": end_date.isoformat()
+                    },
+                    "incentive_amount": {"$ne": None, "$gt": 0}
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total_incentives": {"$sum": "$incentive_amount"}
+                }
+            }
+        ]
+        
+        incentives_result = await db.crane_orders.aggregate(incentives_pipeline).to_list(length=None)
+        total_incentives = incentives_result[0]["total_incentives"] if incentives_result else 0.0
+        
+        salary = DriverSalary(
+            driver_name=salary_data["driver_name"],
+            month=salary_data["month"],
+            year=salary_data["year"],
+            base_salary=float(salary_data["base_salary"]),
+            total_incentives=float(total_incentives),
+            deductions=float(salary_data.get("deductions", 0.0)),
+            notes=salary_data.get("notes"),
+            added_by=current_user["full_name"],
+            added_by_email=current_user["email"]
+        )
+        
+        salary_dict = prepare_for_mongo(salary.model_dump())
+        await db.driver_salaries.insert_one(salary_dict)
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="CREATE",
+            resource_type="DRIVER_SALARY",
+            resource_id=salary.id,
+            new_data=salary.model_dump(mode='json')
+        )
+        
+        return salary
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating driver salary: {str(e)}")
+
+@api_router.put("/driver-salaries/{salary_id}")
+async def update_driver_salary(
+    salary_id: str,
+    salary_data: dict,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Update driver salary record"""
+    try:
+        existing = await db.driver_salaries.find_one({"id": salary_id}, {"_id": 0})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Salary record not found")
+        
+        # Recalculate incentives if month/year/driver changed
+        month = salary_data.get("month", existing["month"])
+        year = salary_data.get("year", existing["year"])
+        driver_name = salary_data.get("driver_name", existing["driver_name"])
+        
+        start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+        
+        incentives_pipeline = [
+            {
+                "$match": {
+                    "$or": [
+                        {"cash_driver_name": driver_name},
+                        {"company_driver_name": driver_name}
+                    ],
+                    "date_time": {
+                        "$gte": start_date.isoformat(),
+                        "$lt": end_date.isoformat()
+                    },
+                    "incentive_amount": {"$ne": None, "$gt": 0}
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total_incentives": {"$sum": "$incentive_amount"}
+                }
+            }
+        ]
+        
+        incentives_result = await db.crane_orders.aggregate(incentives_pipeline).to_list(length=None)
+        total_incentives = incentives_result[0]["total_incentives"] if incentives_result else 0.0
+        
+        update_data = {
+            "base_salary": float(salary_data.get("base_salary", existing["base_salary"])),
+            "total_incentives": float(total_incentives),
+            "deductions": float(salary_data.get("deductions", existing.get("deductions", 0.0))),
+            "notes": salary_data.get("notes", existing.get("notes")),
+            "updated_by": current_user["full_name"],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        result = await db.driver_salaries.update_one(
+            {"id": salary_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Salary record not found")
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="UPDATE",
+            resource_type="DRIVER_SALARY",
+            resource_id=salary_id,
+            old_data=existing,
+            new_data=update_data
+        )
+        
+        return {"message": "Driver salary updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating driver salary: {str(e)}")
+
+@api_router.delete("/driver-salaries/{salary_id}")
+async def delete_driver_salary(
+    salary_id: str,
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Delete driver salary record"""
+    try:
+        existing = await db.driver_salaries.find_one({"id": salary_id}, {"_id": 0})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Salary record not found")
+        
+        result = await db.driver_salaries.delete_one({"id": salary_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Salary record not found")
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="DELETE",
+            resource_type="DRIVER_SALARY",
+            resource_id=salary_id,
+            old_data=existing
+        )
+        
+        return {"message": "Driver salary deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting driver salary: {str(e)}")
+
+@api_router.get("/driver-salaries/calculate-incentives")
+async def calculate_driver_incentives(
+    driver_name: str = Query(...),
+    month: int = Query(..., ge=1, le=12),
+    year: int = Query(..., ge=2020, le=2030),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Calculate total incentives for a driver in a specific month"""
+    try:
+        start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+        
+        # Get all orders with incentives for this driver
+        orders = await db.crane_orders.find({
+            "$or": [
+                {"cash_driver_name": driver_name},
+                {"company_driver_name": driver_name}
+            ],
+            "date_time": {
+                "$gte": start_date.isoformat(),
+                "$lt": end_date.isoformat()
+            },
+            "incentive_amount": {"$ne": None, "$gt": 0}
+        }, {"_id": 0, "unique_id": 1, "customer_name": 1, "date_time": 1, "incentive_amount": 1, "incentive_reason": 1, "order_type": 1}).to_list(length=None)
+        
+        total_incentives = sum(order.get("incentive_amount", 0) for order in orders)
+        
+        return {
+            "driver_name": driver_name,
+            "month": month,
+            "year": year,
+            "total_incentives": total_incentives,
+            "incentive_count": len(orders),
+            "orders": orders
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating incentives: {str(e)}")
+
 # Reports endpoints
 @api_router.get("/reports/expense-by-driver")
 async def get_expense_report_by_driver(
