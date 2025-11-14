@@ -316,11 +316,11 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6">
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-12 h-12 bg-gradient-to-br from-pink-200 to-blue-200 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 backdrop-blur-sm border border-white/40">
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-200 to-indigo-300 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 backdrop-blur-sm border border-white/40">
               <span className="text-2xl">🚛</span>
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-pink-400 to-blue-400 bg-clip-text text-transparent">Kawale Cranes</h1>
+              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-cyan-500 to-indigo-600 bg-clip-text text-transparent">Kawale Cranes</h1>
               <p className="text-slate-600 text-sm font-medium">Fleet Management System</p>
             </div>
           </Link>
