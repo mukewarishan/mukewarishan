@@ -3845,13 +3845,20 @@ const Reports = () => {
                             <tbody>
                               {customColumnsData.slice(0, 100).map((row, idx) => (
                                 <tr key={idx} className="border-t border-white/30 hover:bg-white/30 transition-colors">
-                                  {selectedColumns.map(colKey => (
-                                    <td key={colKey} className="px-3 py-2 text-xs">
-                                      {typeof row[colKey] === 'number' && colKey.includes('amount') || colKey.includes('toll') || colKey.includes('diesel') 
-                                        ? `₹${row[colKey]?.toLocaleString('en-IN') || 0}`
-                                        : row[colKey] || '-'}
-                                    </td>
-                                  ))}
+                                  {selectedColumns.map(colKey => {
+                                    const isMonetaryField = colKey.includes('amount') || colKey.includes('toll') || colKey.includes('diesel') || colKey.includes('revenue') || colKey.includes('expense');
+                                    const shouldHideAmount = isMonetaryField && !hasRole(['super_admin', 'admin']);
+                                    
+                                    return (
+                                      <td key={colKey} className="px-3 py-2 text-xs">
+                                        {shouldHideAmount 
+                                          ? '***' 
+                                          : (typeof row[colKey] === 'number' && isMonetaryField 
+                                            ? `₹${row[colKey]?.toLocaleString('en-IN') || 0}`
+                                            : row[colKey] || '-')}
+                                      </td>
+                                    );
+                                  })}
                                 </tr>
                               ))}
                             </tbody>
