@@ -512,6 +512,15 @@ const Dashboard = () => {
     fetchStats();
   }, [filters, refreshKey]);
 
+  // Handle navigation state for refresh trigger
+  useEffect(() => {
+    if (location.state?.refresh) {
+      setRefreshKey(prev => prev + 1);
+      // Clear the state to prevent refresh on subsequent renders
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
   // Force refresh when page becomes visible (user returns from another tab/window)
   useEffect(() => {
     const handleFocus = () => {
