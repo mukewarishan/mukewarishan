@@ -327,14 +327,14 @@ const Header = () => {
           
           <nav className="flex items-center space-x-4">
             <Link to="/">
-              <Button variant="ghost" className="text-slate-700 hover:text-pink-500 hover:bg-pink-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
+              <Button variant="ghost" className="text-slate-700 hover:text-cyan-600 hover:bg-cyan-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                 <Home size={18} className="mr-2" />
                 Dashboard
               </Button>
             </Link>
             
             <Link to="/new-order">
-              <Button className="bg-gradient-to-r from-pink-200 to-blue-200 text-slate-700 hover:from-pink-300 hover:to-blue-300 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 backdrop-blur-sm border border-white/40">
+              <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 backdrop-blur-sm border border-white/20">
                 <PlusCircle size={18} className="mr-2" />
                 New Order
               </Button>
@@ -342,7 +342,7 @@ const Header = () => {
             
             {/* Rates - All authenticated users can view */}
             <Link to="/rates">
-              <Button variant="ghost" className="text-slate-700 hover:text-pink-500 hover:bg-pink-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
+              <Button variant="ghost" className="text-slate-700 hover:text-blue-600 hover:bg-blue-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                 <span className="mr-2">💰</span>
                 Rates
               </Button>
