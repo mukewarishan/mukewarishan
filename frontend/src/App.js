@@ -138,13 +138,13 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <Card className="w-full max-w-md modern-card border-0 shadow-2xl z-10">
-        <CardHeader className="text-center space-y-6 pt-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-violet-600 to-purple-700 rounded-3xl flex items-center justify-center mx-auto shadow-2xl float">
-            <span className="text-white font-bold text-3xl">🚛</span>
+        <CardHeader className="text-center space-y-6 pt-8 pb-6">
+          <div className="w-24 h-24 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 rounded-3xl flex items-center justify-center mx-auto shadow-2xl float backdrop-blur-sm border-2 border-white/50">
+            <span className="text-4xl">🚛</span>
           </div>
           <div>
-            <CardTitle className="text-3xl font-extrabold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Kawale Cranes</CardTitle>
-            <p className="text-slate-600 text-base font-medium mt-2">Fleet Management System</p>
+            <CardTitle className="text-4xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">Kawale Cranes</CardTitle>
+            <p className="text-slate-600 text-base font-semibold mt-2 tracking-wide">Fleet Management System</p>
           </div>
         </CardHeader>
         <CardContent>
