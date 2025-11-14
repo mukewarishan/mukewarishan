@@ -670,7 +670,7 @@ const Dashboard = () => {
 
   const exportData = async (format) => {
     try {
-      const formatDisplay = format === 'googlesheets' ? 'Google Sheets' : format.toUpperCase();
+      const formatDisplay = format.toUpperCase();
       toast.info(`Generating ${formatDisplay} export...`);
       
       const params = new URLSearchParams();
@@ -679,50 +679,29 @@ const Dashboard = () => {
       if (filters.phone) params.append('phone', filters.phone);
       params.append('limit', '1000'); // Export up to 1000 records
       
-      // Handle Google Sheets differently (returns JSON)
-      if (format === 'googlesheets') {
-        const response = await axios.get(`${API}/export/${format}?${params.toString()}`);
-        
-        if (response.data.spreadsheet_url) {
-          toast.success(`${response.data.message || 'Google Sheets export completed!'}`);
-          
-          // Open the spreadsheet in a new tab
-          window.open(response.data.spreadsheet_url, '_blank');
-          
-          // Show additional info
-          if (response.data.worksheet_name) {
-            setTimeout(() => {
-              toast.info(`Data exported to worksheet: ${response.data.worksheet_name}`);
-            }, 1000);
-          }
-        } else {
-          toast.error('Google Sheets export failed - no spreadsheet URL returned');
-        }
-      } else {
-        // Handle Excel and PDF (binary downloads)
-        const response = await axios.get(`${API}/export/${format}?${params.toString()}`, {
-          responseType: 'blob'
-        });
-        
-        const blob = new Blob([response.data]);
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        const timestamp = new Date().toISOString().slice(0, 10);
-        const filename = `kawale_cranes_orders_${timestamp}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-        link.download = filename;
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        toast.success(`${formatDisplay} export completed successfully!`);
-      }
+      // Handle Excel and PDF (binary downloads)
+      const response = await axios.get(`${API}/export/${format}?${params.toString()}`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `kawale_cranes_orders_${timestamp}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      link.download = filename;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`${formatDisplay} export completed successfully!`);
     } catch (error) {
       console.error('Export error:', error);
-      const formatDisplay = format === 'googlesheets' ? 'Google Sheets' : format.toUpperCase();
+      const formatDisplay = format.toUpperCase();
       
       if (error.response?.data?.detail) {
         toast.error(`Export failed: ${error.response.data.detail}`);
