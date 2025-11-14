@@ -505,30 +505,20 @@ const Dashboard = () => {
   const { hasRole } = useAuth();
   const navigate = useNavigate();
 
+  // Fetch data on mount and when filters or refreshKey changes
   useEffect(() => {
     fetchOrders();
     fetchStats();
-  }, [filters]);
+  }, [filters, refreshKey]);
 
-  // Refresh data when component mounts or becomes visible
+  // Force refresh when page becomes visible (user returns from another tab/window)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchOrders();
-        fetchStats();
-      }
+    const handleFocus = () => {
+      setRefreshKey(prev => prev + 1);
     };
 
-    // Fetch on mount
-    fetchOrders();
-    fetchStats();
-
-    // Listen for page visibility changes
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const fetchOrders = async () => {
