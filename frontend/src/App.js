@@ -18,8 +18,36 @@ import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 import { AlertCircle, Users, Shield, FileText, LogOut, User, Eye, EyeOff, Home, PlusCircle } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Dynamic Backend URL Configuration
+// Automatically detects the environment and sets the correct backend URL
+const getBackendURL = () => {
+  // If environment variable is set, use it (for local development)
+  if (process.env.REACT_APP_BACKEND_URL && process.env.REACT_APP_BACKEND_URL !== '') {
+    return process.env.REACT_APP_BACKEND_URL;
+  }
+  
+  // Auto-detect based on current hostname
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // Development environment (localhost)
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8001';
+  }
+  
+  // Production environment - use current origin
+  // This ensures it always points to the same domain the frontend is served from
+  return `${protocol}//${hostname}`;
+};
+
+const BACKEND_URL = getBackendURL();
 const API = `${BACKEND_URL}/api`;
+
+// Log the configuration for debugging (only in development)
+if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
+  console.log('🔗 Backend URL Configuration:', BACKEND_URL);
+  console.log('🔗 API Endpoint:', API);
+}
 
 // Authentication Context
 const AuthContext = createContext();
