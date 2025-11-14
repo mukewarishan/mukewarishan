@@ -321,7 +321,7 @@ const Header = () => {
             </div>
             <div>
               <h1 className="text-2xl font-extrabold bg-gradient-to-r from-cyan-500 to-indigo-600 bg-clip-text text-transparent">Kawale Cranes</h1>
-              <p className="text-slate-600 text-sm font-medium">Fleet Management System</p>
+              <p className="text-slate-600 text-sm font-medium">Towing Management System</p>
             </div>
           </Link>
           
