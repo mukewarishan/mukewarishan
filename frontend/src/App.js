@@ -501,6 +501,7 @@ const Dashboard = () => {
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [orderFinancials, setOrderFinancials] = useState({}); // Store calculated financials
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh trigger
   const { hasRole } = useAuth();
   const navigate = useNavigate();
 
