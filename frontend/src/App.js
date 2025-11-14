@@ -2965,91 +2965,49 @@ const DriverSalaries = () => {
     }
   };
 
-  const fetchSalaries = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (selectedMonth) params.append('month', selectedMonth);
-      if (selectedYear) params.append('year', selectedYear);
-      
-      const response = await axios.get(`${API}/driver-salaries?${params.toString()}`);
-      setSalaries(response.data);
-    } catch (error) {
-      console.error('Error fetching salaries:', error);
-      toast.error('Failed to fetch driver salaries');
-    } finally {
-      setLoading(false);
-    }
+  const handleEditDefaultSalary = (driver) => {
+    setEditingDriver(driver);
+    setEditDefaultSalary(driver.default_salary.toString());
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSaveDefaultSalary = async () => {
     try {
-      await axios.post(`${API}/driver-salaries`, formData);
-      toast.success('Driver salary added successfully');
-      setShowAddDialog(false);
-      setFormData({
-        driver_name: '',
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-        base_salary: '',
-        deductions: '0',
-        notes: ''
+      await axios.post(`${API}/drivers/default-salary`, {
+        driver_name: editingDriver.name,
+        default_salary: parseFloat(editDefaultSalary)
       });
-      fetchSalaries();
+      toast.success(`Default salary updated for ${editingDriver.name}`);
+      setEditingDriver(null);
+      fetchAllDrivers();
     } catch (error) {
-      console.error('Error adding salary:', error);
-      toast.error(error.response?.data?.detail || 'Failed to add salary');
+      console.error('Error updating default salary:', error);
+      toast.error('Failed to update default salary');
     }
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+  const handleSaveAll = async () => {
     try {
-      await axios.put(`${API}/driver-salaries/${editingSalary.id}`, formData);
-      toast.success('Driver salary updated successfully');
-      setShowEditDialog(false);
-      setEditingSalary(null);
-      fetchSalaries();
+      const driversData = drivers.map(d => ({
+        name: d.name,
+        default_salary: d.default_salary
+      }));
+      
+      await axios.post(`${API}/drivers/bulk-default-salary`, {
+        drivers: driversData
+      });
+      toast.success('All default salaries saved successfully');
+      fetchAllDrivers();
     } catch (error) {
-      console.error('Error updating salary:', error);
-      toast.error(error.response?.data?.detail || 'Failed to update salary');
+      console.error('Error saving salaries:', error);
+      toast.error('Failed to save salaries');
     }
   };
 
-  const handleEdit = (salary) => {
-    setEditingSalary(salary);
-    setFormData({
-      driver_name: salary.driver_name,
-      month: salary.month,
-      year: salary.year,
-      base_salary: salary.base_salary.toString(),
-      deductions: salary.deductions?.toString() || '0',
-      notes: salary.notes || ''
-    });
-    setShowEditDialog(true);
+  const updateDriverSalary = (driverName, newSalary) => {
+    setDrivers(drivers.map(d => 
+      d.name === driverName ? { ...d, default_salary: parseFloat(newSalary) || 15000 } : d
+    ));
   };
-
-  const handleDelete = async (salaryId, driverName) => {
-    if (!window.confirm(`Are you sure you want to delete this salary record for ${driverName}?`)) {
-      return;
-    }
-    try {
-      await axios.delete(`${API}/driver-salaries/${salaryId}`);
-      toast.success('Salary record deleted successfully');
-      fetchSalaries();
-    } catch (error) {
-      console.error('Error deleting salary:', error);
-      toast.error('Failed to delete salary record');
-    }
-  };
-
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
-  const years = Array.from({ length: 11 }, (_, i) => 2020 + i);
 
   return (
     <div className="space-y-6">
