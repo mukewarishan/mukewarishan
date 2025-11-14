@@ -3636,14 +3636,18 @@ const Reports = () => {
                         <thead>
                           <tr className="bg-slate-100">
                             <th className="px-4 py-2 text-left">Vehicle Type</th>
-                            <th className="px-4 py-2 text-right">Revenue</th>
+                            {hasRole(['super_admin', 'admin']) && (
+                              <th className="px-4 py-2 text-right">Revenue</th>
+                            )}
                           </tr>
                         </thead>
                         <tbody>
                           {revenueData.map((item, index) => (
                             <tr key={index} className="border-t">
                               <td className="px-4 py-2">{item.service_type}</td>
-                              <td className="px-4 py-2 text-right">₹{item.revenue?.toLocaleString('en-IN')}</td>
+                              {hasRole(['super_admin', 'admin']) && (
+                                <td className="px-4 py-2 text-right">₹{item.revenue?.toLocaleString('en-IN')}</td>
+                              )}
                             </tr>
                           ))}
                         </tbody>
