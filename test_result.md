@@ -510,7 +510,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Change Password Functionality"
+    - "Google Sheets Removal Verification"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
