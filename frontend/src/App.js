@@ -167,12 +167,21 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <Card className="w-full max-w-md modern-card border-0 shadow-2xl z-10">
         <CardHeader className="text-center space-y-6 pt-8 pb-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 rounded-3xl flex items-center justify-center mx-auto shadow-2xl float backdrop-blur-sm border-2 border-white/50">
-            <span className="text-4xl">🚛</span>
+          {/* Fancy KC Logo */}
+          <div className="relative w-32 h-32 mx-auto">
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-300 via-purple-300 to-blue-300 rounded-3xl opacity-20 blur-2xl animate-pulse"></div>
+            <div className="relative w-32 h-32 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 rounded-3xl flex items-center justify-center shadow-2xl float backdrop-blur-sm border-2 border-white/50 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-shimmer"></div>
+              <div className="relative">
+                <span className="text-5xl font-black bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{fontFamily: 'Inter, sans-serif', letterSpacing: '-0.05em'}}>
+                  KC
+                </span>
+              </div>
+            </div>
           </div>
           <div>
             <CardTitle className="text-4xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">Kawale Cranes</CardTitle>
-            <p className="text-slate-600 text-base font-semibold mt-2 tracking-wide">Fleet Management System</p>
+            <p className="text-slate-600 text-base font-semibold mt-2 tracking-wide">Transport Management System</p>
           </div>
         </CardHeader>
         <CardContent>
