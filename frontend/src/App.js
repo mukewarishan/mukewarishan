@@ -3130,6 +3130,12 @@ const DriverSalaries = () => {
 
 // Reports Component
 const Reports = () => {
+  const { user } = useAuth();
+  const hasRole = (roles) => {
+    if (!user || !user.role) return false;
+    return Array.isArray(roles) ? roles.includes(user.role) : user.role === roles;
+  };
+  
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [expenseData, setExpenseData] = useState([]);
