@@ -2315,6 +2315,15 @@ async def export_custom_report(
         
         filename = f"kawale_custom_report_{group_by}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
         
+        
+        return StreamingResponse(
+            excel_buffer,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting custom report: {str(e)}")
+
 
 
 @api_router.get("/import/history")
