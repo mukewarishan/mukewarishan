@@ -924,6 +924,16 @@ const Dashboard = () => {
                   </Button>
                 </>
               )}
+              {hasRole(['super_admin']) && (
+                <Button
+                  variant="outline"
+                  onClick={deleteAllOrders}
+                  className="flex items-center space-x-2 text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  <span>🗑️</span>
+                  <span>Delete All Data</span>
+                </Button>
+              )}
               <Button 
                 onClick={() => navigate('/new-order')}
                 className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
