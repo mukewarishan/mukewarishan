@@ -600,6 +600,41 @@ const Dashboard = () => {
     }
   };
 
+
+
+  const deleteAllOrders = async () => {
+    if (!hasRole(['super_admin'])) {
+      toast.error('Only Super Admin can delete all data');
+      return;
+    }
+    
+    const firstConfirm = window.confirm(
+      '⚠️ WARNING: This will permanently delete ALL orders from the database!\n\n' +
+      'This action CANNOT be undone!\n\n' +
+      'Are you absolutely sure you want to continue?'
+    );
+    
+    if (!firstConfirm) return;
+    
+    const secondConfirm = window.confirm(
+      '⚠️ FINAL CONFIRMATION\n\n' +
+      'Type YES in your mind to proceed with deleting ALL data.\n\n' +
+      'Click OK to confirm deletion of all orders.'
+    );
+    
+    if (!secondConfirm) return;
+    
+    try {
+      const response = await axios.delete(`${API}/orders/delete-all`);
+      toast.success(response.data.message);
+      fetchOrders();
+      fetchStats();
+    } catch (error) {
+      console.error('Error deleting all orders:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete all orders');
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: '2-digit',
