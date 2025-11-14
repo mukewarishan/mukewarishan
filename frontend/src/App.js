@@ -3210,6 +3210,83 @@ const Reports = () => {
     }
   };
 
+
+  const fetchDailySummary = async () => {
+    try {
+      setLoading(true);
+      const startDate = new Date(selectedYear, selectedMonth - 1, 1).toISOString();
+      const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59).toISOString();
+      
+      const response = await axios.get(`${API}/reports/daily-summary?start_date=${startDate}&end_date=${endDate}`);
+      setDailySummary(response.data.summary);
+      setDailyTotals(response.data.totals);
+    } catch (error) {
+      console.error('Error fetching daily summary:', error);
+      toast.error('Failed to fetch daily summary');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAvailableColumns = async () => {
+    try {
+      const response = await axios.get(`${API}/reports/available-columns`);
+      setAvailableColumns(response.data.columns);
+      // Set default columns
+      const defaultCols = ['date_time', 'customer_name', 'order_type', 'phone'];
+      setSelectedColumns(defaultCols);
+    } catch (error) {
+      console.error('Error fetching columns:', error);
+      toast.error('Failed to fetch available columns');
+    }
+  };
+
+  const fetchCustomColumnsReport = async () => {
+    if (selectedColumns.length === 0) {
+      toast.error('Please select at least one column');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const startDate = new Date(selectedYear, selectedMonth - 1, 1).toISOString();
+      const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59).toISOString();
+      
+      const response = await axios.post(`${API}/reports/custom-columns`, {
+        start_date: startDate,
+        end_date: endDate,
+        columns: selectedColumns,
+        order_type: 'all'
+      });
+      setCustomColumnsData(response.data.data);
+      toast.success(`Report generated with ${response.data.total_records} records`);
+    } catch (error) {
+      console.error('Error fetching custom columns report:', error);
+      toast.error('Failed to generate custom report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleColumn = (columnKey) => {
+    setSelectedColumns(prev => 
+      prev.includes(columnKey) 
+        ? prev.filter(k => k !== columnKey)
+        : [...prev, columnKey]
+    );
+  };
+
+  useEffect(() => {
+    fetchAvailableColumns();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'daily') {
+      fetchDailySummary();
+    }
+  }, [activeTab, selectedMonth, selectedYear]);
+
+
   const exportExpenseReport = async () => {
     try {
       toast.info('Generating expense report...');
