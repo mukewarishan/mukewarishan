@@ -360,11 +360,11 @@ const Header = () => {
               </>
             )}
             
-            <div className="flex items-center space-x-2 text-slate-300">
-              <User size={16} />
-              <span className="text-sm">
+            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+              <User size={18} className="text-violet-600" />
+              <span className="text-sm font-medium text-slate-700">
                 {user?.full_name}
-                <Badge className="ml-2 text-xs" variant={user?.role === 'super_admin' ? 'default' : user?.role === 'admin' ? 'secondary' : 'outline'}>
+                <Badge className="ml-2 text-xs font-semibold" variant={user?.role === 'super_admin' ? 'default' : user?.role === 'admin' ? 'secondary' : 'outline'}>
                   {user?.role?.replace('_', ' ')?.toUpperCase()}
                 </Badge>
               </span>
@@ -373,19 +373,19 @@ const Header = () => {
             <Button 
               variant="ghost" 
               onClick={() => setShowChangePasswordDialog(true)}
-              className="text-slate-300 hover:text-white hover:bg-slate-700"
+              className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 transition-all duration-200"
               title="Change Password"
             >
-              <Shield size={16} />
+              <Shield size={18} />
             </Button>
             
             <Button 
               variant="ghost" 
               onClick={handleLogout}
-              className="text-slate-300 hover:text-white hover:bg-slate-700"
+              className="text-slate-700 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
               title="Logout"
             >
-              <LogOut size={16} />
+              <LogOut size={18} />
             </Button>
           </nav>
         </div>
