@@ -1485,6 +1485,24 @@ const DataImport = () => {
   const [importStatus, setImportStatus] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [importHistory, setImportHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
+  useEffect(() => {
+    fetchImportHistory();
+  }, []);
+
+  const fetchImportHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const response = await axios.get(`${API}/import/history?limit=10`);
+      setImportHistory(response.data);
+    } catch (error) {
+      console.error('Error fetching import history:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
