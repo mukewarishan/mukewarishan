@@ -528,6 +528,21 @@ textarea:focus {
 .input-modern:focus {
   background: rgba(255, 255, 255, 0.8);
   border-color: #ffc4d6;
+
+/* Shimmer Animation for KC Logo */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(200%) translateY(200%) rotate(45deg);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
   box-shadow: 0 0 0 4px rgba(255, 196, 214, 0.15);
   outline: none;
 }
