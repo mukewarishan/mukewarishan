@@ -3124,8 +3124,13 @@ const Reports = () => {
   const [revenueData, setRevenueData] = useState([]);
   const [towingVehicleData, setTowingVehicleData] = useState([]);
   const [customReportData, setCustomReportData] = useState([]);
+  const [dailySummary, setDailySummary] = useState([]);
+  const [dailyTotals, setDailyTotals] = useState(null);
+  const [availableColumns, setAvailableColumns] = useState([]);
+  const [selectedColumns, setSelectedColumns] = useState([]);
+  const [customColumnsData, setCustomColumnsData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('expense');
+  const [activeTab, setActiveTab] = useState('daily');
   
   // Custom report configuration
   const [customConfig, setCustomConfig] = useState({
