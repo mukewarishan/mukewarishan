@@ -3189,11 +3189,131 @@ async def get_available_columns(
 # Data import endpoint
 @api_router.post("/import/excel")
 async def import_excel_data(
+    file: UploadFile = File(...),
     current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN])),
 ):
     """Import orders from Excel file (Admin and Super Admin only)"""
-    # This endpoint will be implemented for file upload functionality
-    return {"message": "Excel import functionality available. Use the frontend upload interface."}
+    try:
+        # Validate file type
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="Only Excel files (.xlsx, .xls) are supported")
+        
+        # Read the Excel file
+        contents = await file.read()
+        wb = openpyxl.load_workbook(BytesIO(contents))
+        ws = wb.active
+        
+        # Get headers from first row
+        headers = [cell.value for cell in ws[1]]
+        
+        imported_count = 0
+        failed_count = 0
+        errors = []
+        
+        # Process each row (skip header)
+        for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            try:
+                # Create a dictionary from row data
+                row_data = dict(zip(headers, row))
+                
+                # Skip empty rows
+                if not any(row_data.values()):
+                    continue
+                
+                # Map Excel columns to database fields
+                order_data = {
+                    "unique_id": str(row_data.get("Order ID") or row_data.get("unique_id") or f"IMP-{uuid.uuid4().hex[:8]}"),
+                    "date_time": datetime.now(timezone.utc).isoformat() if not row_data.get("Date/Time") else str(row_data.get("Date/Time")),
+                    "customer_name": str(row_data.get("Customer Name") or row_data.get("customer_name") or ""),
+                    "phone": str(row_data.get("Phone") or row_data.get("phone") or ""),
+                    "order_type": str(row_data.get("Order Type") or row_data.get("order_type") or "cash").lower(),
+                    "created_by": "system_import"
+                }
+                
+                # Add cash-specific fields
+                if order_data["order_type"] == "cash":
+                    order_data.update({
+                        "cash_trip_from": str(row_data.get("Trip From") or row_data.get("cash_trip_from") or ""),
+                        "cash_trip_to": str(row_data.get("Trip To") or row_data.get("cash_trip_to") or ""),
+                        "cash_driver_name": str(row_data.get("Driver") or row_data.get("cash_driver_name") or ""),
+                        "cash_towing_vehicle": str(row_data.get("Towing Vehicle") or row_data.get("cash_towing_vehicle") or ""),
+                        "cash_service_type": str(row_data.get("Service Type") or row_data.get("cash_service_type") or ""),
+                        "cash_vehicle_name": str(row_data.get("Vehicle Name") or row_data.get("cash_vehicle_name") or ""),
+                        "cash_vehicle_number": str(row_data.get("Vehicle Number") or row_data.get("cash_vehicle_number") or ""),
+                        "amount_received": float(row_data.get("Amount Received") or row_data.get("amount_received") or 0),
+                        "advance_amount": float(row_data.get("Advance Amount") or row_data.get("advance_amount") or 0),
+                        "cash_kms_travelled": float(row_data.get("KMs Travelled") or row_data.get("cash_kms_travelled") or 0),
+                        "cash_toll": float(row_data.get("Toll") or row_data.get("cash_toll") or 0),
+                        "cash_diesel": str(row_data.get("Diesel") or row_data.get("cash_diesel") or ""),
+                        "cash_diesel_refill_location": str(row_data.get("Diesel Location") or row_data.get("cash_diesel_refill_location") or ""),
+                    })
+                else:  # company order
+                    order_data.update({
+                        "company_name": str(row_data.get("Company") or row_data.get("company_name") or ""),
+                        "case_id_file_number": str(row_data.get("Case ID") or row_data.get("case_id_file_number") or ""),
+                        "company_trip_from": str(row_data.get("Trip From") or row_data.get("company_trip_from") or ""),
+                        "company_trip_to": str(row_data.get("Trip To") or row_data.get("company_trip_to") or ""),
+                        "company_driver_name": str(row_data.get("Driver") or row_data.get("company_driver_name") or ""),
+                        "company_towing_vehicle": str(row_data.get("Towing Vehicle") or row_data.get("company_towing_vehicle") or ""),
+                        "company_service_type": str(row_data.get("Service Type") or row_data.get("company_service_type") or ""),
+                        "company_vehicle_name": str(row_data.get("Vehicle Name") or row_data.get("company_vehicle_name") or ""),
+                        "company_vehicle_number": str(row_data.get("Vehicle Number") or row_data.get("company_vehicle_number") or ""),
+                        "company_kms_travelled": float(row_data.get("KMs Travelled") or row_data.get("company_kms_travelled") or 0),
+                        "company_toll": float(row_data.get("Toll") or row_data.get("company_toll") or 0),
+                        "company_diesel": str(row_data.get("Diesel") or row_data.get("company_diesel") or ""),
+                        "name_of_firm": str(row_data.get("Firm") or row_data.get("name_of_firm") or "Kawale Cranes"),
+                    })
+                
+                # Create CraneOrder object
+                crane_order = CraneOrder(**order_data)
+                order_dict = prepare_for_mongo(crane_order.model_dump())
+                
+                # Insert into database
+                await db.crane_orders.insert_one(order_dict)
+                imported_count += 1
+                
+            except Exception as row_error:
+                failed_count += 1
+                errors.append(f"Row {row_idx}: {str(row_error)}")
+                continue
+        
+        # Save import history
+        import_history = {
+            "id": str(uuid.uuid4()),
+            "filename": file.filename,
+            "imported_at": datetime.now(timezone.utc).isoformat(),
+            "imported_by": current_user["email"],
+            "total_records": imported_count + failed_count,
+            "successful": imported_count,
+            "failed": failed_count,
+            "status": "completed" if failed_count == 0 else "completed_with_errors"
+        }
+        await db.import_history.insert_one(import_history)
+        
+        # Log audit
+        await log_audit(
+            user_id=current_user["id"],
+            user_email=current_user["email"],
+            action="IMPORT",
+            resource_type="ORDER",
+            new_data={
+                "filename": file.filename,
+                "imported": imported_count,
+                "failed": failed_count
+            }
+        )
+        
+        return {
+            "message": f"Import completed! {imported_count} records imported successfully.",
+            "imported": imported_count,
+            "failed": failed_count,
+            "errors": errors[:10] if errors else []  # Return first 10 errors
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error importing Excel file: {str(e)}")
 
 # Service rates calculation functions
 async def initialize_service_rates():
