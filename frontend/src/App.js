@@ -180,8 +180,8 @@ const LoginPage = () => {
             </div>
           </div>
           <div>
-            <CardTitle className="text-4xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">Kawale Cranes</CardTitle>
-            <p className="text-slate-600 text-base font-semibold mt-2 tracking-wide">Transport Management System</p>
+            <CardTitle className="text-4xl font-extrabold bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 bg-clip-text text-transparent">Kawale Cranes</CardTitle>
+            <p className="text-slate-600 text-base font-semibold mt-2 tracking-wide">Towing Management System</p>
           </div>
         </CardHeader>
         <CardContent>
