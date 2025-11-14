@@ -509,6 +509,27 @@ const Dashboard = () => {
     fetchStats();
   }, [filters]);
 
+  // Refresh data when component mounts or becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchOrders();
+        fetchStats();
+      }
+    };
+
+    // Fetch on mount
+    fetchOrders();
+    fetchStats();
+
+    // Listen for page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
