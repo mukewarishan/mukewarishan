@@ -3014,92 +3014,99 @@ const DriverSalaries = () => {
       <div className="modern-card p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">💰 Driver Salaries</h2>
-            <p className="text-slate-600 mt-1">Manage monthly driver salaries and incentives</p>
+            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">💰 Driver Default Salaries</h2>
+            <p className="text-slate-600 mt-1">Set default monthly salary for all drivers (applies to all months)</p>
           </div>
-          <Button onClick={() => setShowAddDialog(true)} className="bg-gradient-to-r from-emerald-200 to-teal-200 text-slate-700 hover:from-emerald-300 hover:to-teal-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40">
-            <span className="mr-2">➕</span>
-            Add Salary Record
+          <Button onClick={handleSaveAll} className="bg-gradient-to-r from-emerald-200 to-teal-200 text-slate-700 hover:from-emerald-300 hover:to-teal-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40">
+            <span className="mr-2">💾</span>
+            Save All Changes
           </Button>
         </div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <Label>Month</Label>
-            <Select value={selectedMonth.toString()} onValueChange={(val) => setSelectedMonth(parseInt(val))}>
-              <SelectTrigger className="input-modern">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month, idx) => (
-                  <SelectItem key={idx} value={(idx + 1).toString()}>{month}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Year</Label>
-            <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
-              <SelectTrigger className="input-modern">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Salaries Table */}
+        {/* Drivers Table */}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto"></div>
-            <p className="text-slate-600 mt-4">Loading salaries...</p>
+            <p className="text-slate-600 mt-4">Loading drivers...</p>
           </div>
-        ) : salaries.length === 0 ? (
+        ) : drivers.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-5xl mb-4">📭</div>
-            <p className="text-slate-600">No salary records found for {months[selectedMonth - 1]} {selectedYear}</p>
+            <p className="text-slate-600">No drivers found. Add some orders first!</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-emerald-50/50 to-teal-50/50 backdrop-blur-sm">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Driver Name</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Base Salary</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Incentives</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Deductions</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Net Salary</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {salaries.map((salary) => {
-                  const netSalary = salary.base_salary + salary.total_incentives - (salary.deductions || 0);
-                  return (
-                    <tr key={salary.id} className="border-t border-white/30 hover:bg-white/30 transition-colors">
-                      <td className="px-4 py-3 font-medium text-slate-700">{salary.driver_name}</td>
-                      <td className="px-4 py-3 text-right">₹{salary.base_salary.toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-3 text-right text-green-600 font-semibold">+₹{salary.total_incentives.toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-3 text-right text-red-600">-₹{(salary.deductions || 0).toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-3 text-right font-bold text-emerald-600">₹{netSalary.toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-3 text-center space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(salary)} className="backdrop-blur-sm">
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(salary.id, salary.driver_name)}>
-                          Delete
-                        </Button>
+          <div className="space-y-4">
+            <div className="frosted-glass p-4 rounded-2xl">
+              <p className="text-sm text-slate-600">
+                <strong>Note:</strong> Default salary of ₹15,000 is automatically set for all drivers. You can edit individual salaries below. Changes apply to all months unless you create a specific monthly override.
+              </p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gradient-to-r from-emerald-50/50 to-teal-50/50 backdrop-blur-sm">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Driver Name</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Default Monthly Salary (₹)</th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drivers.map((driver, index) => (
+                    <tr key={index} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                      <td className="px-4 py-4 font-medium text-slate-700">{driver.name}</td>
+                      <td className="px-4 py-4 text-right">
+                        {editingDriver?.name === driver.name ? (
+                          <div className="flex items-center justify-end space-x-2">
+                            <Input
+                              type="number"
+                              value={editDefaultSalary}
+                              onChange={(e) => setEditDefaultSalary(e.target.value)}
+                              className="w-32 input-modern text-right"
+                              min="0"
+                              step="100"
+                            />
+                            <Button size="sm" onClick={handleSaveDefaultSalary} className="bg-green-500 text-white hover:bg-green-600">
+                              ✓
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingDriver(null)}>
+                              ✕
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-lg font-semibold text-emerald-600">
+                            ₹{driver.default_salary.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {editingDriver?.name === driver.name ? null : (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleEditDefaultSalary(driver)}
+                            className="backdrop-blur-sm"
+                          >
+                            Edit
+                          </Button>
+                        )}
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="frosted-glass p-4 rounded-2xl mt-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-slate-600">
+                  <strong>Total Drivers:</strong> {drivers.length}
+                </div>
+                <div className="text-sm text-slate-600">
+                  <strong>Total Monthly Salary Budget:</strong> ₹{drivers.reduce((sum, d) => sum + d.default_salary, 0).toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
