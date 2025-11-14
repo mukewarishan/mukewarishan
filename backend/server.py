@@ -2629,7 +2629,7 @@ async def get_import_history(
 ):
     """Get import history (Admin and Super Admin only)"""
     try:
-        imports = await db.import_history.find({}).sort("imported_at", -1).limit(limit).to_list(length=None)
+        imports = await db.import_history.find({}, {"_id": 0}).sort("imported_at", -1).limit(limit).to_list(length=None)
         
         # Convert datetime fields to ISO format
         for import_record in imports:
