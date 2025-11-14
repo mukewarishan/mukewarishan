@@ -102,13 +102,13 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the new Change Password functionality for user admin@kawalecranes.com in Kawale Cranes application"
+user_problem_statement: "Remove Google Sheets export functionality from Kawale Cranes application - eliminate all related code, dependencies, UI elements, and environment variables"
 
 backend:
   - task: "Google Sheets API Integration"
-    implemented: true
-    working: false
-    file: "server.py"
+    implemented: false
+    working: "removed"
+    file: "server.py, requirements.txt, .env"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
@@ -119,6 +119,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Tested Google Sheets export endpoint. Returns HTTP 500 as expected due to missing environment variables (GOOGLE_SERVICE_ACCOUNT_KEY_PATH and GOOGLE_SHEETS_SPREADSHEET_ID). Implementation is correct but requires configuration to work."
+      - working: "removed"
+        agent: "main"
+        comment: "✅ GOOGLE SHEETS REMOVED FROM BACKEND: Removed all Google Sheets related code and dependencies: 1) Removed imports (gspread, google.oauth2.service_account.Credentials) from server.py, 2) Removed entire /export/googlesheets endpoint (180 lines), 3) Removed Google Sheets environment variables from .env file, 4) Removed dependencies from requirements.txt (google-auth, google-auth-oauthlib, gspread). Backend is now clean of all Google Sheets functionality."
 
   - task: "SK Rates Calculation System"
     implemented: true
