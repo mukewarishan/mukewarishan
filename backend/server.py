@@ -301,6 +301,23 @@ class CalculatedOrderFinancials(BaseModel):
     calculation_details: Optional[str] = None  # Details of how calculation was done
 
 # Helper functions for MongoDB serialization
+
+
+class ImportHistory(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    imported_by: str
+    imported_by_email: str
+    imported_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    total_records: int
+    success_count: int
+    error_count: int
+    cash_orders: int = 0
+    company_orders: int = 0
+    sample_data: List[Dict[str, Any]] = []  # First 5 records as preview
+
 def prepare_for_mongo(data):
     """Convert datetime objects to ISO strings for MongoDB storage"""
     doc = dict(data)
