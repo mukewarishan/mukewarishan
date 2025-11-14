@@ -343,11 +343,11 @@ const Header = () => {
               </>
             )}
             
-            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
-              <User size={18} className="text-violet-600" />
+            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-pink-100/60 to-blue-100/60 rounded-2xl border border-white/40 backdrop-blur-sm shadow-sm">
+              <User size={18} className="text-pink-500" />
               <span className="text-sm font-medium text-slate-700">
                 {user?.full_name}
-                <Badge className="ml-2 text-xs font-semibold" variant={user?.role === 'super_admin' ? 'default' : user?.role === 'admin' ? 'secondary' : 'outline'}>
+                <Badge className="ml-2 text-xs font-semibold bg-white/60 backdrop-blur-sm border border-white/40" variant={user?.role === 'super_admin' ? 'default' : user?.role === 'admin' ? 'secondary' : 'outline'}>
                   {user?.role?.replace('_', ' ')?.toUpperCase()}
                 </Badge>
               </span>
@@ -356,7 +356,7 @@ const Header = () => {
             <Button 
               variant="ghost" 
               onClick={() => setShowChangePasswordDialog(true)}
-              className="text-slate-700 hover:text-violet-600 hover:bg-violet-50 transition-all duration-200"
+              className="text-slate-700 hover:text-blue-500 hover:bg-blue-50/50 transition-all duration-200 backdrop-blur-sm"
               title="Change Password"
             >
               <Shield size={18} />
@@ -365,7 +365,7 @@ const Header = () => {
             <Button 
               variant="ghost" 
               onClick={handleLogout}
-              className="text-slate-700 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+              className="text-slate-700 hover:text-rose-500 hover:bg-rose-50/50 transition-all duration-200 backdrop-blur-sm"
               title="Logout"
             >
               <LogOut size={18} />
