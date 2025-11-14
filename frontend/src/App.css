@@ -409,6 +409,105 @@ textarea:focus {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
+
+
+/* Pastel Theme Colors */
+:root {
+  --pastel-pink: #ffc4d6;
+  --pastel-blue: #b8d4f1;
+  --pastel-purple: #dbc4f0;
+  --pastel-peach: #ffd4c4;
+  --pastel-mint: #c4f0d4;
+  --pastel-lavender: #e5dff5;
+}
+
+/* Mobile Navigation Glassmorphism */
+@media (max-width: 768px) {
+  .mobile-nav {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(25px) saturate(150%);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Mobile Menu Button */
+  .mobile-menu-btn {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    padding: 8px;
+  }
+}
+
+/* Pastel Badge Variants */
+.badge-pastel-pink {
+  background: linear-gradient(135deg, rgba(255, 196, 214, 0.4), rgba(255, 196, 214, 0.2));
+  color: #db2777;
+  border: 1px solid rgba(255, 196, 214, 0.5);
+}
+
+.badge-pastel-blue {
+  background: linear-gradient(135deg, rgba(184, 212, 241, 0.4), rgba(184, 212, 241, 0.2));
+  color: #2563eb;
+  border: 1px solid rgba(184, 212, 241, 0.5);
+}
+
+.badge-pastel-purple {
+  background: linear-gradient(135deg, rgba(219, 196, 240, 0.4), rgba(219, 196, 240, 0.2));
+  color: #9333ea;
+  border: 1px solid rgba(219, 196, 240, 0.5);
+}
+
+/* Animated Background for Mobile */
+@media (max-width: 768px) {
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(circle, rgba(255, 192, 203, 0.15) 0%, transparent 70%),
+      radial-gradient(circle, rgba(173, 216, 230, 0.15) 0%, transparent 70%);
+    animation: rotate-background 30s linear infinite;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  @keyframes rotate-background {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/* Frosted Glass Effect for Cards */
+.frosted-glass {
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 20px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+/* Soft Shadow */
+.soft-shadow {
+  box-shadow: 0 8px 24px rgba(255, 192, 203, 0.15);
+}
+
+/* Soft Shadow Hover */
+.soft-shadow:hover {
+  box-shadow: 0 12px 32px rgba(255, 192, 203, 0.2);
+}
+
 .stat-card-gradient:hover {
   background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.35) 100%);
   transform: translateY(-4px) scale(1.02);
