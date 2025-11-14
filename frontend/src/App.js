@@ -4260,6 +4260,17 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/driver-salaries"
+              element={
+                <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                  <Header />
+                  <DriverSalaries />
+                </ProtectedRoute>
+              }
+            />
+
           </Routes>
         </BrowserRouter>
         <Toaster position="top-right" richColors />
