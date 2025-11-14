@@ -127,12 +127,15 @@ class CraneOrderAPITester:
             "phone": "9876543211",
             "order_type": "company",
             "name_of_firm": "ABC Transport Ltd",
+            "company_name": "Europ Assistance",  # Required field
             "case_id_file_number": "CASE001",
             "company_trip_from": "Delhi",
             "company_trip_to": "Gurgaon",
             "company_vehicle_name": "Mahindra Bolero",
             "company_vehicle_number": "DL01CD5678",
-            "company_service_type": "4-Wheeler Crane",
+            "company_service_type": "4-Wheeler Crane",  # Required field
+            "company_driver_details": "Rahul Kumar",  # Required field (Driver)
+            "company_towing_vehicle": "Tata ACE",  # Required field (Towing Vehicle)
             "company_kms_travelled": 50.0,
             "company_toll": 100.0,
             "company_diesel": 400.0,
