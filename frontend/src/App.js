@@ -2938,6 +2938,363 @@ const EditOrderPage = () => {
   return <OrderForm orderId={orderId} />;
 };
 
+
+
+// Driver Salaries Component
+const DriverSalaries = () => {
+  const [salaries, setSalaries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingSalary, setEditingSalary] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [formData, setFormData] = useState({
+    driver_name: '',
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+    base_salary: '',
+    deductions: '0',
+    notes: ''
+  });
+
+  useEffect(() => {
+    fetchSalaries();
+  }, [selectedMonth, selectedYear]);
+
+  const fetchSalaries = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (selectedMonth) params.append('month', selectedMonth);
+      if (selectedYear) params.append('year', selectedYear);
+      
+      const response = await axios.get(`${API}/driver-salaries?${params.toString()}`);
+      setSalaries(response.data);
+    } catch (error) {
+      console.error('Error fetching salaries:', error);
+      toast.error('Failed to fetch driver salaries');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/driver-salaries`, formData);
+      toast.success('Driver salary added successfully');
+      setShowAddDialog(false);
+      setFormData({
+        driver_name: '',
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        base_salary: '',
+        deductions: '0',
+        notes: ''
+      });
+      fetchSalaries();
+    } catch (error) {
+      console.error('Error adding salary:', error);
+      toast.error(error.response?.data?.detail || 'Failed to add salary');
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${API}/driver-salaries/${editingSalary.id}`, formData);
+      toast.success('Driver salary updated successfully');
+      setShowEditDialog(false);
+      setEditingSalary(null);
+      fetchSalaries();
+    } catch (error) {
+      console.error('Error updating salary:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update salary');
+    }
+  };
+
+  const handleEdit = (salary) => {
+    setEditingSalary(salary);
+    setFormData({
+      driver_name: salary.driver_name,
+      month: salary.month,
+      year: salary.year,
+      base_salary: salary.base_salary.toString(),
+      deductions: salary.deductions?.toString() || '0',
+      notes: salary.notes || ''
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleDelete = async (salaryId, driverName) => {
+    if (!window.confirm(`Are you sure you want to delete this salary record for ${driverName}?`)) {
+      return;
+    }
+    try {
+      await axios.delete(`${API}/driver-salaries/${salaryId}`);
+      toast.success('Salary record deleted successfully');
+      fetchSalaries();
+    } catch (error) {
+      console.error('Error deleting salary:', error);
+      toast.error('Failed to delete salary record');
+    }
+  };
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const years = Array.from({ length: 11 }, (_, i) => 2020 + i);
+
+  return (
+    <div className="space-y-6">
+      <div className="modern-card p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">💰 Driver Salaries</h2>
+            <p className="text-slate-600 mt-1">Manage monthly driver salaries and incentives</p>
+          </div>
+          <Button onClick={() => setShowAddDialog(true)} className="bg-gradient-to-r from-emerald-200 to-teal-200 text-slate-700 hover:from-emerald-300 hover:to-teal-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40">
+            <span className="mr-2">➕</span>
+            Add Salary Record
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <Label>Month</Label>
+            <Select value={selectedMonth.toString()} onValueChange={(val) => setSelectedMonth(parseInt(val))}>
+              <SelectTrigger className="input-modern">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month, idx) => (
+                  <SelectItem key={idx} value={(idx + 1).toString()}>{month}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Year</Label>
+            <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
+              <SelectTrigger className="input-modern">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Salaries Table */}
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto"></div>
+            <p className="text-slate-600 mt-4">Loading salaries...</p>
+          </div>
+        ) : salaries.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-5xl mb-4">📭</div>
+            <p className="text-slate-600">No salary records found for {months[selectedMonth - 1]} {selectedYear}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gradient-to-r from-emerald-50/50 to-teal-50/50 backdrop-blur-sm">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Driver Name</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Base Salary</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Incentives</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Deductions</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Net Salary</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salaries.map((salary) => {
+                  const netSalary = salary.base_salary + salary.total_incentives - (salary.deductions || 0);
+                  return (
+                    <tr key={salary.id} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                      <td className="px-4 py-3 font-medium text-slate-700">{salary.driver_name}</td>
+                      <td className="px-4 py-3 text-right">₹{salary.base_salary.toLocaleString('en-IN')}</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">+₹{salary.total_incentives.toLocaleString('en-IN')}</td>
+                      <td className="px-4 py-3 text-right text-red-600">-₹{(salary.deductions || 0).toLocaleString('en-IN')}</td>
+                      <td className="px-4 py-3 text-right font-bold text-emerald-600">₹{netSalary.toLocaleString('en-IN')}</td>
+                      <td className="px-4 py-3 text-center space-x-2">
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(salary)} className="backdrop-blur-sm">
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDelete(salary.id, salary.driver_name)}>
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Add Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Driver Salary</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>Driver Name *</Label>
+              <Input
+                value={formData.driver_name}
+                onChange={(e) => setFormData({ ...formData, driver_name: e.target.value })}
+                placeholder="Enter driver name"
+                required
+                className="input-modern"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Month *</Label>
+                <Select value={formData.month.toString()} onValueChange={(val) => setFormData({ ...formData, month: parseInt(val) })}>
+                  <SelectTrigger className="input-modern">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((month, idx) => (
+                      <SelectItem key={idx} value={(idx + 1).toString()}>{month}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Year *</Label>
+                <Select value={formData.year.toString()} onValueChange={(val) => setFormData({ ...formData, year: parseInt(val) })}>
+                  <SelectTrigger className="input-modern">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Base Salary (₹) *</Label>
+              <Input
+                type="number"
+                value={formData.base_salary}
+                onChange={(e) => setFormData({ ...formData, base_salary: e.target.value })}
+                placeholder="Enter base salary"
+                required
+                min="0"
+                step="0.01"
+                className="input-modern"
+              />
+              <p className="text-xs text-slate-500 mt-1">Incentives will be calculated automatically from orders</p>
+            </div>
+            <div>
+              <Label>Deductions (₹)</Label>
+              <Input
+                type="number"
+                value={formData.deductions}
+                onChange={(e) => setFormData({ ...formData, deductions: e.target.value })}
+                placeholder="Enter deductions"
+                min="0"
+                step="0.01"
+                className="input-modern"
+              />
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Input
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Optional notes"
+                className="input-modern"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
+              <Button type="submit" className="bg-gradient-to-r from-emerald-200 to-teal-200 text-slate-700">Add Salary</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Driver Salary</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div>
+              <Label>Driver Name</Label>
+              <Input value={formData.driver_name} disabled className="input-modern bg-slate-100" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Month</Label>
+                <Input value={months[formData.month - 1]} disabled className="input-modern bg-slate-100" />
+              </div>
+              <div>
+                <Label>Year</Label>
+                <Input value={formData.year} disabled className="input-modern bg-slate-100" />
+              </div>
+            </div>
+            <div>
+              <Label>Base Salary (₹) *</Label>
+              <Input
+                type="number"
+                value={formData.base_salary}
+                onChange={(e) => setFormData({ ...formData, base_salary: e.target.value })}
+                required
+                min="0"
+                step="0.01"
+                className="input-modern"
+              />
+            </div>
+            <div>
+              <Label>Deductions (₹)</Label>
+              <Input
+                type="number"
+                value={formData.deductions}
+                onChange={(e) => setFormData({ ...formData, deductions: e.target.value })}
+                min="0"
+                step="0.01"
+                className="input-modern"
+              />
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Input
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                className="input-modern"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+              <Button type="submit" className="bg-gradient-to-r from-emerald-200 to-teal-200 text-slate-700">Update Salary</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+
 // Reports Component
 const Reports = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
