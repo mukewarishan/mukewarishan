@@ -2244,7 +2244,8 @@ const OrderForm = ({ orderId = null }) => {
         toast.success('Order created successfully!');
       }
       
-      navigate('/');
+      // Navigate with state to trigger refresh
+      navigate('/', { state: { refresh: true } });
     } catch (error) {
       console.error('Error saving order:', error);
       if (error.response?.status === 403) {
