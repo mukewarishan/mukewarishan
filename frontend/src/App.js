@@ -3371,6 +3371,16 @@ const Reports = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('daily');
   
+  // Order list modal state
+  const [ordersModal, setOrdersModal] = useState({
+    isOpen: false,
+    orders: [],
+    loading: false,
+    date: '',
+    orderType: 'all',
+    title: ''
+  });
+  
   // Custom report configuration
   const [customConfig, setCustomConfig] = useState({
     start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
