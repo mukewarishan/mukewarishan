@@ -541,6 +541,162 @@ textarea:focus {
 
 .animate-shimmer {
   animation: shimmer 3s ease-in-out infinite;
+
+
+/* ================================================
+   RESPONSIVE DESIGN - MOBILE FIRST
+   ================================================ */
+
+/* Mobile Responsive Tables */
+@media (max-width: 768px) {
+  /* Make tables scrollable on mobile */
+  .overflow-x-auto {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Reduce table font size on mobile */
+  table {
+    font-size: 0.875rem;
+  }
+  
+  table th,
+  table td {
+    padding: 0.5rem 0.75rem !important;
+    white-space: nowrap;
+  }
+  
+  /* Card padding adjustments */
+  .modern-card,
+  .glass-card,
+  .frosted-glass {
+    padding: 1rem !important;
+  }
+  
+  /* Button sizing for mobile */
+  button {
+    font-size: 0.875rem;
+  }
+  
+  /* Form inputs */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+  
+  /* Hide non-essential columns on mobile */
+  .mobile-hide {
+    display: none;
+  }
+  
+  /* Stack buttons vertically on small screens */
+  .button-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .button-group button {
+    width: 100%;
+  }
+}
+
+/* Tablet Responsive */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .max-w-7xl {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+  
+  /* Adjust grid columns for tablets */
+  .grid {
+    gap: 1.5rem;
+  }
+}
+
+/* Touch-friendly targets */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase tap target size for touch devices */
+  button,
+  a,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Remove hover states on touch devices */
+  *:hover {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Container responsive padding */
+@media (max-width: 640px) {
+  .container,
+  .max-w-7xl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Smaller headings on mobile */
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  h3 {
+    font-size: 1.125rem;
+  }
+  
+  /* Dashboard stats cards */
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 896px) and (orientation: landscape) {
+  .header-glass {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .mobile-menu-open {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print,
+  header,
+  nav,
+  button {
+    display: none !important;
+  }
+  
+  .print-full-width {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  
+  table {
+    page-break-inside: avoid;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    font-weight: 400;
+  }
+}
+
 }
 
   box-shadow: 0 0 0 4px rgba(255, 196, 214, 0.15);
