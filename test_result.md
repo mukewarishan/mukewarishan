@@ -107,15 +107,18 @@ user_problem_statement: "Fix critical Excel import bug: Date-Time values from Co
 backend:
   - task: "Excel Import Date-Time Fix"
     implemented: true
-    working: "NA"
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "IMPLEMENTED FIX: Added excel_serial_to_datetime() helper function to convert Excel serial date numbers (e.g., 45923.762870370374) to Python datetime objects. Updated date parsing logic in /api/import/excel endpoint (lines 3313-3348) to detect and properly handle three date formats: 1) datetime objects from Excel (already working), 2) Excel serial numbers (int/float) - NEW FIX, 3) ISO string formats (already working). The helper function converts Excel serial numbers using Excel's epoch (December 30, 1899) accounting for Excel's leap year quirk. Now when Column D contains numeric serial dates, they are properly converted to datetime objects instead of falling back to datetime.now(). Need comprehensive testing with user's uploaded file (15-11.xlsx) to verify: 1) Imported records use date from Column D, not current date, 2) Date format DD/MMM/YYYY HH:MM:SS is preserved correctly, 3) All records import successfully, 4) No regression on existing datetime/string format imports."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL BUG DETECTED: Excel import date-time fix is NOT working consistently. Comprehensive testing with user's file (15-11.xlsx) reveals: ✅ PARTIAL SUCCESS: 134 orders have correct September 2025 dates from Excel file (fix working for some records), ❌ BUG PERSISTS: 433 orders have current date (November 15, 2025) instead of Excel dates (fix failing for most records), 🔍 EVIDENCE: Same customers (Sachi phone 9545617572, Kartik phone 7350009241) appear with BOTH correct Excel dates (2025-09-23) AND incorrect current dates (2025-11-15), indicating inconsistent behavior. 📊 IMPORT RESULTS: Successfully imported 412 records (total orders: 440→852), but most used current date instead of Column D values. 🔍 ROOT CAUSE: The fix appears to work sometimes but fails other times, defaulting to datetime.now(). This suggests the date parsing logic has a conditional path that's not handling all cases correctly. URGENT ACTION REQUIRED: Debug the date parsing logic in excel import endpoint to identify why it's inconsistent."
 
   - task: "Google Sheets API Integration"
     implemented: false
