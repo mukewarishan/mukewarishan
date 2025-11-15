@@ -968,41 +968,6 @@ async def update_order(
             raise e
         raise HTTPException(status_code=500, detail=f"Error updating order: {str(e)}")
 
-@api_router.delete("/orders/{order_id}")
-async def delete_order(
-    order_id: str,
-    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
-):
-    """Delete a specific crane order (Admin and Super Admin only)"""
-    try:
-        # Get order for audit log
-        existing_order = await db.crane_orders.find_one({"id": order_id}, {"_id": 0})
-        if not existing_order:
-            raise HTTPException(status_code=404, detail="Order not found")
-        
-        result = await db.crane_orders.delete_one({"id": order_id})
-        
-        if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Order not found")
-        
-        # Log audit
-        await log_audit(
-            user_id=current_user["id"],
-            user_email=current_user["email"],
-            action="DELETE",
-            resource_type="ORDER",
-            resource_id=order_id,
-            old_data=existing_order
-        )
-        
-        return {"message": "Order deleted successfully"}
-    
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
-        raise HTTPException(status_code=500, detail=f"Error deleting order: {str(e)}")
-
-
 @api_router.delete("/orders/delete-all")
 async def delete_all_orders(
     current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN]))
