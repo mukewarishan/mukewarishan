@@ -4334,14 +4334,17 @@ const Reports = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                      👨‍✈️ Driver Performance & Salary Report
+                      👨‍✈️ Driver Performance & Salary Report - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
                     </h3>
-                    <Button 
-                      onClick={fetchDriverReport} 
-                      className="bg-gradient-to-r from-cyan-200 to-blue-200 text-slate-700 hover:from-cyan-300 hover:to-blue-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
-                    >
-                      Generate Report
-                    </Button>
+                    {hasRole(['super_admin', 'admin']) && (
+                      <Button 
+                        onClick={exportDriverReport} 
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <span className="mr-2">📥</span>
+                        Export Excel
+                      </Button>
+                    )}
                   </div>
 
                   {loading ? (
