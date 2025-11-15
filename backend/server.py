@@ -842,6 +842,7 @@ async def get_orders(
     order_type: Optional[str] = Query(None, description="Filter by order type (cash/company)"),
     customer_name: Optional[str] = Query(None, description="Filter by customer name"),
     phone: Optional[str] = Query(None, description="Filter by phone number"),
+    date: Optional[str] = Query(None, description="Filter by specific date (YYYY-MM-DD format)"),
     limit: int = Query(100, ge=1, le=1000, description="Number of orders to return"),
     skip: int = Query(0, ge=0, description="Number of orders to skip")
 ):
@@ -855,10 +856,13 @@ async def get_orders(
         query["customer_name"] = {"$regex": customer_name, "$options": "i"}
     if phone:
         query["phone"] = {"$regex": phone, "$options": "i"}
+    if date:
+        # Filter by date (match orders where date_time starts with the given date)
+        query["date_time"] = {"$regex": f"^{date}"}
     
     try:
         # Exclude MongoDB's _id field from results
-        orders = await db.crane_orders.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+        orders = await db.crane_orders.find(query, {"_id": 0}).sort("date_time", -1).skip(skip).limit(limit).to_list(limit)
         
         # Parse datetime fields from MongoDB
         parsed_orders = [parse_from_mongo(order) for order in orders]
