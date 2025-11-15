@@ -3315,6 +3315,10 @@ async def import_excel_data(
                         "name_of_firm": safe_str(get_value(["Firm", "name_of_firm", "Firm Name"], "Kawale Cranes")),
                     })
                 
+                # Log first few records for debugging
+                if imported_count < 3:
+                    logging.info(f"Sample import row {row_idx}: order_type={order_data['order_type']}, amount={order_data.get('amount_received', 0)}")
+                
                 # Insert directly to database without Pydantic validation
                 # This allows more flexible import of data
                 await db.crane_orders.insert_one(order_data)
