@@ -27,6 +27,43 @@ def clean_string(value):
         return None
     return value_str
 
+def ensure_super_admin_exists(db):
+    """Ensure super admin user exists in the database"""
+    try:
+        import bcrypt
+        users_collection = db['users']
+        
+        # Check if super admin exists
+        super_admin = users_collection.find_one({"email": "ad@kc.com"})
+        
+        if not super_admin:
+            # Create super admin user
+            hashed_password = bcrypt.hashpw("jaishriram".encode('utf-8'), bcrypt.gensalt())
+            
+            user = {
+                "id": str(uuid.uuid4()),
+                "email": "ad@kc.com",
+                "full_name": "Super Administrator",
+                "hashed_password": hashed_password.decode('utf-8'),
+                "role": "super_admin",
+                "is_active": True,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            users_collection.insert_one(user)
+            print("[SEED] ✅ Created super admin user: ad@kc.com / jaishriram")
+        else:
+            # Update password to ensure it's correct
+            hashed_password = bcrypt.hashpw("jaishriram".encode('utf-8'), bcrypt.gensalt())
+            users_collection.update_one(
+                {"email": "ad@kc.com"},
+                {"$set": {"hashed_password": hashed_password.decode('utf-8')}}
+            )
+            print("[SEED] ✅ Super admin user exists, password updated: ad@kc.com / jaishriram")
+            
+    except Exception as e:
+        print(f"[SEED] Error creating super admin: {str(e)}")
+
 def seed_database_if_empty():
     """Seed database with Excel data if it's empty or has very few records"""
     try:
@@ -36,6 +73,9 @@ def seed_database_if_empty():
         client = MongoClient(MONGO_URL)
         db = client[DB_NAME]
         orders_collection = db['crane_orders']
+        
+        # Always ensure super admin exists
+        ensure_super_admin_exists(db)
         
         # Check if database already has data
         existing_count = orders_collection.count_documents({})
