@@ -4447,14 +4447,20 @@ const Reports = () => {
                             </td>
                             <td className="border border-slate-300 px-3 py-2 text-sm">
                               {order.order_type === 'cash' 
-                                ? `${order.cash_trip_from || 'N/A'} → ${order.cash_trip_to || 'N/A'}`
-                                : `${order.company_trip_from || 'N/A'} → ${order.company_trip_to || 'N/A'}`
+                                ? (order.cash_trip_from && order.cash_trip_to 
+                                    ? `${order.cash_trip_from} → ${order.cash_trip_to}`
+                                    : 'No route data')
+                                : (order.company_trip_from && order.company_trip_to
+                                    ? `${order.company_trip_from} → ${order.company_trip_to}`
+                                    : 'No route data')
                               }
                             </td>
                             <td className="border border-slate-300 px-3 py-2 text-right text-sm font-medium">
                               {order.order_type === 'cash' 
                                 ? `₹${(order.amount_received || 0).toLocaleString('en-IN')}`
-                                : 'Company'
+                                : (order.financials && order.financials.total_revenue 
+                                    ? `₹${order.financials.total_revenue.toLocaleString('en-IN')}`
+                                    : '₹0')
                               }
                             </td>
                           </tr>
