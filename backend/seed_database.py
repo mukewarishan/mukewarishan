@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from datetime import datetime, timezone
 import uuid
 import re
+import bcrypt
 
 def clean_monetary_value(value):
     """Clean monetary values like '₹ 2000.00', '500.00 INR', etc."""
