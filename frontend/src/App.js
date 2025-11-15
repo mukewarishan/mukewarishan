@@ -4006,9 +4006,33 @@ const Reports = () => {
                               return (
                                 <tr key={day.date} className="border-t border-white/30 hover:bg-white/30 transition-colors">
                                   <td className="px-4 py-3 font-medium">{new Date(day.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                                  <td className="px-4 py-3 text-center font-semibold text-blue-600">{day.total_orders}</td>
-                                  <td className="px-4 py-3 text-center text-green-600">{day.cash_orders}</td>
-                                  <td className="px-4 py-3 text-center text-purple-600">{day.company_orders}</td>
+                                  <td className="px-4 py-3 text-center">
+                                    <button
+                                      onClick={() => showOrdersForDate(day.date, 'all')}
+                                      className="font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-all"
+                                      title="Click to view all orders"
+                                    >
+                                      {day.total_orders}
+                                    </button>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <button
+                                      onClick={() => showOrdersForDate(day.date, 'cash')}
+                                      className="text-green-600 hover:text-green-800 hover:underline cursor-pointer transition-all"
+                                      title="Click to view cash orders"
+                                    >
+                                      {day.cash_orders}
+                                    </button>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <button
+                                      onClick={() => showOrdersForDate(day.date, 'company')}
+                                      className="text-purple-600 hover:text-purple-800 hover:underline cursor-pointer transition-all"
+                                      title="Click to view company orders"
+                                    >
+                                      {day.company_orders}
+                                    </button>
+                                  </td>
                                   <td className="px-4 py-3 text-right text-red-600">₹{day.total_expense.toLocaleString('en-IN')}</td>
                                   <td className="px-4 py-3 text-right text-green-600">₹{day.total_revenue.toLocaleString('en-IN')}</td>
                                   <td className={`px-4 py-3 text-right font-bold ${profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
