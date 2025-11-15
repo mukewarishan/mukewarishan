@@ -4358,6 +4358,109 @@ const Reports = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Orders Modal */}
+      {ordersModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeOrdersModal}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-4 flex justify-between items-center">
+              <h3 className="text-xl font-bold">{ordersModal.title}</h3>
+              <button
+                onClick={closeOrdersModal}
+                className="text-white hover:text-gray-200 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-all"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {ordersModal.loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                  <p className="ml-4 text-slate-600">Loading orders...</p>
+                </div>
+              ) : ordersModal.orders.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-slate-500 text-lg">No orders found for this date</p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4 text-sm text-slate-600">
+                    Showing {ordersModal.orders.length} order{ordersModal.orders.length !== 1 ? 's' : ''}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-slate-100">
+                          <th className="border border-slate-300 px-3 py-2 text-left text-sm font-semibold">Date & Time</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left text-sm font-semibold">Customer</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left text-sm font-semibold">Phone</th>
+                          <th className="border border-slate-300 px-3 py-2 text-center text-sm font-semibold">Type</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left text-sm font-semibold">Service</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left text-sm font-semibold">From → To</th>
+                          <th className="border border-slate-300 px-3 py-2 text-right text-sm font-semibold">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ordersModal.orders.map((order) => (
+                          <tr key={order.id} className="hover:bg-slate-50">
+                            <td className="border border-slate-300 px-3 py-2 text-sm">
+                              {new Date(order.date_time).toLocaleString('en-IN', { 
+                                day: '2-digit', 
+                                month: 'short', 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </td>
+                            <td className="border border-slate-300 px-3 py-2 text-sm">{order.customer_name || 'N/A'}</td>
+                            <td className="border border-slate-300 px-3 py-2 text-sm">{order.phone || 'N/A'}</td>
+                            <td className="border border-slate-300 px-3 py-2 text-center text-sm">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                order.order_type === 'cash' 
+                                  ? 'bg-green-100 text-green-700' 
+                                  : 'bg-purple-100 text-purple-700'
+                              }`}>
+                                {order.order_type === 'cash' ? 'Cash' : 'Company'}
+                              </span>
+                            </td>
+                            <td className="border border-slate-300 px-3 py-2 text-sm">
+                              {order.order_type === 'cash' ? order.cash_service_type : order.company_service_type}
+                            </td>
+                            <td className="border border-slate-300 px-3 py-2 text-sm">
+                              {order.order_type === 'cash' 
+                                ? `${order.cash_trip_from || 'N/A'} → ${order.cash_trip_to || 'N/A'}`
+                                : `${order.company_trip_from || 'N/A'} → ${order.company_trip_to || 'N/A'}`
+                              }
+                            </td>
+                            <td className="border border-slate-300 px-3 py-2 text-right text-sm font-medium">
+                              {order.order_type === 'cash' 
+                                ? `₹${(order.amount_received || 0).toLocaleString('en-IN')}`
+                                : 'Company'
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-50 px-6 py-4 flex justify-end">
+              <Button
+                onClick={closeOrdersModal}
+                className="bg-slate-600 hover:bg-slate-700 text-white"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
