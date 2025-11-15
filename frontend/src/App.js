@@ -3545,6 +3545,37 @@ const Reports = () => {
     }
   };
 
+  // Export driver report to Excel
+  const exportDriverReport = async () => {
+    try {
+      const response = await axios.get(`${API}/reports/driver-report/export?month=${selectedMonth}&year=${selectedYear}`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Driver_Report_${months.find(m => m.value === selectedMonth)?.label}_${selectedYear}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Driver report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting driver report:', error);
+      toast.error('Failed to export driver report');
+    }
+  };
+
+  // Auto-fetch driver report when tab is active
+  useEffect(() => {
+    if (activeTab === 'driver-report') {
+      fetchDriverReport();
+    }
+  }, [activeTab, selectedMonth, selectedYear]);
+
   // Function to fetch and display orders for a specific date
   const showOrdersForDate = async (date, orderType = 'all') => {
     try {
