@@ -3241,6 +3241,124 @@ async def get_available_columns(
     
     return {"columns": columns}
 
+# Driver Reports endpoint
+@api_router.get("/reports/driver-report")
+async def get_driver_report(
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    year: int = Query(..., ge=2020, le=2030, description="Year (2020-2030)"),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Get comprehensive driver report with orders, expenses, revenue, and salary for a specific month"""
+    try:
+        # Create date range for the month
+        start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+        
+        # Get all orders in the month
+        orders = await db.crane_orders.find({
+            "date_time": {
+                "$gte": start_date.isoformat(),
+                "$lt": end_date.isoformat()
+            }
+        }, {"_id": 0}).to_list(length=None)
+        
+        # Get driver default salaries
+        default_salaries = await db.driver_default_salaries.find({}).to_list(length=None)
+        salary_map = {ds["driver_name"]: ds["default_salary"] for ds in default_salaries}
+        
+        # Get driver-specific salary overrides for this month
+        driver_salaries = await db.driver_salaries.find({
+            "month": month,
+            "year": year
+        }).to_list(length=None)
+        
+        override_salary_map = {ds["driver_name"]: ds["salary_amount"] for ds in driver_salaries}
+        
+        # Aggregate data by driver
+        driver_data = {}
+        
+        for order in orders:
+            # Determine driver name based on order type
+            driver_name = None
+            if order.get("order_type") == "cash" and order.get("cash_driver_name"):
+                driver_name = order.get("cash_driver_name")
+            elif order.get("order_type") == "company" and order.get("company_driver_name"):
+                driver_name = order.get("company_driver_name")
+            
+            if not driver_name or not driver_name.strip():
+                continue
+            
+            driver_name = driver_name.strip()
+            
+            # Initialize driver entry if not exists
+            if driver_name not in driver_data:
+                driver_data[driver_name] = {
+                    "driver_name": driver_name,
+                    "total_orders": 0,
+                    "cash_orders": 0,
+                    "company_orders": 0,
+                    "total_revenue": 0.0,
+                    "total_diesel_expense": 0.0,
+                    "total_toll_expense": 0.0,
+                    "total_expenses": 0.0,
+                    "total_incentives": 0.0,
+                    "default_salary": salary_map.get(driver_name, 15000.0),
+                    "actual_salary": override_salary_map.get(driver_name, salary_map.get(driver_name, 15000.0))
+                }
+            
+            # Update counts
+            driver_data[driver_name]["total_orders"] += 1
+            if order.get("order_type") == "cash":
+                driver_data[driver_name]["cash_orders"] += 1
+                driver_data[driver_name]["total_revenue"] += order.get("amount_received", 0) or 0
+                driver_data[driver_name]["total_diesel_expense"] += order.get("cash_diesel", 0) or 0
+                driver_data[driver_name]["total_toll_expense"] += order.get("cash_toll", 0) or 0
+            else:  # company order
+                driver_data[driver_name]["company_orders"] += 1
+                # Calculate revenue for company orders
+                financials = await calculate_order_financials(order)
+                driver_data[driver_name]["total_revenue"] += financials.total_revenue
+                driver_data[driver_name]["total_diesel_expense"] += order.get("company_diesel", 0) or 0
+                driver_data[driver_name]["total_toll_expense"] += order.get("company_toll", 0) or 0
+            
+            # Add incentives
+            incentive = order.get("incentive_amount", 0) or 0
+            driver_data[driver_name]["total_incentives"] += incentive
+        
+        # Calculate total expenses
+        for driver_name in driver_data:
+            driver_data[driver_name]["total_expenses"] = (
+                driver_data[driver_name]["total_diesel_expense"] +
+                driver_data[driver_name]["total_toll_expense"]
+            )
+        
+        # Convert to list and sort by driver name
+        drivers_list = sorted(driver_data.values(), key=lambda x: x["driver_name"])
+        
+        # Calculate totals
+        totals = {
+            "total_drivers": len(drivers_list),
+            "total_orders": sum(d["total_orders"] for d in drivers_list),
+            "total_revenue": sum(d["total_revenue"] for d in drivers_list),
+            "total_expenses": sum(d["total_expenses"] for d in drivers_list),
+            "total_incentives": sum(d["total_incentives"] for d in drivers_list),
+            "total_salary_budget": sum(d["actual_salary"] for d in drivers_list)
+        }
+        
+        return {
+            "month": month,
+            "year": year,
+            "drivers": drivers_list,
+            "totals": totals
+        }
+    
+    except Exception as e:
+        logging.error(f"Error generating driver report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating driver report: {str(e)}")
+
 # Data import endpoint
 @api_router.post("/import/excel")
 async def import_excel_data(
