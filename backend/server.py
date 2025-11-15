@@ -1009,14 +1009,26 @@ async def delete_all_orders(
 ):
     """Delete all crane orders (Super Admin only - DANGEROUS!)"""
     try:
+        # Log the database being used for debugging
+        logging.info(f"Delete all orders requested by {current_user['email']}")
+        logging.info(f"Database: {db.name}")
+        
         # Count orders before deletion
         count = await db.crane_orders.count_documents({})
+        logging.info(f"Found {count} orders to delete")
         
         if count == 0:
-            raise HTTPException(status_code=404, detail="No orders found to delete")
+            # Check if collection exists
+            collections = await db.list_collection_names()
+            logging.warning(f"No orders found. Available collections: {collections}")
+            raise HTTPException(
+                status_code=404, 
+                detail=f"No orders found to delete in database '{db.name}'. The database may be empty or orders may not have been imported yet."
+            )
         
         # Delete all orders
         result = await db.crane_orders.delete_many({})
+        logging.info(f"Deleted {result.deleted_count} orders")
         
         # Log audit
         await log_audit(
@@ -1035,6 +1047,7 @@ async def delete_all_orders(
     except HTTPException:
         raise
     except Exception as e:
+        logging.error(f"Error deleting all orders: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting all orders: {str(e)}")
 
 
