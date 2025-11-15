@@ -3359,6 +3359,110 @@ async def get_driver_report(
         logging.error(f"Error generating driver report: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating driver report: {str(e)}")
 
+# Driver Report Excel Export endpoint
+@api_router.get("/reports/driver-report/export")
+async def export_driver_report(
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    year: int = Query(..., ge=2020, le=2030, description="Year (2020-2030)"),
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Export driver report as Excel file"""
+    try:
+        # Get the report data
+        report_response = await get_driver_report(month, year, current_user)
+        drivers_data = report_response["drivers"]
+        totals_data = report_response["totals"]
+        
+        # Create Excel workbook
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = f"Driver Report {year}-{month:02d}"
+        
+        # Title
+        title_cell = worksheet.cell(row=1, column=1, value=f"Driver Performance & Salary Report - {calendar.month_name[month]} {year}")
+        title_cell.font = openpyxl.styles.Font(bold=True, size=14)
+        worksheet.merge_cells('A1:H1')
+        
+        # Headers
+        headers = [
+            "Driver Name", "Total Orders", "Cash Orders", "Company Orders",
+            "Revenue (₹)", "Expenses (₹)", "Incentives (₹)", "Salary (₹)"
+        ]
+        
+        for col, header in enumerate(headers, 1):
+            cell = worksheet.cell(row=3, column=col, value=header)
+            cell.font = openpyxl.styles.Font(bold=True, color="FFFFFF")
+            cell.fill = openpyxl.styles.PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+            cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+        
+        # Data rows
+        for row_idx, driver in enumerate(drivers_data, 4):
+            worksheet.cell(row=row_idx, column=1, value=driver["driver_name"])
+            worksheet.cell(row=row_idx, column=2, value=driver["total_orders"])
+            worksheet.cell(row=row_idx, column=3, value=driver["cash_orders"])
+            worksheet.cell(row=row_idx, column=4, value=driver["company_orders"])
+            worksheet.cell(row=row_idx, column=5, value=driver["total_revenue"])
+            worksheet.cell(row=row_idx, column=6, value=driver["total_expenses"])
+            worksheet.cell(row=row_idx, column=7, value=driver["total_incentives"])
+            
+            # Salary cell with green background
+            salary_cell = worksheet.cell(row=row_idx, column=8, value=driver["actual_salary"])
+            salary_cell.fill = openpyxl.styles.PatternFill(start_color="D4EDDA", end_color="D4EDDA", fill_type="solid")
+            salary_cell.font = openpyxl.styles.Font(bold=True)
+        
+        # Totals row
+        totals_row = len(drivers_data) + 5
+        worksheet.cell(row=totals_row, column=1, value="TOTAL")
+        worksheet.cell(row=totals_row, column=2, value=totals_data["total_orders"])
+        worksheet.cell(row=totals_row, column=3, value="")
+        worksheet.cell(row=totals_row, column=4, value="")
+        worksheet.cell(row=totals_row, column=5, value=totals_data["total_revenue"])
+        worksheet.cell(row=totals_row, column=6, value=totals_data["total_expenses"])
+        worksheet.cell(row=totals_row, column=7, value=totals_data["total_incentives"])
+        worksheet.cell(row=totals_row, column=8, value=totals_data["total_salary_budget"])
+        
+        # Format totals row
+        for col in range(1, 9):
+            cell = worksheet.cell(row=totals_row, column=col)
+            cell.font = openpyxl.styles.Font(bold=True)
+            cell.fill = openpyxl.styles.PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+        
+        # Format currency columns
+        for row in range(4, totals_row + 1):
+            for col in [5, 6, 7, 8]:  # Revenue, Expenses, Incentives, Salary
+                cell = worksheet.cell(row=row, column=col)
+                cell.number_format = '₹#,##0'
+        
+        # Auto-adjust column widths
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 30)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        # Save to bytes
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        filename = f"driver_report_{year}_{month:02d}.xlsx"
+        
+        return Response(
+            content=excel_buffer.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        logging.error(f"Error exporting driver report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error exporting driver report: {str(e)}")
+
 # Data import endpoint
 @api_router.post("/import/excel")
 async def import_excel_data(
