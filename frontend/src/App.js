@@ -3996,15 +3996,19 @@ const Reports = () => {
                         </thead>
                         <tbody>
                           {revenueData.map((item, index) => (
-                            <tr key={index} className="border-t">
-                              <td className="px-4 py-2">{item.service_type}</td>
+                            <tr key={index} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                              <td className="px-4 py-3 font-medium">{item.service_type}</td>
                               {hasRole(['super_admin', 'admin']) && (
-                                <td className="px-4 py-2 text-right">₹{item.revenue?.toLocaleString('en-IN')}</td>
+                                <td className="px-4 py-3 text-right font-semibold text-green-600">₹{item.revenue?.toLocaleString('en-IN')}</td>
                               )}
                             </tr>
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-slate-500 text-lg">No revenue data available for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}</p>
                     </div>
                   )}
                 </div>
