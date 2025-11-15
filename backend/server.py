@@ -1104,6 +1104,18 @@ async def get_orders_summary(current_user: dict = Depends(get_current_user)):
         # Calculate total orders
         total_orders = await db.crane_orders.count_documents({})
         
+        # Calculate company order revenue by fetching all company orders and calculating revenue
+        company_stat = next((s for s in stats if s["_id"] == "company"), None)
+        if company_stat:
+            company_orders = await db.crane_orders.find({"order_type": "company"}).to_list(None)
+            total_company_revenue = 0
+            
+            for order in company_orders:
+                financials = await calculate_order_financials(order)
+                total_company_revenue += financials.total_revenue
+            
+            company_stat["total_revenue"] = total_company_revenue
+        
         return {
             "total_orders": total_orders,
             "by_type": stats
