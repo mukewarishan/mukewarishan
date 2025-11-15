@@ -3121,9 +3121,22 @@ const DriverSalaries = () => {
             <p className="text-slate-600 mt-4">Loading drivers...</p>
           </div>
         ) : drivers.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-5xl mb-4">📭</div>
-            <p className="text-slate-600">No drivers found. Add some orders first!</p>
+          <div className="text-center py-12 frosted-glass p-8 rounded-2xl">
+            <div className="text-6xl mb-4">👷</div>
+            <h3 className="text-xl font-bold text-slate-700 mb-2">No Drivers Found</h3>
+            <p className="text-slate-600 mb-4">
+              Driver names are automatically extracted from your orders.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+              <p className="text-sm text-slate-700">
+                <strong>💡 To see drivers here:</strong>
+              </p>
+              <ol className="text-left text-sm text-slate-600 mt-2 space-y-1 pl-5 list-decimal">
+                <li>Go to <strong>Data Import</strong> page</li>
+                <li>Upload your Excel file with orders</li>
+                <li>After import, driver names will appear here automatically</li>
+              </ol>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
