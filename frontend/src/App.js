@@ -315,18 +315,20 @@ const Header = () => {
     <>
     <header className="header-glass sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-6">
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-12 h-12 bg-gradient-to-br from-cyan-200 to-indigo-300 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 backdrop-blur-sm border border-white/40">
-              <span className="text-2xl">🚛</span>
+        <div className="flex justify-between items-center py-4 md:py-6">
+          {/* Logo - Always Visible */}
+          <Link to="/" className="flex items-center space-x-2 md:space-x-3 group">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-cyan-200 to-indigo-300 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 backdrop-blur-sm border border-white/40">
+              <span className="text-xl md:text-2xl">🚛</span>
             </div>
-            <div>
-              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-cyan-500 to-indigo-600 bg-clip-text text-transparent">Kawale Cranes</h1>
-              <p className="text-slate-600 text-sm font-medium">Towing Management System</p>
+            <div className="hidden sm:block">
+              <h1 className="text-lg md:text-2xl font-extrabold bg-gradient-to-r from-cyan-500 to-indigo-600 bg-clip-text text-transparent">Kawale Cranes</h1>
+              <p className="text-slate-600 text-xs md:text-sm font-medium">Towing Management System</p>
             </div>
           </Link>
           
-          <nav className="flex items-center space-x-4">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-2 xl:space-x-4">
             <Link to="/">
               <Button variant="ghost" className="text-slate-700 hover:text-cyan-600 hover:bg-cyan-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                 <Home size={18} className="mr-2" />
