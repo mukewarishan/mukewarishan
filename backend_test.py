@@ -964,6 +964,120 @@ class CraneOrderAPITester:
         
         return success1 and success2
 
+    def test_excel_import_datetime_fix(self):
+        """CRITICAL TEST: Excel Import Date-Time Fix with User's File"""
+        print("\n📥 CRITICAL PRIORITY: Testing Excel Import Date-Time Fix...")
+        
+        # Step 1: Get current order count before import
+        success1, orders_before = self.run_test("Get Orders Count Before Import", "GET", "orders/stats/summary", 200)
+        if not success1:
+            return self.log_test("Excel Import DateTime Fix", False, "Failed to get initial order count")
+        
+        initial_count = orders_before.get('total_orders', 0)
+        self.log_test("Initial Order Count", True, f"Found {initial_count} orders before import")
+        
+        # Step 2: Import the user's Excel file (15-11.xlsx)
+        import os
+        excel_file_path = "/app/15-11.xlsx"
+        
+        if not os.path.exists(excel_file_path):
+            return self.log_test("Excel Import DateTime Fix", False, "User's Excel file (15-11.xlsx) not found")
+        
+        # Prepare file upload
+        url = f"{self.api_url}/import/excel"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            with open(excel_file_path, 'rb') as f:
+                files = {'file': ('15-11.xlsx', f, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+                response = requests.post(url, files=files, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                import_result = response.json()
+                self.log_test("Excel File Import", True, f"Import successful: {import_result}")
+                
+                # Step 3: Verify import succeeded with success message
+                if 'message' in import_result and 'success' in import_result['message'].lower():
+                    self.log_test("Import Success Message", True, f"Success message: {import_result['message']}")
+                else:
+                    self.log_test("Import Success Message", False, f"Unexpected response: {import_result}")
+                
+                # Step 4: Check that new orders were added
+                success4, orders_after = self.run_test("Get Orders Count After Import", "GET", "orders/stats/summary", 200)
+                if success4:
+                    final_count = orders_after.get('total_orders', 0)
+                    imported_count = final_count - initial_count
+                    
+                    if imported_count > 0:
+                        self.log_test("New Orders Added", True, f"Added {imported_count} new orders (from {initial_count} to {final_count})")
+                        
+                        # Step 5: CRITICAL - Verify date-time values from Excel file, NOT current date
+                        success5, recent_orders = self.run_test("Get Recent Orders for DateTime Check", "GET", "orders", 200, params={"limit": imported_count + 5})
+                        
+                        if success5 and recent_orders:
+                            # Look for orders with September 2025 dates (from Excel file)
+                            september_2025_orders = []
+                            current_date_orders = []
+                            
+                            for order in recent_orders:
+                                order_date = order.get('date_time', '')
+                                if '2025-09' in order_date:  # September 2025 from Excel
+                                    september_2025_orders.append(order)
+                                elif '2025-11-15' in order_date:  # Current date (would indicate bug)
+                                    current_date_orders.append(order)
+                            
+                            # Verify we have orders with Excel dates, not current dates
+                            if len(september_2025_orders) >= 3:  # Should have multiple orders from Excel
+                                self.log_test("Excel DateTime Values Used", True, f"Found {len(september_2025_orders)} orders with September 2025 dates from Excel file")
+                                
+                                # Check specific sample records from Excel
+                                sachi_order = next((o for o in september_2025_orders if 'Sachi' in o.get('customer_name', '')), None)
+                                kartik_order = next((o for o in september_2025_orders if 'Kartik' in o.get('customer_name', '')), None)
+                                
+                                if sachi_order:
+                                    sachi_date = sachi_order.get('date_time', '')
+                                    if '2025-09-23' in sachi_date and '18:15' in sachi_date:
+                                        self.log_test("Sachi Order DateTime Correct", True, f"Sachi order has correct Excel date: {sachi_date}")
+                                    else:
+                                        self.log_test("Sachi Order DateTime Correct", False, f"Sachi order date incorrect: {sachi_date}")
+                                
+                                if kartik_order:
+                                    kartik_date = kartik_order.get('date_time', '')
+                                    if '2025-09-23' in kartik_date and '10:26' in kartik_date:
+                                        self.log_test("Kartik Order DateTime Correct", True, f"Kartik order has correct Excel date: {kartik_date}")
+                                    else:
+                                        self.log_test("Kartik Order DateTime Correct", False, f"Kartik order date incorrect: {kartik_date}")
+                                
+                                # Verify NO orders have current date (would indicate the bug still exists)
+                                if len(current_date_orders) == 0:
+                                    self.log_test("No Current Date Orders", True, "✅ No orders found with current date - fix working correctly")
+                                    return True
+                                else:
+                                    self.log_test("No Current Date Orders", False, f"❌ Found {len(current_date_orders)} orders with current date - bug still exists")
+                                    return False
+                            else:
+                                self.log_test("Excel DateTime Values Used", False, f"Only found {len(september_2025_orders)} orders with Excel dates, expected more")
+                                return False
+                        else:
+                            self.log_test("Get Recent Orders for DateTime Check", False, "Failed to retrieve orders for date verification")
+                            return False
+                    else:
+                        self.log_test("New Orders Added", False, f"No new orders added. Count remained {final_count}")
+                        return False
+                else:
+                    self.log_test("Get Orders Count After Import", False, "Failed to get order count after import")
+                    return False
+            else:
+                error_msg = f"Import failed with status {response.status_code}: {response.text}"
+                self.log_test("Excel File Import", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Excel File Import", False, f"Import request failed: {str(e)}")
+            return False
+        
+        return False
+
     def test_service_rates_initialization(self):
         """Test if service rates were properly initialized in the database"""
         print("\n💰 Testing Service Rates Initialization...")
