@@ -571,7 +571,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Excel Import Date-Time Fix - COMPLETED"
+    - "Daily Summary Clickable Orders Feature - COMPLETED"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
