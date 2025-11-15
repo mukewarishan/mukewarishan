@@ -1114,9 +1114,9 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <div key={order.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center space-x-3">
+                  <div key={order.id} className="border border-slate-200 rounded-lg p-3 md:p-4 hover:shadow-md transition-shadow">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+                      <div className="flex items-center flex-wrap gap-2">
                         {hasRole(['super_admin', 'admin']) && (
                           <input
                             type="checkbox"
@@ -1139,15 +1139,16 @@ const Dashboard = () => {
                             : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
                           }
                         >
-                          {order.created_by === 'system_import' ? '📥 IMPORTED' : '✏️ CREATED'}
+                          {order.created_by === 'system_import' ? '📥 IMPORT' : '✏️ CREATED'}
                         </Badge>
-                        <span className="text-sm text-slate-500">ID: {order.unique_id.slice(0, 8)}</span>
+                        <span className="text-xs sm:text-sm text-slate-500">ID: {order.unique_id.slice(0, 8)}</span>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex gap-2">
                         <Button 
                           size="sm" 
                           variant="outline"
                           onClick={() => navigate(`/edit-order/${order.id}`)}
+                          className="flex-1 sm:flex-none"
                         >
                           Edit
                         </Button>
@@ -1156,6 +1157,7 @@ const Dashboard = () => {
                             size="sm" 
                             variant="destructive"
                             onClick={() => deleteOrder(order.id)}
+                            className="flex-1 sm:flex-none"
                           >
                             Delete
                           </Button>
@@ -1163,7 +1165,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                       <div>
                         <p className="font-semibold text-slate-900">{order.customer_name}</p>
                         <p className="text-sm text-slate-600">{order.phone}</p>
