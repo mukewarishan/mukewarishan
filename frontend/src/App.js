@@ -3966,9 +3966,9 @@ const Reports = () => {
               {/* Revenue Report Tab */}
               <TabsContent value="revenue">
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">
-                      Revenue Report by Vehicle Type - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                      📊 Revenue Report by Vehicle Type - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
                     </h3>
                     {hasRole(['super_admin', 'admin']) && (
                       <Button onClick={exportRevenueReport} className="bg-green-600 hover:bg-green-700 text-white">
@@ -3979,21 +3979,18 @@ const Reports = () => {
                   </div>
 
                   {loading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto"></div>
+                      <p className="text-slate-600 mt-4">Loading revenue report...</p>
                     </div>
-                  ) : revenueData.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-slate-600">No data available</p>
-                    </div>
-                  ) : (
+                  ) : revenueData.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="bg-slate-100">
-                            <th className="px-4 py-2 text-left">Vehicle Type</th>
+                          <tr className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 backdrop-blur-sm">
+                            <th className="px-4 py-3 text-left text-sm font-semibold">Vehicle Type</th>
                             {hasRole(['super_admin', 'admin']) && (
-                              <th className="px-4 py-2 text-right">Revenue</th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold">Revenue</th>
                             )}
                           </tr>
                         </thead>
