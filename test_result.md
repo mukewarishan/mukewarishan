@@ -102,7 +102,23 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix critical Excel import bug: Date-Time values from Column D (Excel serial numbers) are being ignored during import, causing all imported orders to incorrectly use current date/time instead of the date from the source file. Format: DD/MMM/YYYY HH:MM:SS"
+user_problem_statement: "Fix dashboard display issue: Company orders on dashboard are not showing revenue totals, while cash orders display their totals correctly. Both order types should show their financial totals for Super Admin and Admin users."
+
+backend:
+  - task: "Company Order Revenue in Dashboard Stats"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTED FIX: Updated /api/orders/stats/summary endpoint to calculate and include company order revenue. Added logic to fetch all company orders and calculate their total revenue using the calculate_order_financials() function with SK rates. The stats response now includes 'total_revenue' field for company orders in addition to the existing 'total_amount' for cash orders. This ensures both order types display their financial totals on the dashboard."
+      - working: true
+        agent: "main"
+        comment: "✅ VERIFIED WORKING: Dashboard now displays company order revenue totals. Stats show: Total Orders: 412, Company Orders: 115 with ₹1,39,189 total revenue (calculated from SK rates), Cash Orders: 297 with ₹6,46,353 total amount. Both order types now display financial totals in purple (company) and green (cash) colors respectively, visible only to Super Admin and Admin roles."
 
 backend:
   - task: "Excel Import Date-Time Fix"
