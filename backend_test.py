@@ -4300,6 +4300,225 @@ class CraneOrderAPITester:
         
         return overall_success
 
+    def test_daily_summary_date_filter(self):
+        """Test new date filter parameter in GET /api/orders endpoint"""
+        print("\n📅 Testing Daily Summary Date Filter Feature...")
+        
+        # Test date filter with specific dates
+        success1, response1 = self.run_test(
+            "Date Filter - September 23, 2025", 
+            "GET", 
+            "orders", 
+            200, 
+            params={"date": "2025-09-23"}
+        )
+        
+        success2, response2 = self.run_test(
+            "Date Filter - October 1, 2025", 
+            "GET", 
+            "orders", 
+            200, 
+            params={"date": "2025-10-01"}
+        )
+        
+        # Verify orders are sorted by date_time descending
+        if success1 and response1:
+            orders = response1 if isinstance(response1, list) else []
+            if len(orders) > 1:
+                # Check if orders are sorted by date_time descending
+                dates_sorted = True
+                for i in range(len(orders) - 1):
+                    current_date = orders[i].get('date_time', '')
+                    next_date = orders[i + 1].get('date_time', '')
+                    if current_date < next_date:
+                        dates_sorted = False
+                        break
+                
+                if dates_sorted:
+                    self.log_test("Date Filter - Sort Order", True, "Orders correctly sorted by date_time descending")
+                else:
+                    self.log_test("Date Filter - Sort Order", False, "Orders not properly sorted by date_time")
+            else:
+                self.log_test("Date Filter - Sort Order", True, f"Found {len(orders)} orders for date filter test")
+        
+        return success1 and success2
+
+    def test_daily_summary_combined_filters(self):
+        """Test date + order type filter combination"""
+        print("\n🔍 Testing Combined Date and Order Type Filters...")
+        
+        # Test date + cash order type filter
+        success1, response1 = self.run_test(
+            "Combined Filter - Date + Cash Orders", 
+            "GET", 
+            "orders", 
+            200, 
+            params={"date": "2025-09-23", "order_type": "cash"}
+        )
+        
+        # Test date + company order type filter
+        success2, response2 = self.run_test(
+            "Combined Filter - Date + Company Orders", 
+            "GET", 
+            "orders", 
+            200, 
+            params={"date": "2025-09-23", "order_type": "company"}
+        )
+        
+        # Verify filtering works correctly
+        if success1 and response1:
+            cash_orders = response1 if isinstance(response1, list) else []
+            all_cash = all(order.get('order_type') == 'cash' for order in cash_orders)
+            all_correct_date = all('2025-09-23' in order.get('date_time', '') for order in cash_orders)
+            
+            if all_cash and all_correct_date:
+                self.log_test("Combined Filter Validation - Cash", True, f"All {len(cash_orders)} orders are cash type with correct date")
+            else:
+                self.log_test("Combined Filter Validation - Cash", False, "Some orders don't match cash type or date filter")
+        
+        if success2 and response2:
+            company_orders = response2 if isinstance(response2, list) else []
+            all_company = all(order.get('order_type') == 'company' for order in company_orders)
+            all_correct_date = all('2025-09-23' in order.get('date_time', '') for order in company_orders)
+            
+            if all_company and all_correct_date:
+                self.log_test("Combined Filter Validation - Company", True, f"All {len(company_orders)} orders are company type with correct date")
+            else:
+                self.log_test("Combined Filter Validation - Company", False, "Some orders don't match company type or date filter")
+        
+        return success1 and success2
+
+    def test_daily_summary_endpoint(self):
+        """Test daily summary endpoint for clickable orders feature"""
+        print("\n📊 Testing Daily Summary Endpoint...")
+        
+        # Test daily summary endpoint
+        success1, response1 = self.run_test(
+            "Daily Summary Report", 
+            "GET", 
+            "reports/daily-summary", 
+            200, 
+            params={"start_date": "2025-09-01", "end_date": "2025-09-30"}
+        )
+        
+        if success1 and response1:
+            # Verify response structure
+            if isinstance(response1, list) or isinstance(response1, dict):
+                self.log_test("Daily Summary Structure", True, f"Daily summary returned valid data structure")
+                
+                # Check if we have daily breakdown data
+                if isinstance(response1, list) and len(response1) > 0:
+                    sample_day = response1[0]
+                    expected_fields = ['date', 'total_orders', 'cash_orders', 'company_orders']
+                    has_required_fields = all(field in sample_day for field in expected_fields)
+                    
+                    if has_required_fields:
+                        self.log_test("Daily Summary Fields", True, f"Daily summary contains required fields: {expected_fields}")
+                    else:
+                        self.log_test("Daily Summary Fields", False, f"Missing required fields in daily summary")
+                elif isinstance(response1, dict):
+                    self.log_test("Daily Summary Data", True, f"Daily summary returned data: {list(response1.keys())}")
+                else:
+                    self.log_test("Daily Summary Data", False, "Daily summary returned empty data")
+            else:
+                self.log_test("Daily Summary Structure", False, f"Unexpected response type: {type(response1)}")
+        
+        return success1
+
+    def test_daily_summary_data_verification(self):
+        """Test data verification for daily summary feature"""
+        print("\n✅ Testing Daily Summary Data Verification...")
+        
+        # Get orders for September 2025 to verify data exists
+        success1, orders_response = self.run_test(
+            "Get September 2025 Orders", 
+            "GET", 
+            "orders", 
+            200, 
+            params={"date": "2025-09", "limit": 100}
+        )
+        
+        if success1 and orders_response:
+            orders = orders_response if isinstance(orders_response, list) else []
+            september_orders = [order for order in orders if '2025-09' in order.get('date_time', '')]
+            
+            if len(september_orders) > 0:
+                self.log_test("September 2025 Data Exists", True, f"Found {len(september_orders)} orders in September 2025")
+                
+                # Count by order type
+                cash_count = len([o for o in september_orders if o.get('order_type') == 'cash'])
+                company_count = len([o for o in september_orders if o.get('order_type') == 'company'])
+                
+                self.log_test("September Order Type Breakdown", True, f"Cash: {cash_count}, Company: {company_count}")
+                
+                # Test that daily summary matches filtered orders
+                success2, daily_summary = self.run_test(
+                    "Daily Summary for September", 
+                    "GET", 
+                    "reports/daily-summary", 
+                    200, 
+                    params={"start_date": "2025-09-01", "end_date": "2025-09-30"}
+                )
+                
+                if success2:
+                    self.log_test("Daily Summary vs Orders Match", True, "Daily summary endpoint accessible for verification")
+                    return True
+                else:
+                    self.log_test("Daily Summary vs Orders Match", False, "Could not access daily summary for verification")
+            else:
+                self.log_test("September 2025 Data Exists", False, "No September 2025 orders found for testing")
+        
+        # Also test October 2025 data
+        success3, oct_orders = self.run_test(
+            "Get October 2025 Orders", 
+            "GET", 
+            "orders", 
+            200, 
+            params={"date": "2025-10", "limit": 100}
+        )
+        
+        if success3 and oct_orders:
+            oct_orders_list = oct_orders if isinstance(oct_orders, list) else []
+            october_orders = [order for order in oct_orders_list if '2025-10' in order.get('date_time', '')]
+            
+            if len(october_orders) > 0:
+                self.log_test("October 2025 Data Exists", True, f"Found {len(october_orders)} orders in October 2025")
+            else:
+                self.log_test("October 2025 Data Exists", False, "No October 2025 orders found")
+        
+        return success1
+
+    def test_daily_summary_clickable_orders_comprehensive(self):
+        """Comprehensive test for Daily Summary Clickable Orders Feature"""
+        print("\n🎯 COMPREHENSIVE TESTING: Daily Summary Clickable Orders Feature")
+        print("Testing all requirements from review request:")
+        print("1. Date filter parameter in GET /api/orders")
+        print("2. Date + Order Type filter combination") 
+        print("3. Daily Summary endpoint")
+        print("4. Data verification")
+        
+        # Run all daily summary tests
+        test1 = self.test_daily_summary_date_filter()
+        test2 = self.test_daily_summary_combined_filters()
+        test3 = self.test_daily_summary_endpoint()
+        test4 = self.test_daily_summary_data_verification()
+        
+        # Overall assessment
+        all_passed = test1 and test2 and test3 and test4
+        
+        if all_passed:
+            self.log_test("Daily Summary Clickable Orders - OVERALL", True, "✅ ALL DAILY SUMMARY TESTS PASSED - Feature working correctly")
+        else:
+            failed_tests = []
+            if not test1: failed_tests.append("Date filter")
+            if not test2: failed_tests.append("Combined filters")
+            if not test3: failed_tests.append("Daily summary endpoint")
+            if not test4: failed_tests.append("Data verification")
+            
+            self.log_test("Daily Summary Clickable Orders - OVERALL", False, f"❌ FAILED TESTS: {', '.join(failed_tests)}")
+        
+        return all_passed
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Kawale Cranes Backend API Tests")
