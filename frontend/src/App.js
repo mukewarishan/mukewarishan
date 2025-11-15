@@ -4631,6 +4631,312 @@ const RatesManagement = () => {
 };
 
 // Main App Component
+
+// Data Management Component - Combines Import and Reports
+const DataManagement = () => {
+  const [activeSection, setActiveSection] = useState('import');
+  const { hasRole } = useAuth();
+
+  return (
+    <div className="min-h-screen pb-8 pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Card className="modern-card border-0 shadow-xl">
+          <CardHeader className="border-b border-slate-200/50 bg-gradient-to-r from-teal-50/50 to-blue-50/50 backdrop-blur-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle className="text-3xl font-extrabold bg-gradient-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent">
+                  📊 Data Management
+                </CardTitle>
+                <p className="text-slate-600 mt-1">Import data and generate comprehensive reports</p>
+              </div>
+              
+              {/* Section Toggle */}
+              <div className="flex gap-2 bg-white/60 p-1 rounded-xl border border-slate-200/50 backdrop-blur-sm">
+                <Button
+                  variant={activeSection === 'import' ? 'default' : 'ghost'}
+                  onClick={() => setActiveSection('import')}
+                  className={activeSection === 'import' 
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }
+                >
+                  <span className="mr-2">📥</span>
+                  Import Data
+                </Button>
+                <Button
+                  variant={activeSection === 'reports' ? 'default' : 'ghost'}
+                  onClick={() => setActiveSection('reports')}
+                  className={activeSection === 'reports' 
+                    ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white hover:from-teal-600 hover:to-blue-700' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }
+                >
+                  <span className="mr-2">📊</span>
+                  Reports
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-6">
+            {activeSection === 'import' ? (
+              <DataImportSection />
+            ) : (
+              <ReportsSection />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+// Extract DataImport content into a section component
+const DataImportSection = () => {
+  // Move all DataImport component logic here
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState(null);
+  const [importHistory, setImportHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    fetchImportHistory();
+  }, []);
+
+  const fetchImportHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const response = await axios.get(`${API}/import/history`);
+      setImportHistory(response.data);
+    } catch (error) {
+      console.error('Error fetching import history:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setImportStatus(null);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+      setSelectedFile(file);
+      setImportStatus(null);
+    } else {
+      toast.error('Please upload an Excel file (.xlsx or .xls)');
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleImport = async () => {
+    if (!selectedFile) {
+      toast.error('Please select an Excel file first');
+      return;
+    }
+    
+    setImporting(true);
+    setImportStatus(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      toast.info('Processing Excel file...');
+      
+      const response = await axios.post(`${API}/import/excel`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      toast.success(response.data.message);
+      setImportStatus({
+        success: true,
+        imported: response.data.imported,
+        failed: response.data.failed,
+        message: response.data.message,
+        errors: response.data.errors || []
+      });
+      
+      fetchImportHistory();
+      setSelectedFile(null);
+    } catch (error) {
+      console.error('Import error:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Import failed';
+      toast.error(errorMsg);
+      setImportStatus({
+        success: false,
+        message: errorMsg
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* File Upload Section */}
+      <div className="frosted-glass p-6 rounded-2xl border border-slate-200/50">
+        <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
+          <span className="mr-2">📤</span>
+          Upload Excel File
+        </h3>
+        
+        <div
+          className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-indigo-400 transition-all duration-300 bg-white/50"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
+          {selectedFile ? (
+            <div className="space-y-4">
+              <div className="text-4xl">📄</div>
+              <div>
+                <p className="text-lg font-semibold text-slate-700">{selectedFile.name}</p>
+                <p className="text-sm text-slate-500">{(selectedFile.size / 1024).toFixed(2)} KB</p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  onClick={handleImport}
+                  disabled={importing}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
+                >
+                  {importing ? '⏳ Importing...' : '🚀 Import Excel Data'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedFile(null)}
+                  disabled={importing}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-5xl">📁</div>
+              <div>
+                <p className="text-lg font-semibold text-slate-700 mb-2">
+                  Drag & drop your Excel file here
+                </p>
+                <p className="text-sm text-slate-500 mb-4">or click to browse</p>
+              </div>
+              <label htmlFor="file-upload">
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <Button asChild className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700">
+                  <span className="cursor-pointer">
+                    Choose File
+                  </span>
+                </Button>
+              </label>
+              <p className="text-xs text-slate-400 mt-2">Supported formats: .xlsx, .xls</p>
+            </div>
+          )}
+        </div>
+
+        {/* Import Status */}
+        {importStatus && (
+          <div className={`mt-4 p-4 rounded-xl ${importStatus.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            <p className={`font-semibold ${importStatus.success ? 'text-green-800' : 'text-red-800'}`}>
+              {importStatus.message}
+            </p>
+            {importStatus.success && (
+              <div className="mt-2 text-sm text-green-700">
+                <p>✅ Imported: {importStatus.imported} records</p>
+                {importStatus.failed > 0 && <p>❌ Failed: {importStatus.failed} records</p>}
+              </div>
+            )}
+            {importStatus.errors && importStatus.errors.length > 0 && (
+              <div className="mt-3">
+                <p className="font-semibold text-sm text-red-700 mb-1">Errors:</p>
+                <ul className="text-xs text-red-600 space-y-1 max-h-40 overflow-y-auto">
+                  {importStatus.errors.map((error, idx) => (
+                    <li key={idx}>• {error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Import History */}
+      <div className="frosted-glass p-6 rounded-2xl border border-slate-200/50">
+        <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
+          <span className="mr-2">📜</span>
+          Import History
+        </h3>
+
+        {loadingHistory ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto"></div>
+            <p className="text-slate-600 mt-4">Loading history...</p>
+          </div>
+        ) : importHistory.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-2">📭</div>
+            <p className="text-slate-600">No import history yet</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-3 px-2 font-semibold text-slate-700">File Name</th>
+                  <th className="text-left py-3 px-2 font-semibold text-slate-700">Date</th>
+                  <th className="text-center py-3 px-2 font-semibold text-slate-700">Total</th>
+                  <th className="text-center py-3 px-2 font-semibold text-slate-700">Success</th>
+                  <th className="text-center py-3 px-2 font-semibold text-slate-700">Failed</th>
+                  <th className="text-left py-3 px-2 font-semibold text-slate-700">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {importHistory.map((record, idx) => (
+                  <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="py-3 px-2">{record.filename}</td>
+                    <td className="py-3 px-2">{new Date(record.imported_at).toLocaleString('en-IN')}</td>
+                    <td className="py-3 px-2 text-center">{record.total_records}</td>
+                    <td className="py-3 px-2 text-center text-green-600">{record.successful}</td>
+                    <td className="py-3 px-2 text-center text-red-600">{record.failed}</td>
+                    <td className="py-3 px-2">
+                      <Badge className={record.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}>
+                        {record.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Extract Reports content into a section component  
+const ReportsSection = () => {
+  // This will use the existing Reports component logic
+  return <Reports />;
+};
+
+
 function App() {
   return (
     <AuthProvider>
