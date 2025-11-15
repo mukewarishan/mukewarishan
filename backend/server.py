@@ -3299,11 +3299,13 @@ async def import_excel_data(
                     return default
                 
                 # Determine order type with multiple possible column names
-                order_type_raw = get_value(["Order Type", "order_type", "Type", "OrderType", "Order_Type"])
+                order_type_raw = get_value(["Order Type", "order_type", "Type", "OrderType", "Order_Type", "Cash / Company"])
                 order_type = safe_str(order_type_raw, "cash").lower()
                 
                 # Normalize order type
                 if order_type in ['company', 'comp', 'corporate']:
+                    order_type = "company"
+                elif 'company' in order_type:
                     order_type = "company"
                 else:
                     order_type = "cash"
