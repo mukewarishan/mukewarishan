@@ -4298,95 +4298,95 @@ const Reports = () => {
                 </div>
               </TabsContent>
 
-              {/* Custom Reports Tab */}
-              <TabsContent value="custom">
-                <div className="space-y-6">
-                  <div className="bg-slate-50 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-4">Custom Report Configuration</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label>Start Date</Label>
-                        <Input
-                          type="date"
-                          value={customConfig.start_date}
-                          onChange={(e) => setCustomConfig(prev => ({...prev, start_date: e.target.value}))}
-                        />
-                      </div>
-                      <div>
-                        <Label>End Date</Label>
-                        <Input
-                          type="date"
-                          value={customConfig.end_date}
-                          onChange={(e) => setCustomConfig(prev => ({...prev, end_date: e.target.value}))}
-                        />
-                      </div>
-                      <div>
-                        <Label>Group By</Label>
-                        <Select value={customConfig.group_by} onValueChange={(value) => setCustomConfig(prev => ({...prev, group_by: value}))}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="order_type">Order Type</SelectItem>
-                            <SelectItem value="driver">Driver</SelectItem>
-                            <SelectItem value="service_type">Service Type</SelectItem>
-                            <SelectItem value="towing_vehicle">Towing Vehicle</SelectItem>
-                            <SelectItem value="firm">Firm</SelectItem>
-                            <SelectItem value="company">Company</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    
-                    <div className="flex space-x-4 mt-4">
-                      <Button onClick={fetchCustomReport} className="bg-blue-600 hover:bg-blue-700 text-white">
-                        Generate Report
-                      </Button>
-                      <Button onClick={exportCustomReport} className="bg-green-600 hover:bg-green-700 text-white">
-                        <span className="mr-2">📥</span>
-                        Export Excel
-                      </Button>
-                    </div>
+              {/* Driver Reports Tab */}
+              <TabsContent value="driver-report">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                      👨‍✈️ Driver Performance & Salary Report
+                    </h3>
+                    <Button 
+                      onClick={fetchDriverReport} 
+                      className="bg-gradient-to-r from-cyan-200 to-blue-200 text-slate-700 hover:from-cyan-300 hover:to-blue-300 font-semibold shadow-lg backdrop-blur-sm border border-white/40"
+                    >
+                      Generate Report
+                    </Button>
                   </div>
 
                   {loading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto"></div>
+                      <p className="text-slate-600 mt-4">Loading driver report...</p>
                     </div>
-                  ) : customReportData.length > 0 && (
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-slate-300">
-                        <thead>
-                          <tr className="bg-slate-100">
-                            <th className="border border-slate-300 px-4 py-2 text-left">{customConfig.group_by.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Total Revenue (₹)</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Total Expenses (₹)</th>
-                            <th className="border border-slate-300 px-4 py-2 text-right">Net Profit (₹)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {customReportData.map((item, index) => (
-                            <tr key={index} className="hover:bg-slate-50">
-                              <td className="border border-slate-300 px-4 py-2 font-medium">{item.group_key}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{item.cash_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{item.company_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{item.total_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right">₹{item.total_revenue?.toLocaleString('en-IN')}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right">₹{item.total_expenses?.toLocaleString('en-IN')}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{(item.total_revenue - item.total_expenses)?.toLocaleString('en-IN')}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  ) : driverReportData.drivers && driverReportData.drivers.length > 0 ? (
+                    <>
+                      {/* Summary Cards */}
+                      {driverReportData.totals && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="frosted-glass p-4 rounded-2xl text-center">
+                            <div className="text-3xl font-bold text-cyan-500">{driverReportData.totals.total_drivers}</div>
+                            <div className="text-sm text-slate-600 mt-1">Total Drivers</div>
+                          </div>
+                          <div className="frosted-glass p-4 rounded-2xl text-center">
+                            <div className="text-3xl font-bold text-blue-500">{driverReportData.totals.total_orders}</div>
+                            <div className="text-sm text-slate-600 mt-1">Total Orders</div>
+                          </div>
+                          <div className="frosted-glass p-4 rounded-2xl text-center">
+                            <div className="text-3xl font-bold text-green-500">₹{driverReportData.totals.total_salary_budget?.toLocaleString('en-IN')}</div>
+                            <div className="text-sm text-slate-600 mt-1">Total Salary Budget</div>
+                          </div>
+                        </div>
+                      )}
 
-                  {customReportData.length === 0 && !loading && (
-                    <div className="text-center py-8 text-slate-500">
-                      Configure and generate your custom report above
+                      {/* Driver Table */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-gradient-to-r from-cyan-50/50 to-blue-50/50 backdrop-blur-sm">
+                              <th className="px-4 py-3 text-left text-sm font-semibold">Driver Name</th>
+                              <th className="px-4 py-3 text-center text-sm font-semibold">Orders</th>
+                              <th className="px-4 py-3 text-center text-sm font-semibold">Cash</th>
+                              <th className="px-4 py-3 text-center text-sm font-semibold">Company</th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold">Revenue</th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold">Expenses</th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold">Incentives</th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold bg-green-50">Salary</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {driverReportData.drivers.map((driver, index) => (
+                              <tr key={index} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                                <td className="px-4 py-3 font-medium">{driver.driver_name}</td>
+                                <td className="px-4 py-3 text-center font-semibold text-blue-600">{driver.total_orders}</td>
+                                <td className="px-4 py-3 text-center text-green-600">{driver.cash_orders}</td>
+                                <td className="px-4 py-3 text-center text-purple-600">{driver.company_orders}</td>
+                                <td className="px-4 py-3 text-right text-green-600">₹{driver.total_revenue?.toLocaleString('en-IN')}</td>
+                                <td className="px-4 py-3 text-right text-red-600">₹{driver.total_expenses?.toLocaleString('en-IN')}</td>
+                                <td className="px-4 py-3 text-right text-cyan-600">₹{driver.total_incentives?.toLocaleString('en-IN')}</td>
+                                <td className="px-4 py-3 text-right font-bold text-green-700 bg-green-50">
+                                  ₹{driver.actual_salary?.toLocaleString('en-IN')}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          {/* Totals Row */}
+                          <tfoot>
+                            <tr className="bg-gradient-to-r from-cyan-100 to-blue-100 font-bold">
+                              <td className="px-4 py-3">TOTAL</td>
+                              <td className="px-4 py-3 text-center">{driverReportData.totals.total_orders}</td>
+                              <td className="px-4 py-3 text-center" colSpan="2"></td>
+                              <td className="px-4 py-3 text-right">₹{driverReportData.totals.total_revenue?.toLocaleString('en-IN')}</td>
+                              <td className="px-4 py-3 text-right">₹{driverReportData.totals.total_expenses?.toLocaleString('en-IN')}</td>
+                              <td className="px-4 py-3 text-right">₹{driverReportData.totals.total_incentives?.toLocaleString('en-IN')}</td>
+                              <td className="px-4 py-3 text-right bg-green-100">₹{driverReportData.totals.total_salary_budget?.toLocaleString('en-IN')}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-slate-500 text-lg">Click "Generate Report" to view driver performance and salary data</p>
                     </div>
                   )}
                 </div>
