@@ -3313,10 +3313,6 @@ async def import_excel_data(
                 # Extract and parse date/time from Excel
                 date_time_raw = get_value(["Date-Time", "Date Time", "DateTime", "date_time", "Date", "Order Date"])
                 
-                # Debug logging for first few rows
-                if imported_count < 5:
-                    logging.info(f"DEBUG Row {row_idx}: date_time_raw = {date_time_raw}, type = {type(date_time_raw)}, isinstance datetime = {isinstance(date_time_raw, datetime)}")
-                
                 # Helper function to convert Excel serial date number to datetime
                 def excel_serial_to_datetime(serial_number):
                     """Convert Excel serial date number to Python datetime"""
@@ -3332,37 +3328,25 @@ async def import_excel_data(
                 if isinstance(date_time_raw, datetime):
                     # Already a datetime object from Excel
                     order_date_time = date_time_raw.isoformat()
-                    if imported_count < 5:
-                        logging.info(f"DEBUG Row {row_idx}: Using datetime.isoformat() = {order_date_time}")
                 elif isinstance(date_time_raw, (int, float)) and date_time_raw > 0:
                     # Excel serial number (numeric value)
                     converted_date = excel_serial_to_datetime(date_time_raw)
                     if converted_date:
                         order_date_time = converted_date.isoformat()
-                        if imported_count < 5:
-                            logging.info(f"DEBUG Row {row_idx}: Converted serial number to {order_date_time}")
                     else:
                         # Conversion failed, use current time
                         order_date_time = datetime.now(timezone.utc).isoformat()
-                        if imported_count < 5:
-                            logging.info(f"DEBUG Row {row_idx}: Serial conversion failed, using current time")
                 elif isinstance(date_time_raw, str) and date_time_raw.strip():
                     # String format - try to parse
                     try:
                         parsed_date = datetime.fromisoformat(date_time_raw.replace('Z', '+00:00'))
                         order_date_time = parsed_date.isoformat()
-                        if imported_count < 5:
-                            logging.info(f"DEBUG Row {row_idx}: Parsed ISO string to {order_date_time}")
                     except:
                         # If parsing fails, use current time
                         order_date_time = datetime.now(timezone.utc).isoformat()
-                        if imported_count < 5:
-                            logging.info(f"DEBUG Row {row_idx}: ISO parsing failed, using current time")
                 else:
                     # No date provided, use current time
                     order_date_time = datetime.now(timezone.utc).isoformat()
-                    if imported_count < 5:
-                        logging.info(f"DEBUG Row {row_idx}: No date provided (type={type(date_time_raw)}, value={date_time_raw}), using current time")
                 
                 # Base order data - required fields
                 order_data = {
