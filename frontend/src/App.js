@@ -473,17 +473,10 @@ const Header = () => {
                     </Button>
                   </Link>
                   
-                  <Link to="/import-data" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-indigo-500 hover:bg-indigo-50/50">
-                      <FileText size={18} className="mr-3" />
-                      Import Data
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/reports" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/data-management" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-teal-500 hover:bg-teal-50/50">
                       <span className="mr-3">📊</span>
-                      Reports
+                      Data Management
                     </Button>
                   </Link>
                   
