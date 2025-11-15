@@ -420,7 +420,132 @@ const Header = () => {
               <LogOut size={18} />
             </Button>
           </nav>
+
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden">
+            <Button
+              variant="ghost"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-slate-700 hover:text-cyan-600 hover:bg-cyan-50/50 p-2"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-white/20 bg-white/95 backdrop-blur-sm">
+            <div className="px-4 py-4 space-y-3">
+              <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-cyan-600 hover:bg-cyan-50/50">
+                  <Home size={18} className="mr-3" />
+                  Dashboard
+                </Button>
+              </Link>
+              
+              <Link to="/new-order" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full justify-start bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700">
+                  <PlusCircle size={18} className="mr-3" />
+                  New Order
+                </Button>
+              </Link>
+              
+              <Link to="/rates" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-blue-600 hover:bg-blue-50/50">
+                  <span className="mr-3">💰</span>
+                  Rates
+                </Button>
+              </Link>
+              
+              {hasRole(['super_admin', 'admin']) && (
+                <>
+                  <Link to="/users" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-blue-500 hover:bg-blue-50/50">
+                      <Users size={18} className="mr-3" />
+                      Users
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/audit-logs" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-purple-500 hover:bg-purple-50/50">
+                      <FileText size={18} className="mr-3" />
+                      Audit Logs
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/import-data" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-indigo-500 hover:bg-indigo-50/50">
+                      <FileText size={18} className="mr-3" />
+                      Import Data
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/reports" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-teal-500 hover:bg-teal-50/50">
+                      <span className="mr-3">📊</span>
+                      Reports
+                    </Button>
+                  </Link>
+                  
+                  {hasRole(['super_admin', 'admin']) && (
+                    <Link to="/driver-salaries" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start text-slate-700 hover:text-emerald-500 hover:bg-emerald-50/50">
+                        <span className="mr-3">💰</span>
+                        Driver Salaries
+                      </Button>
+                    </Link>
+                  )}
+                </>
+              )}
+              
+              {/* Mobile User Info */}
+              <div className="pt-3 border-t border-slate-200">
+                <div className="flex items-center space-x-3 px-3 py-2 bg-gradient-to-r from-cyan-100/60 to-blue-100/60 rounded-lg">
+                  <User size={18} className="text-pink-500" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-700">{user?.full_name}</p>
+                    <Badge className="text-xs font-semibold bg-white/60 backdrop-blur-sm border border-white/40" variant={user?.role === 'super_admin' ? 'default' : user?.role === 'admin' ? 'secondary' : 'outline'}>
+                      {user?.role?.replace('_', ' ')?.toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2 mt-3">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => {
+                      setShowChangePasswordDialog(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex-1 text-slate-700 hover:text-blue-500 hover:bg-blue-50/50"
+                  >
+                    <Shield size={16} className="mr-2" />
+                    Change Password
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex-1 text-slate-700 hover:text-rose-500 hover:bg-rose-50/50"
+                  >
+                    <LogOut size={16} className="mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
     
