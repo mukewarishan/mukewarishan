@@ -1037,6 +1037,32 @@ async def delete_all_orders(
             action="DELETE_ALL",
             resource_type="ORDER",
             new_data={"deleted_count": result.deleted_count}
+
+
+@api_router.get("/debug/database-info")
+async def get_database_info(
+    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN]))
+):
+    """Debug endpoint to check database status (Super Admin only)"""
+    try:
+        collections = await db.list_collection_names()
+        
+        info = {
+            "database_name": db.name,
+            "collections": collections,
+            "counts": {}
+        }
+        
+        # Count documents in each collection
+        for collection_name in collections:
+            count = await db[collection_name].count_documents({})
+            info["counts"][collection_name] = count
+        
+        return info
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting database info: {str(e)}")
+
         )
         
         return {
