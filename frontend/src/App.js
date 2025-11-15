@@ -4420,7 +4420,7 @@ const Reports = () => {
                     </>
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-slate-500 text-lg">Click "Generate Report" to view driver performance and salary data</p>
+                      <p className="text-slate-500 text-lg">No driver data available for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}</p>
                     </div>
                   )}
                 </div>
