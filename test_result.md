@@ -461,6 +461,21 @@ backend:
         comment: "✅ CHANGE PASSWORD FUNCTIONALITY COMPREHENSIVE TESTING COMPLETE: All 12 test scenarios passed with 100% success rate. ✅ CORE FUNCTIONALITY: Admin login successful ✅, valid password change (admin123 → newpass123) returns HTTP 200 with success message ✅, login with new password works ✅, login with old password correctly rejected (HTTP 401) ✅, password restoration (newpass123 → admin123) successful ✅, login with restored password works ✅. ✅ ERROR HANDLING: Wrong current password returns HTTP 400 with correct error message ✅, short password (<6 chars) validation returns HTTP 400 ✅, same password validation returns HTTP 400 ✅, missing current password returns HTTP 400 ✅, missing new password returns HTTP 400 ✅. ✅ AUDIT LOGGING: Password change properly logged in audit trail with masked password (***) ✅. The change password endpoint PUT /api/auth/change-password is working perfectly with proper validation, security controls, and audit logging as specified in the review request."
 
 frontend:
+  - task: "Company Order Revenue Display on Dashboard"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTED FIX: Updated Dashboard component (lines 915-942) to display company order revenue totals. Modified the stats card rendering logic to show 'total_revenue' for company orders in addition to 'total_amount' for cash orders. Added conditional rendering: Cash orders show green-colored total_amount, Company orders show purple-colored total_revenue. Both are visible only to Super Admin and Admin users (hasRole check). Data Entry users do not see financial totals."
+      - working: true
+        agent: "main"
+        comment: "✅ VERIFIED WORKING: Dashboard stats cards now display both order types' totals correctly. Company Orders card shows count (115) and total revenue (₹1,39,189) in purple color. Cash Orders card shows count (297) and total amount (₹6,46,353) in green color. Visual distinction maintained with different colors and icons (🏢 for company, 💰 for cash). Screenshot verification confirms proper display and formatting."
+
   - task: "Google Sheets Export Button"
     implemented: false
     working: "removed"
