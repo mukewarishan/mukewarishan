@@ -3310,12 +3310,31 @@ async def import_excel_data(
                 else:
                     order_type = "cash"
                 
+                # Extract and parse date/time from Excel
+                date_time_raw = get_value(["Date-Time", "Date Time", "DateTime", "date_time", "Date", "Order Date"])
+                
+                # Convert to ISO format string
+                if isinstance(date_time_raw, datetime):
+                    # Already a datetime object from Excel
+                    order_date_time = date_time_raw.isoformat()
+                elif isinstance(date_time_raw, str) and date_time_raw.strip():
+                    # String format - try to parse
+                    try:
+                        parsed_date = datetime.fromisoformat(date_time_raw.replace('Z', '+00:00'))
+                        order_date_time = parsed_date.isoformat()
+                    except:
+                        # If parsing fails, use current time
+                        order_date_time = datetime.now(timezone.utc).isoformat()
+                else:
+                    # No date provided, use current time
+                    order_date_time = datetime.now(timezone.utc).isoformat()
+                
                 # Base order data - required fields
                 order_data = {
                     "id": str(uuid.uuid4()),
                     "added_time": datetime.now(timezone.utc).isoformat(),
-                    "unique_id": safe_str(get_value(["Order ID", "unique_id", "OrderID", "ID"]), f"IMP-{uuid.uuid4().hex[:8]}"),
-                    "date_time": datetime.now(timezone.utc).isoformat(),  # Will be stored as ISO string
+                    "unique_id": safe_str(get_value(["Unique ID", "unique_id", "Order ID", "OrderID", "ID"]), f"IMP-{uuid.uuid4().hex[:8]}"),
+                    "date_time": order_date_time,  # Use actual date from Excel
                     "customer_name": safe_str(get_value(["Customer Name", "customer_name", "Customer", "Name"]), "Unknown"),
                     "phone": safe_str(get_value(["Phone", "phone", "Mobile", "Contact"]), ""),
                     "order_type": order_type,
