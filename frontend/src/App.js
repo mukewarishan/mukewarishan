@@ -265,6 +265,7 @@ const ProtectedRoute = ({ children, requiredRoles }) => {
 // Header Component
 const Header = () => {
   const { user, logout, hasRole } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
