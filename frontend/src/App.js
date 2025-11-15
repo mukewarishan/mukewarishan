@@ -3525,6 +3525,54 @@ const Reports = () => {
     );
   };
 
+  // Function to fetch and display orders for a specific date
+  const showOrdersForDate = async (date, orderType = 'all') => {
+    try {
+      setOrdersModal({
+        isOpen: true,
+        orders: [],
+        loading: true,
+        date: date,
+        orderType: orderType,
+        title: `Orders for ${new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}${orderType !== 'all' ? ` (${orderType === 'cash' ? 'Cash' : 'Company'})` : ''}`
+      });
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('date', date);
+      if (orderType !== 'all') {
+        params.append('order_type', orderType);
+      }
+      params.append('limit', '1000'); // Get all orders for the day
+
+      const response = await axios.get(`${API}/orders?${params.toString()}`);
+      
+      setOrdersModal(prev => ({
+        ...prev,
+        orders: response.data,
+        loading: false
+      }));
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to fetch orders');
+      setOrdersModal(prev => ({
+        ...prev,
+        loading: false
+      }));
+    }
+  };
+
+  const closeOrdersModal = () => {
+    setOrdersModal({
+      isOpen: false,
+      orders: [],
+      loading: false,
+      date: '',
+      orderType: 'all',
+      title: ''
+    });
+  };
+
   useEffect(() => {
     fetchAvailableColumns();
   }, []);
