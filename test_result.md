@@ -102,9 +102,21 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implement 5 UI/UX improvements for Kawale Cranes: 1) Enhanced login page with fancy KC logo, 2) Update super admin credentials to ad@kc.com/jaishriram, 3) Change browser title to 'KC - TMS', 4) Add Excel/PDF export buttons for Custom Columns report, 5) Fix extra rendering text in Reports section"
+user_problem_statement: "Fix critical Excel import bug: Date-Time values from Column D (Excel serial numbers) are being ignored during import, causing all imported orders to incorrectly use current date/time instead of the date from the source file. Format: DD/MMM/YYYY HH:MM:SS"
 
 backend:
+  - task: "Excel Import Date-Time Fix"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTED FIX: Added excel_serial_to_datetime() helper function to convert Excel serial date numbers (e.g., 45923.762870370374) to Python datetime objects. Updated date parsing logic in /api/import/excel endpoint (lines 3313-3348) to detect and properly handle three date formats: 1) datetime objects from Excel (already working), 2) Excel serial numbers (int/float) - NEW FIX, 3) ISO string formats (already working). The helper function converts Excel serial numbers using Excel's epoch (December 30, 1899) accounting for Excel's leap year quirk. Now when Column D contains numeric serial dates, they are properly converted to datetime objects instead of falling back to datetime.now(). Need comprehensive testing with user's uploaded file (15-11.xlsx) to verify: 1) Imported records use date from Column D, not current date, 2) Date format DD/MMM/YYYY HH:MM:SS is preserved correctly, 3) All records import successfully, 4) No regression on existing datetime/string format imports."
+
   - task: "Google Sheets API Integration"
     implemented: false
     working: "removed"
