@@ -3546,10 +3546,27 @@ const Reports = () => {
       params.append('limit', '1000'); // Get all orders for the day
 
       const response = await axios.get(`${API}/orders?${params.toString()}`);
+      const orders = response.data;
+      
+      // Fetch financials for company orders
+      const ordersWithFinancials = await Promise.all(
+        orders.map(async (order) => {
+          if (order.order_type === 'company') {
+            try {
+              const financialsResponse = await axios.get(`${API}/orders/${order.id}/financials`);
+              return { ...order, financials: financialsResponse.data };
+            } catch (error) {
+              console.error(`Error fetching financials for order ${order.id}:`, error);
+              return { ...order, financials: null };
+            }
+          }
+          return order;
+        })
+      );
       
       setOrdersModal(prev => ({
         ...prev,
-        orders: response.data,
+        orders: ordersWithFinancials,
         loading: false
       }));
     } catch (error) {
