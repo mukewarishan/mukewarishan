@@ -526,7 +526,8 @@ metadata:
 test_plan:
   current_focus:
     - "Excel Import Date-Time Fix"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Excel Import Date-Time Fix"
   test_all: false
   test_priority: "high_first"
 
