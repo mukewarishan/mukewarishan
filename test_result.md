@@ -522,12 +522,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Google Sheets Removal Verification"
+    - "Excel Import Date-Time Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "main"
+    message: "🔧 EXCEL IMPORT DATE-TIME FIX IMPLEMENTED: Fixed critical bug where Excel import was ignoring Date-Time column (Column D) values and using current timestamp for all imported orders. Root cause: Import logic didn't handle Excel serial date numbers (numeric format like 45923.762870370374). Solution: Added excel_serial_to_datetime() helper function that converts Excel serial numbers to Python datetime using Excel's epoch (Dec 30, 1899). Updated date parsing logic to detect numeric values and convert them properly. Backend restarted successfully. Ready for comprehensive testing with user's uploaded file (15-11.xlsx) to verify dates are imported correctly from Column D instead of using current date."
   - agent: "main"
     message: "Implemented Google Sheets export (skipped setup per user request). Fixed incentive field visibility - moved Incentive Amount & Reason to Costs & Charges section, only visible for Cash orders and Admin/Super Admin users."
   - agent: "testing"
