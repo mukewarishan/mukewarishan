@@ -367,17 +367,10 @@ const Header = () => {
                   </Button>
                 </Link>
                 
-                <Link to="/import-data">
-                  <Button variant="ghost" className="text-slate-700 hover:text-indigo-500 hover:bg-indigo-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
-                    <FileText size={18} className="mr-2" />
-                    Import Data
-                  </Button>
-                </Link>
-                
-                <Link to="/reports">
+                <Link to="/data-management">
                   <Button variant="ghost" className="text-slate-700 hover:text-teal-500 hover:bg-teal-50/50 font-medium transition-all duration-200 backdrop-blur-sm">
                     <span className="mr-2">📊</span>
-                    Reports
+                    Data Management
                   </Button>
                 </Link>
                 
