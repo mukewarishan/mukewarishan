@@ -1037,6 +1037,18 @@ async def delete_all_orders(
             action="DELETE_ALL",
             resource_type="ORDER",
             new_data={"deleted_count": result.deleted_count}
+        )
+        
+        return {
+            "message": f"Successfully deleted all {result.deleted_count} orders",
+            "deleted_count": result.deleted_count
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting all orders: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting all orders: {str(e)}")
 
 
 @api_router.get("/debug/database-info")
