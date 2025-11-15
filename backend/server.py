@@ -3206,6 +3206,15 @@ async def import_excel_data(
         # Get headers from first row
         headers = [cell.value for cell in ws[1]]
         
+        # Log headers for debugging
+        logging.info(f"Excel file headers: {headers}")
+        
+        # Create case-insensitive header mapping
+        header_map = {}
+        for i, header in enumerate(headers):
+            if header:
+                header_map[str(header).strip().lower()] = i
+        
         imported_count = 0
         failed_count = 0
         errors = []
