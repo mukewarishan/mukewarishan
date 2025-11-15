@@ -1075,19 +1075,6 @@ async def get_database_info(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting database info: {str(e)}")
 
-        )
-        
-        return {
-            "message": f"Successfully deleted all {result.deleted_count} orders",
-            "deleted_count": result.deleted_count
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logging.error(f"Error deleting all orders: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error deleting all orders: {str(e)}")
-
 
 @api_router.get("/orders/stats/summary")
 async def get_orders_summary(current_user: dict = Depends(get_current_user)):
