@@ -3313,10 +3313,29 @@ async def import_excel_data(
                 # Extract and parse date/time from Excel
                 date_time_raw = get_value(["Date-Time", "Date Time", "DateTime", "date_time", "Date", "Order Date"])
                 
+                # Helper function to convert Excel serial date number to datetime
+                def excel_serial_to_datetime(serial_number):
+                    """Convert Excel serial date number to Python datetime"""
+                    try:
+                        # Excel's epoch is January 1, 1900 (for Windows)
+                        # Note: Excel incorrectly treats 1900 as a leap year, so dates before March 1, 1900 are off by 1 day
+                        excel_epoch = datetime(1899, 12, 30)  # Using Dec 30, 1899 to account for Excel's quirk
+                        return excel_epoch + timedelta(days=float(serial_number))
+                    except (ValueError, TypeError, OverflowError):
+                        return None
+                
                 # Convert to ISO format string
                 if isinstance(date_time_raw, datetime):
                     # Already a datetime object from Excel
                     order_date_time = date_time_raw.isoformat()
+                elif isinstance(date_time_raw, (int, float)) and date_time_raw > 0:
+                    # Excel serial number (numeric value)
+                    converted_date = excel_serial_to_datetime(date_time_raw)
+                    if converted_date:
+                        order_date_time = converted_date.isoformat()
+                    else:
+                        # Conversion failed, use current time
+                        order_date_time = datetime.now(timezone.utc).isoformat()
                 elif isinstance(date_time_raw, str) and date_time_raw.strip():
                     # String format - try to parse
                     try:
