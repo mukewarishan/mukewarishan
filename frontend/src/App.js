@@ -3901,9 +3901,9 @@ const Reports = () => {
               {/* Expense Report Tab */}
               <TabsContent value="expense">
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">
-                      Expense Report by Driver - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+                      💰 Expense Report by Driver - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
                     </h3>
                     {hasRole(['super_admin', 'admin']) && (
                       <Button onClick={exportExpenseReport} className="bg-green-600 hover:bg-green-700 text-white">
@@ -3914,39 +3914,40 @@ const Reports = () => {
                   </div>
 
                   {loading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400 mx-auto"></div>
+                      <p className="text-slate-600 mt-4">Loading expense report...</p>
                     </div>
-                  ) : (
+                  ) : expenseData.length > 0 ? (
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-slate-300">
+                      <table className="w-full">
                         <thead>
-                          <tr className="bg-slate-100">
-                            <th className="border border-slate-300 px-4 py-2 text-left">Driver Name</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
+                          <tr className="bg-gradient-to-r from-orange-50/50 to-red-50/50 backdrop-blur-sm">
+                            <th className="px-4 py-3 text-left text-sm font-semibold">Driver Name</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold">Orders</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold">Cash</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold">Company</th>
                             {hasRole(['super_admin', 'admin']) && (
                               <>
-                                <th className="border border-slate-300 px-4 py-2 text-right">Diesel Expense (₹)</th>
-                                <th className="border border-slate-300 px-4 py-2 text-right">Toll Expense (₹)</th>
-                                <th className="border border-slate-300 px-4 py-2 text-right">Total Expense (₹)</th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold">Diesel</th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold">Toll</th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold">Total Expense</th>
                               </>
                             )}
                           </tr>
                         </thead>
                         <tbody>
                           {expenseData.map((driver, index) => (
-                            <tr key={index} className="hover:bg-slate-50">
-                              <td className="border border-slate-300 px-4 py-2 font-medium">{driver.driver_name}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{driver.cash_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{driver.company_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{driver.total_orders}</td>
+                            <tr key={index} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                              <td className="px-4 py-3 font-medium">{driver.driver_name}</td>
+                              <td className="px-4 py-3 text-center font-semibold text-blue-600">{driver.total_orders}</td>
+                              <td className="px-4 py-3 text-center text-green-600">{driver.cash_orders}</td>
+                              <td className="px-4 py-3 text-center text-purple-600">{driver.company_orders}</td>
                               {hasRole(['super_admin', 'admin']) && (
                                 <>
-                                  <td className="border border-slate-300 px-4 py-2 text-right">₹{driver.total_diesel_expense?.toLocaleString('en-IN')}</td>
-                                  <td className="border border-slate-300 px-4 py-2 text-right">₹{driver.total_toll_expense?.toLocaleString('en-IN')}</td>
-                                  <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{driver.total_expenses?.toLocaleString('en-IN')}</td>
+                                  <td className="px-4 py-3 text-right text-orange-600">₹{driver.total_diesel_expense?.toLocaleString('en-IN')}</td>
+                                  <td className="px-4 py-3 text-right text-orange-600">₹{driver.total_toll_expense?.toLocaleString('en-IN')}</td>
+                                  <td className="px-4 py-3 text-right font-bold text-red-600">₹{driver.total_expenses?.toLocaleString('en-IN')}</td>
                                 </>
                               )}
                             </tr>
@@ -3954,11 +3955,9 @@ const Reports = () => {
                         </tbody>
                       </table>
                     </div>
-                  )}
-
-                  {expenseData.length === 0 && !loading && (
-                    <div className="text-center py-8 text-slate-500">
-                      No expense data found for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-slate-500 text-lg">No expense data found for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}</p>
                     </div>
                   )}
                 </div>
