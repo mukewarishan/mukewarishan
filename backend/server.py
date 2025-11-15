@@ -3220,61 +3220,80 @@ async def import_excel_data(
                 if not any(row_data.values()):
                     continue
                 
-                # Map Excel columns to database fields
+                # Helper function to safely convert values
+                def safe_str(val, default=""):
+                    if val is None or (isinstance(val, str) and val.strip().lower() in ['nan', 'nat', 'none', '']):
+                        return default
+                    return str(val).strip()
+                
+                def safe_float(val, default=0.0):
+                    if val is None or val == '':
+                        return default
+                    try:
+                        # Handle string representations of numbers with currency symbols
+                        if isinstance(val, str):
+                            val = val.replace('₹', '').replace(',', '').strip()
+                        return float(val)
+                    except (ValueError, TypeError):
+                        return default
+                
+                # Base order data - required fields
                 order_data = {
-                    "unique_id": str(row_data.get("Order ID") or row_data.get("unique_id") or f"IMP-{uuid.uuid4().hex[:8]}"),
-                    "date_time": datetime.now(timezone.utc).isoformat() if not row_data.get("Date/Time") else str(row_data.get("Date/Time")),
-                    "customer_name": str(row_data.get("Customer Name") or row_data.get("customer_name") or ""),
-                    "phone": str(row_data.get("Phone") or row_data.get("phone") or ""),
-                    "order_type": str(row_data.get("Order Type") or row_data.get("order_type") or "cash").lower(),
+                    "id": str(uuid.uuid4()),
+                    "added_time": datetime.now(timezone.utc).isoformat(),
+                    "unique_id": safe_str(row_data.get("Order ID") or row_data.get("unique_id"), f"IMP-{uuid.uuid4().hex[:8]}"),
+                    "date_time": datetime.now(timezone.utc).isoformat(),  # Will be stored as ISO string
+                    "customer_name": safe_str(row_data.get("Customer Name") or row_data.get("customer_name"), "Unknown"),
+                    "phone": safe_str(row_data.get("Phone") or row_data.get("phone"), ""),
+                    "order_type": safe_str(row_data.get("Order Type") or row_data.get("order_type"), "cash").lower(),
                     "created_by": "system_import"
                 }
                 
                 # Add cash-specific fields
                 if order_data["order_type"] == "cash":
                     order_data.update({
-                        "cash_trip_from": str(row_data.get("Trip From") or row_data.get("cash_trip_from") or ""),
-                        "cash_trip_to": str(row_data.get("Trip To") or row_data.get("cash_trip_to") or ""),
-                        "cash_driver_name": str(row_data.get("Driver") or row_data.get("cash_driver_name") or ""),
-                        "cash_towing_vehicle": str(row_data.get("Towing Vehicle") or row_data.get("cash_towing_vehicle") or ""),
-                        "cash_service_type": str(row_data.get("Service Type") or row_data.get("cash_service_type") or ""),
-                        "cash_vehicle_name": str(row_data.get("Vehicle Name") or row_data.get("cash_vehicle_name") or ""),
-                        "cash_vehicle_number": str(row_data.get("Vehicle Number") or row_data.get("cash_vehicle_number") or ""),
-                        "amount_received": float(row_data.get("Amount Received") or row_data.get("amount_received") or 0),
-                        "advance_amount": float(row_data.get("Advance Amount") or row_data.get("advance_amount") or 0),
-                        "cash_kms_travelled": float(row_data.get("KMs Travelled") or row_data.get("cash_kms_travelled") or 0),
-                        "cash_toll": float(row_data.get("Toll") or row_data.get("cash_toll") or 0),
-                        "cash_diesel": str(row_data.get("Diesel") or row_data.get("cash_diesel") or ""),
-                        "cash_diesel_refill_location": str(row_data.get("Diesel Location") or row_data.get("cash_diesel_refill_location") or ""),
+                        "cash_trip_from": safe_str(row_data.get("Trip From") or row_data.get("cash_trip_from")),
+                        "cash_trip_to": safe_str(row_data.get("Trip To") or row_data.get("cash_trip_to")),
+                        "cash_driver_name": safe_str(row_data.get("Driver") or row_data.get("cash_driver_name")),
+                        "cash_towing_vehicle": safe_str(row_data.get("Towing Vehicle") or row_data.get("cash_towing_vehicle")),
+                        "cash_service_type": safe_str(row_data.get("Service Type") or row_data.get("cash_service_type")),
+                        "cash_vehicle_name": safe_str(row_data.get("Vehicle Name") or row_data.get("cash_vehicle_name")),
+                        "cash_vehicle_number": safe_str(row_data.get("Vehicle Number") or row_data.get("cash_vehicle_number")),
+                        "amount_received": safe_float(row_data.get("Amount Received") or row_data.get("amount_received")),
+                        "advance_amount": safe_float(row_data.get("Advance Amount") or row_data.get("advance_amount")),
+                        "cash_kms_travelled": safe_float(row_data.get("KMs Travelled") or row_data.get("cash_kms_travelled")),
+                        "cash_toll": safe_float(row_data.get("Toll") or row_data.get("cash_toll")),
+                        "cash_diesel": safe_float(row_data.get("Diesel") or row_data.get("cash_diesel")),
+                        "cash_diesel_refill_location": safe_str(row_data.get("Diesel Location") or row_data.get("cash_diesel_refill_location")),
                     })
                 else:  # company order
                     order_data.update({
-                        "company_name": str(row_data.get("Company") or row_data.get("company_name") or ""),
-                        "case_id_file_number": str(row_data.get("Case ID") or row_data.get("case_id_file_number") or ""),
-                        "company_trip_from": str(row_data.get("Trip From") or row_data.get("company_trip_from") or ""),
-                        "company_trip_to": str(row_data.get("Trip To") or row_data.get("company_trip_to") or ""),
-                        "company_driver_name": str(row_data.get("Driver") or row_data.get("company_driver_name") or ""),
-                        "company_towing_vehicle": str(row_data.get("Towing Vehicle") or row_data.get("company_towing_vehicle") or ""),
-                        "company_service_type": str(row_data.get("Service Type") or row_data.get("company_service_type") or ""),
-                        "company_vehicle_name": str(row_data.get("Vehicle Name") or row_data.get("company_vehicle_name") or ""),
-                        "company_vehicle_number": str(row_data.get("Vehicle Number") or row_data.get("company_vehicle_number") or ""),
-                        "company_kms_travelled": float(row_data.get("KMs Travelled") or row_data.get("company_kms_travelled") or 0),
-                        "company_toll": float(row_data.get("Toll") or row_data.get("company_toll") or 0),
-                        "company_diesel": str(row_data.get("Diesel") or row_data.get("company_diesel") or ""),
-                        "name_of_firm": str(row_data.get("Firm") or row_data.get("name_of_firm") or "Kawale Cranes"),
+                        "company_name": safe_str(row_data.get("Company") or row_data.get("company_name")),
+                        "case_id_file_number": safe_str(row_data.get("Case ID") or row_data.get("case_id_file_number")),
+                        "company_trip_from": safe_str(row_data.get("Trip From") or row_data.get("company_trip_from")),
+                        "company_trip_to": safe_str(row_data.get("Trip To") or row_data.get("company_trip_to")),
+                        "company_driver_name": safe_str(row_data.get("Driver") or row_data.get("company_driver_name")),
+                        "company_towing_vehicle": safe_str(row_data.get("Towing Vehicle") or row_data.get("company_towing_vehicle")),
+                        "company_service_type": safe_str(row_data.get("Service Type") or row_data.get("company_service_type")),
+                        "company_vehicle_name": safe_str(row_data.get("Vehicle Name") or row_data.get("company_vehicle_name")),
+                        "company_vehicle_number": safe_str(row_data.get("Vehicle Number") or row_data.get("company_vehicle_number")),
+                        "company_kms_travelled": safe_float(row_data.get("KMs Travelled") or row_data.get("company_kms_travelled")),
+                        "company_toll": safe_float(row_data.get("Toll") or row_data.get("company_toll")),
+                        "company_diesel": safe_float(row_data.get("Diesel") or row_data.get("company_diesel")),
+                        "name_of_firm": safe_str(row_data.get("Firm") or row_data.get("name_of_firm"), "Kawale Cranes"),
                     })
                 
-                # Create CraneOrder object
-                crane_order = CraneOrder(**order_data)
-                order_dict = prepare_for_mongo(crane_order.model_dump())
-                
-                # Insert into database
-                await db.crane_orders.insert_one(order_dict)
+                # Insert directly to database without Pydantic validation
+                # This allows more flexible import of data
+                await db.crane_orders.insert_one(order_data)
                 imported_count += 1
                 
             except Exception as row_error:
                 failed_count += 1
-                errors.append(f"Row {row_idx}: {str(row_error)}")
+                error_msg = f"Row {row_idx}: {str(row_error)}"
+                errors.append(error_msg)
+                # Log detailed error for debugging
+                logging.error(f"Import error - {error_msg}")
                 continue
         
         # Save import history
