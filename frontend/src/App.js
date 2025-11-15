@@ -4266,9 +4266,9 @@ const Reports = () => {
               {/* Towing Vehicle Revenue Report Tab */}
               <TabsContent value="towing">
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">
-                      Revenue Report by Towing Vehicle - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                      🚛 Revenue Report by Towing Vehicle - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
                     </h3>
                     {hasRole(['super_admin', 'admin']) && (
                       <Button onClick={exportTowingVehicleReport} className="bg-green-600 hover:bg-green-700 text-white">
@@ -4279,39 +4279,40 @@ const Reports = () => {
                   </div>
 
                   {loading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+                      <p className="text-slate-600 mt-4">Loading towing vehicle report...</p>
                     </div>
-                  ) : (
+                  ) : towingVehicleData.length > 0 ? (
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-slate-300">
+                      <table className="w-full">
                         <thead>
-                          <tr className="bg-slate-100">
-                            <th className="border border-slate-300 px-4 py-2 text-left">Towing Vehicle</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Cash Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Company Orders</th>
-                            <th className="border border-slate-300 px-4 py-2 text-center">Total Orders</th>
+                          <tr className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 backdrop-blur-sm">
+                            <th className="px-4 py-3 text-left text-sm font-semibold">Towing Vehicle</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold">Cash</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold">Company</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold">Total Orders</th>
                             {hasRole(['super_admin', 'admin']) && (
                               <>
-                                <th className="border border-slate-300 px-4 py-2 text-right">Base Revenue (₹)</th>
-                                <th className="border border-slate-300 px-4 py-2 text-right">Incentive (₹)</th>
-                                <th className="border border-slate-300 px-4 py-2 text-right">Total Revenue (₹)</th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold">Base Revenue</th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold">Incentive</th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold">Total Revenue</th>
                               </>
                             )}
                           </tr>
                         </thead>
                         <tbody>
                           {towingVehicleData.map((vehicle, index) => (
-                            <tr key={index} className="hover:bg-slate-50">
-                              <td className="border border-slate-300 px-4 py-2 font-medium">{vehicle.towing_vehicle}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.cash_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.company_orders}</td>
-                              <td className="border border-slate-300 px-4 py-2 text-center">{vehicle.total_orders}</td>
+                            <tr key={index} className="border-t border-white/30 hover:bg-white/30 transition-colors">
+                              <td className="px-4 py-3 font-medium">{vehicle.towing_vehicle}</td>
+                              <td className="px-4 py-3 text-center text-green-600">{vehicle.cash_orders}</td>
+                              <td className="px-4 py-3 text-center text-purple-600">{vehicle.company_orders}</td>
+                              <td className="px-4 py-3 text-center font-semibold text-blue-600">{vehicle.total_orders}</td>
                               {hasRole(['super_admin', 'admin']) && (
                                 <>
-                                  <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_base_revenue?.toLocaleString('en-IN')}</td>
-                                  <td className="border border-slate-300 px-4 py-2 text-right">₹{vehicle.total_incentive_amount?.toLocaleString('en-IN')}</td>
-                                  <td className="border border-slate-300 px-4 py-2 text-right font-bold">₹{vehicle.total_revenue?.toLocaleString('en-IN')}</td>
+                                  <td className="px-4 py-3 text-right text-green-600">₹{vehicle.total_base_revenue?.toLocaleString('en-IN')}</td>
+                                  <td className="px-4 py-3 text-right text-cyan-600">₹{vehicle.total_incentive_amount?.toLocaleString('en-IN')}</td>
+                                  <td className="px-4 py-3 text-right font-bold text-emerald-600">₹{vehicle.total_revenue?.toLocaleString('en-IN')}</td>
                                 </>
                               )}
                             </tr>
@@ -4319,11 +4320,9 @@ const Reports = () => {
                         </tbody>
                       </table>
                     </div>
-                  )}
-
-                  {towingVehicleData.length === 0 && !loading && (
-                    <div className="text-center py-8 text-slate-500">
-                      No towing vehicle data found for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-slate-500 text-lg">No towing vehicle data available for {months.find(m => m.value === selectedMonth)?.label} {selectedYear}</p>
                     </div>
                   )}
                 </div>
