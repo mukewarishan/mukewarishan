@@ -1053,7 +1053,7 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               {hasRole(['super_admin', 'admin']) && (
                 <>
                   <Button
@@ -1062,7 +1062,8 @@ const Dashboard = () => {
                     className="flex items-center space-x-2"
                   >
                     <span>📊</span>
-                    <span>Export Excel</span>
+                    <span className="hidden sm:inline">Export Excel</span>
+                    <span className="sm:hidden">Excel</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -1070,7 +1071,8 @@ const Dashboard = () => {
                     className="flex items-center space-x-2"
                   >
                     <span>📄</span>
-                    <span>Export PDF</span>
+                    <span className="hidden sm:inline">Export PDF</span>
+                    <span className="sm:hidden">PDF</span>
                   </Button>
                 </>
               )}
@@ -1081,14 +1083,16 @@ const Dashboard = () => {
                   className="flex items-center space-x-2 text-red-600 border-red-300 hover:bg-red-50"
                 >
                   <span>🗑️</span>
-                  <span>Delete All Data</span>
+                  <span className="hidden sm:inline">Delete All Data</span>
+                  <span className="sm:hidden">Delete</span>
                 </Button>
               )}
               <Button 
                 onClick={() => navigate('/new-order')}
                 className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
               >
-                + Add New Order
+                <span className="hidden sm:inline">+ Add New Order</span>
+                <span className="sm:hidden">+ New</span>
               </Button>
             </div>
           </CardHeader>
