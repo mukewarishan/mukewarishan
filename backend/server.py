@@ -3322,11 +3322,16 @@ async def import_excel_data(
             }
         )
         
+        result_message = f"Import completed! {imported_count} records imported successfully"
+        if failed_count > 0:
+            result_message += f", {failed_count} records failed"
+        
         return {
-            "message": f"Import completed! {imported_count} records imported successfully.",
+            "message": result_message,
             "imported": imported_count,
             "failed": failed_count,
-            "errors": errors[:10] if errors else []  # Return first 10 errors
+            "total_rows": imported_count + failed_count,
+            "errors": errors if len(errors) <= 50 else errors[:50] + [f"... and {len(errors) - 50} more errors"]
         }
     
     except HTTPException:
