@@ -3246,15 +3246,38 @@ async def import_excel_data(
                     except (ValueError, TypeError):
                         return default
                 
+                # Helper to get value from row_data with multiple possible column names (case-insensitive)
+                def get_value(possible_names, default=""):
+                    for name in possible_names:
+                        # Try exact match first
+                        if name in row_data and row_data[name] is not None:
+                            return row_data[name]
+                        # Try case-insensitive match
+                        for key in row_data.keys():
+                            if key and str(key).strip().lower() == name.lower():
+                                if row_data[key] is not None:
+                                    return row_data[key]
+                    return default
+                
+                # Determine order type with multiple possible column names
+                order_type_raw = get_value(["Order Type", "order_type", "Type", "OrderType", "Order_Type"])
+                order_type = safe_str(order_type_raw, "cash").lower()
+                
+                # Normalize order type
+                if order_type in ['company', 'comp', 'corporate']:
+                    order_type = "company"
+                else:
+                    order_type = "cash"
+                
                 # Base order data - required fields
                 order_data = {
                     "id": str(uuid.uuid4()),
                     "added_time": datetime.now(timezone.utc).isoformat(),
-                    "unique_id": safe_str(row_data.get("Order ID") or row_data.get("unique_id"), f"IMP-{uuid.uuid4().hex[:8]}"),
+                    "unique_id": safe_str(get_value(["Order ID", "unique_id", "OrderID", "ID"]), f"IMP-{uuid.uuid4().hex[:8]}"),
                     "date_time": datetime.now(timezone.utc).isoformat(),  # Will be stored as ISO string
-                    "customer_name": safe_str(row_data.get("Customer Name") or row_data.get("customer_name"), "Unknown"),
-                    "phone": safe_str(row_data.get("Phone") or row_data.get("phone"), ""),
-                    "order_type": safe_str(row_data.get("Order Type") or row_data.get("order_type"), "cash").lower(),
+                    "customer_name": safe_str(get_value(["Customer Name", "customer_name", "Customer", "Name"]), "Unknown"),
+                    "phone": safe_str(get_value(["Phone", "phone", "Mobile", "Contact"]), ""),
+                    "order_type": order_type,
                     "created_by": "system_import"
                 }
                 
