@@ -80,17 +80,34 @@ class CraneOrderAPITester:
 
     def test_login(self):
         """Test admin login and get token"""
+        # Try primary admin credentials first
         success, response = self.run_test(
-            "Admin Login",
+            "Admin Login (Primary)",
             "POST",
             "auth/login",
             200,
             data={"email": "admin@kawalecranes.com", "password": "admin123"}
         )
+        
         if success and 'access_token' in response:
             self.token = response['access_token']
             self.log_test("Token Obtained", True, f"Token length: {len(self.token)}")
             return True
+        
+        # Try alternative Super Admin credentials
+        success, response = self.run_test(
+            "Admin Login (Alternative)",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "ad@kc.com", "password": "jaishriram"}
+        )
+        
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            self.log_test("Token Obtained (Alternative)", True, f"Token length: {len(self.token)}")
+            return True
+        
         return False
 
     def test_root_endpoint(self):
