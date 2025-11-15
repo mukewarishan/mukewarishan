@@ -3531,6 +3531,20 @@ const Reports = () => {
     );
   };
 
+  // Fetch driver report
+  const fetchDriverReport = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/reports/driver-report?month=${selectedMonth}&year=${selectedYear}`);
+      setDriverReportData(response.data);
+    } catch (error) {
+      console.error('Error fetching driver report:', error);
+      toast.error('Failed to fetch driver report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Function to fetch and display orders for a specific date
   const showOrdersForDate = async (date, orderType = 'all') => {
     try {
