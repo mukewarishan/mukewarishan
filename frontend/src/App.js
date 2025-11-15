@@ -3380,6 +3380,12 @@ const Reports = () => {
     orderType: 'all',
     title: ''
   });
+
+  // Driver report state
+  const [driverReportData, setDriverReportData] = useState({
+    drivers: [],
+    totals: {}
+  });
   
   // Custom report configuration
   const [customConfig, setCustomConfig] = useState({
