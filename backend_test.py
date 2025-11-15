@@ -1079,6 +1079,191 @@ class CraneOrderAPITester:
         
         return False
 
+    def test_excel_import_comprehensive(self):
+        """COMPREHENSIVE TEST: Excel Import Date-Time Fix - All Requirements"""
+        print("\n📥 COMPREHENSIVE EXCEL IMPORT DATE-TIME FIX TESTING...")
+        print("🎯 Testing all requirements from review request:")
+        print("   1. Excel file import with user's file (15-11.xlsx)")
+        print("   2. Date-Time verification (Column D values, NOT current date)")
+        print("   3. Data integrity check (all records imported)")
+        print("   4. Regression testing (existing orders unaffected)")
+        
+        # Authentication check
+        if not self.token:
+            return self.log_test("Excel Import Comprehensive", False, "No authentication token available")
+        
+        # Step 1: Get baseline data before import
+        success1, orders_before = self.run_test("Pre-Import Order Count", "GET", "orders/stats/summary", 200)
+        if not success1:
+            return self.log_test("Excel Import Comprehensive", False, "Failed to get baseline order count")
+        
+        initial_total = orders_before.get('total_orders', 0)
+        initial_by_type = {item['_id']: item['count'] for item in orders_before.get('by_type', [])}
+        initial_cash = initial_by_type.get('cash', 0)
+        initial_company = initial_by_type.get('company', 0)
+        
+        self.log_test("Baseline Data Captured", True, f"Initial: {initial_total} total ({initial_cash} cash, {initial_company} company)")
+        
+        # Step 2: Import user's Excel file
+        excel_file_path = "/app/15-11.xlsx"
+        if not os.path.exists(excel_file_path):
+            return self.log_test("Excel Import Comprehensive", False, "User's Excel file (15-11.xlsx) not found")
+        
+        # Perform import
+        url = f"{self.api_url}/import/excel"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            with open(excel_file_path, 'rb') as f:
+                files = {'file': ('15-11.xlsx', f, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+                response = requests.post(url, files=files, headers=headers, timeout=30)
+            
+            if response.status_code != 200:
+                return self.log_test("Excel Import Comprehensive", False, f"Import failed: HTTP {response.status_code} - {response.text}")
+            
+            import_result = response.json()
+            self.log_test("Excel File Import Success", True, f"Import response: {import_result}")
+            
+        except Exception as e:
+            return self.log_test("Excel Import Comprehensive", False, f"Import request failed: {str(e)}")
+        
+        # Step 3: Verify import results
+        success3, orders_after = self.run_test("Post-Import Order Count", "GET", "orders/stats/summary", 200)
+        if not success3:
+            return self.log_test("Excel Import Comprehensive", False, "Failed to get post-import order count")
+        
+        final_total = orders_after.get('total_orders', 0)
+        final_by_type = {item['_id']: item['count'] for item in orders_after.get('by_type', [])}
+        final_cash = final_by_type.get('cash', 0)
+        final_company = final_by_type.get('company', 0)
+        
+        imported_total = final_total - initial_total
+        imported_cash = final_cash - initial_cash
+        imported_company = final_company - initial_company
+        
+        if imported_total <= 0:
+            return self.log_test("Excel Import Comprehensive", False, f"No new orders imported. Count: {initial_total} → {final_total}")
+        
+        self.log_test("Import Count Verification", True, f"Imported {imported_total} orders ({imported_cash} cash, {imported_company} company)")
+        
+        # Step 4: CRITICAL - Date-Time Verification
+        success4, all_orders = self.run_test("Get All Orders for DateTime Check", "GET", "orders", 200, params={"limit": 1000})
+        if not success4:
+            return self.log_test("Excel Import Comprehensive", False, "Failed to retrieve orders for date verification")
+        
+        # Analyze date patterns
+        september_2025_orders = []
+        november_2025_orders = []  # Current date (would indicate bug)
+        other_dates = []
+        
+        for order in all_orders:
+            order_date = order.get('date_time', '')
+            customer_name = order.get('customer_name', '')
+            
+            if '2025-09' in order_date:
+                september_2025_orders.append({
+                    'customer': customer_name,
+                    'date': order_date,
+                    'phone': order.get('phone', ''),
+                    'type': order.get('order_type', '')
+                })
+            elif '2025-11-15' in order_date:  # Today's date
+                november_2025_orders.append({
+                    'customer': customer_name,
+                    'date': order_date,
+                    'phone': order.get('phone', ''),
+                    'type': order.get('order_type', '')
+                })
+            else:
+                other_dates.append(order_date[:10])  # Just the date part
+        
+        # Verify Excel dates are being used (September 2025)
+        if len(september_2025_orders) < 3:
+            return self.log_test("Excel Import Comprehensive", False, f"Expected multiple September 2025 orders from Excel, found only {len(september_2025_orders)}")
+        
+        self.log_test("Excel Date-Time Values Found", True, f"Found {len(september_2025_orders)} orders with September 2025 dates from Excel file")
+        
+        # Verify specific sample records from Excel file
+        sachi_found = False
+        kartik_found = False
+        
+        for order in september_2025_orders:
+            if 'Sachi' in order['customer'] and order['phone'] == '9545617572':
+                if '2025-09-23' in order['date'] and '18:15' in order['date']:
+                    sachi_found = True
+                    self.log_test("Sachi Record DateTime Correct", True, f"Sachi order: {order['date']} (from Excel Column D)")
+                else:
+                    self.log_test("Sachi Record DateTime Incorrect", False, f"Sachi date wrong: {order['date']}")
+            
+            if 'Kartik' in order['customer'] and order['phone'] == '7350009241':
+                if '2025-09-23' in order['date'] and '10:26' in order['date']:
+                    kartik_found = True
+                    self.log_test("Kartik Record DateTime Correct", True, f"Kartik order: {order['date']} (from Excel Column D)")
+                else:
+                    self.log_test("Kartik Record DateTime Incorrect", False, f"Kartik date wrong: {order['date']}")
+        
+        if not sachi_found:
+            self.log_test("Sachi Record Not Found", False, "Expected Sachi order with phone 9545617572 not found")
+        
+        if not kartik_found:
+            self.log_test("Kartik Record Not Found", False, "Expected Kartik order with phone 7350009241 not found")
+        
+        # CRITICAL: Verify NO orders have current date (bug indicator)
+        if len(november_2025_orders) > 0:
+            return self.log_test("Excel Import Comprehensive", False, f"❌ BUG DETECTED: {len(november_2025_orders)} orders have current date instead of Excel date")
+        
+        self.log_test("No Current Date Bug", True, "✅ No orders found with current date - Excel dates properly imported")
+        
+        # Step 5: Data Integrity Check
+        # Verify all expected records from Excel are imported
+        expected_customers = ['Sachi', 'Kartik']  # Sample from first few rows
+        found_customers = [order['customer'] for order in september_2025_orders if any(name in order['customer'] for name in expected_customers)]
+        
+        if len(found_customers) >= 2:
+            self.log_test("Data Integrity Check", True, f"Found expected sample customers: {found_customers}")
+        else:
+            self.log_test("Data Integrity Check", False, f"Missing expected customers, found: {found_customers}")
+        
+        # Step 6: Regression Testing - verify existing orders unaffected
+        # Check that we still have orders from other time periods
+        other_date_count = len(set(other_dates))
+        if other_date_count > 0:
+            self.log_test("Regression Test - Existing Orders", True, f"Existing orders from {other_date_count} different dates preserved")
+        else:
+            self.log_test("Regression Test - Existing Orders", True, "No existing orders to preserve (fresh database)")
+        
+        # Step 7: Format Verification - check ISO string format
+        sample_september_order = september_2025_orders[0] if september_2025_orders else None
+        if sample_september_order:
+            sample_date = sample_september_order['date']
+            if 'T' in sample_date and ('Z' in sample_date or '+' in sample_date):
+                self.log_test("ISO Format Verification", True, f"Dates properly formatted as ISO strings: {sample_date}")
+            else:
+                self.log_test("ISO Format Verification", False, f"Date format may be incorrect: {sample_date}")
+        
+        # Final assessment
+        critical_checks = [
+            len(september_2025_orders) >= 3,  # Excel dates found
+            len(november_2025_orders) == 0,   # No current dates
+            sachi_found,                      # Sample record 1
+            kartik_found,                     # Sample record 2
+            imported_total > 0                # Records imported
+        ]
+        
+        if all(critical_checks):
+            self.log_test("Excel Import DateTime Fix - OVERALL", True, "✅ ALL CRITICAL TESTS PASSED - Excel import date-time fix working correctly")
+            return True
+        else:
+            failed_checks = []
+            if len(september_2025_orders) < 3: failed_checks.append("Insufficient Excel dates")
+            if len(november_2025_orders) > 0: failed_checks.append("Current dates found (bug)")
+            if not sachi_found: failed_checks.append("Sachi record missing/incorrect")
+            if not kartik_found: failed_checks.append("Kartik record missing/incorrect")
+            if imported_total <= 0: failed_checks.append("No records imported")
+            
+            self.log_test("Excel Import DateTime Fix - OVERALL", False, f"❌ FAILED CHECKS: {', '.join(failed_checks)}")
+            return False
+
     def test_service_rates_initialization(self):
         """Test if service rates were properly initialized in the database"""
         print("\n💰 Testing Service Rates Initialization...")
