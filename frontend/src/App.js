@@ -4990,11 +4990,11 @@ function App() {
               }
             />
             <Route
-              path="/import-data"
+              path="/data-management"
               element={
                 <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
                   <Header />
-                  <DataImport />
+                  <DataManagement />
                 </ProtectedRoute>
               }
             />
@@ -5004,15 +5004,6 @@ function App() {
                 <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
                   <Header />
                   <RatesManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
-                  <Header />
-                  <Reports />
                 </ProtectedRoute>
               }
             />
