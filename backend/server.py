@@ -3335,9 +3335,9 @@ async def import_excel_data(
                         "amount_received": safe_float(get_value(["Amount Received", "amount_received", "Amount", "Cash Amount", "Total Amount"])),
                         "advance_amount": safe_float(get_value(["Advance Amount", "advance_amount", "Advance", "AdvanceAmount", "Received Advance Amount"])),
                         "cash_kms_travelled": safe_float(get_value(["KMs Travelled", "cash_kms_travelled", "KMs", "Distance", "KM", "Cash Kms Travelled"])),
-                        "cash_toll": safe_float(get_value(["Toll", "cash_toll", "Toll Amount"])),
-                        "cash_diesel": safe_float(get_value(["Diesel", "cash_diesel", "Diesel Amount"])),
-                        "cash_diesel_refill_location": safe_str(get_value(["Diesel Location", "cash_diesel_refill_location", "Diesel Place"])),
+                        "cash_toll": safe_float(get_value(["Toll", "cash_toll", "Toll Amount", "Cash Toll"])),
+                        "cash_diesel": safe_float(get_value(["Diesel", "cash_diesel", "Diesel Amount", "Cash Diesel"])),
+                        "cash_diesel_refill_location": safe_str(get_value(["Diesel Location", "cash_diesel_refill_location", "Diesel Place", "Cash Diesel Re-fill Location"])),
                     })
                 else:  # company order
                     order_data.update({
