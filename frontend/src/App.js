@@ -3844,7 +3844,7 @@ const Reports = () => {
                 <TabsTrigger value="expense" className="text-sm">💰 Expense</TabsTrigger>
                 <TabsTrigger value="revenue" className="text-sm">📊 Revenue</TabsTrigger>
                 <TabsTrigger value="towing" className="text-sm">🚛 Towing</TabsTrigger>
-                <TabsTrigger value="custom" className="text-sm">⚙️ Custom</TabsTrigger>
+                <TabsTrigger value="driver-report" className="text-sm">👨‍✈️ Driver Reports</TabsTrigger>
               </TabsList>
 
               {/* Expense Report Tab */}
