@@ -4530,8 +4530,13 @@ class CraneOrderAPITester:
             print("❌ Login failed, stopping tests")
             return 1
 
-        # Run Excel Import Verification first - PRIMARY FOCUS
-        print("\n🎯 EXCEL IMPORT VERIFICATION - PRIMARY FOCUS")
+        # PRIORITY: Daily Summary Clickable Orders Feature Testing
+        print("\n🎯 DAILY SUMMARY CLICKABLE ORDERS FEATURE - PRIMARY FOCUS")
+        print("=" * 80)
+        self.test_daily_summary_clickable_orders_comprehensive()
+
+        # Run Excel Import Verification - SECONDARY FOCUS
+        print("\n🎯 EXCEL IMPORT VERIFICATION - SECONDARY FOCUS")
         print("=" * 80)
         self.test_excel_import_verification()
         self.test_reports_with_imported_data()
