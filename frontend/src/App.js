@@ -962,7 +962,7 @@ const Dashboard = () => {
             <CardTitle className="text-lg font-semibold text-slate-900">Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <Label className="text-sm font-medium text-slate-700">Order Type</Label>
                 <Select value={filters.order_type} onValueChange={(value) => 
