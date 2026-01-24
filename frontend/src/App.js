@@ -2356,15 +2356,21 @@ const OrderForm = ({ orderId = null }) => {
         }
       });
       
-      // Convert datetime strings
-      if (submitData.date_time) {
+      // Convert datetime strings - handle empty strings as null
+      if (submitData.date_time && submitData.date_time !== '') {
         submitData.date_time = new Date(submitData.date_time).toISOString();
+      } else {
+        submitData.date_time = null;
       }
-      if (submitData.reach_time) {
+      if (submitData.reach_time && submitData.reach_time !== '') {
         submitData.reach_time = new Date(submitData.reach_time).toISOString();
+      } else {
+        submitData.reach_time = null;
       }
-      if (submitData.drop_time) {
+      if (submitData.drop_time && submitData.drop_time !== '') {
         submitData.drop_time = new Date(submitData.drop_time).toISOString();
+      } else {
+        submitData.drop_time = null;
       }
       
       // Handle incentive fields (admin only)
