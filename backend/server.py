@@ -286,6 +286,14 @@ class CraneOrderUpdate(BaseModel):
     incentive_reason: Optional[str] = None
     incentive_added_by: Optional[str] = None
     incentive_added_at: Optional[datetime] = None
+    
+    # Validator to convert empty strings to None for datetime fields
+    @field_validator('date_time', 'reach_time', 'drop_time', 'incentive_added_at', mode='before')
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if v == '' or v == 'null':
+            return None
+        return v
 
 class ServiceRate(BaseModel):
     model_config = ConfigDict(extra='forbid')
