@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone, timedelta
